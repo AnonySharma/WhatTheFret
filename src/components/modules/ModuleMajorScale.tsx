@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Volume2, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
-import { ascendingFrequencies, deriveMajorScale, NoteName, NOTE_NAMES, shiftSemitones } from '../../utils/guitarTheory';
+import { ascendingFrequencies, deriveMajorScale, NoteName } from '../../utils/guitarTheory';
 import { useTimeouts } from '../labs/useTimeouts';
 import { guitarAudio } from '../../utils/audioSynth';
 
