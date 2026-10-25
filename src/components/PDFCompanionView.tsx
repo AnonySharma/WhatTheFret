@@ -79,7 +79,7 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
         </div>
 
         <a
-          href="/assets/aistudio/Intuitive_Guitar_Theory_2a43fe6c.pdf"
+          href={`assets/docs/Intuitive_Guitar_Theory.pdf`}
           target="_blank"
           rel="noopener noreferrer"
           className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-semibold text-xs flex items-center gap-2 shadow-sm transition-colors"

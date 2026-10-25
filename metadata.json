@@ -1,6 +1,0 @@
-{
-  "name": "Intuitive Guitar Studio",
-  "description": "Master guitar mechanics, interval math, chord visualizers, and real-time pitch feedback based on Intuitive Guitar Theory.",
-  "requestFramePermissions": ["microphone"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
