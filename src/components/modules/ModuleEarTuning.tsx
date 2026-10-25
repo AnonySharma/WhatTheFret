@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Volume2, Info, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { GUITAR_STRINGS, getFretNote } from '../../utils/guitarTheory';
 import { guitarAudio } from '../../utils/audioSynth';
+import { BeatNoteDemo } from './BeatNoteDemo';
 
 export const ModuleEarTuning: React.FC = () => {
   const [activePairIndex, setActivePairIndex] = useState<number>(0);
@@ -239,6 +240,11 @@ export const ModuleEarTuning: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <BeatNoteDemo
+        referenceFreq={currentPair.freq}
+        referenceName={`open ${currentPair.targetName}`}
+      />
     </div>
   );
 };

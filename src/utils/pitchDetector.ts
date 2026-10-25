@@ -42,6 +42,13 @@ export function frequencyToNote(freq: number): {
   };
 }
 
+export type PitchListener = (res: PitchDetectionResult | null) => void;
+
+/**
+ * One shared microphone stream with any number of listeners. The stream opens with the
+ * first listener and closes when the last one leaves, so the tuner screen, the top-bar
+ * widget and the ear trainer can all use it without leaking streams.
+ */
 export class PitchDetector {
   private audioCtx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
@@ -49,18 +56,34 @@ export class PitchDetector {
   private animationFrameId: number | null = null;
   private buffer: Float32Array<ArrayBuffer> | null = null;
   private isListening: boolean = false;
-  private onPitchCallback: ((res: PitchDetectionResult | null) => void) | null = null;
+  private listeners = new Set<PitchListener>();
+  private startPromise: Promise<boolean> | null = null;
+  /** Bumped on every teardown so a start that is still awaiting the mic can notice it was cancelled. */
+  private session = 0;
 
-  public async startListening(callback: (res: PitchDetectionResult | null) => void): Promise<boolean> {
+  public startListening(callback: PitchListener): Promise<boolean> {
+    this.listeners.add(callback);
+    if (this.isListening) return Promise.resolve(true);
+    if (!this.startPromise) {
+      this.startPromise = this.openStream().finally(() => {
+        this.startPromise = null;
+      });
+    }
+    return this.startPromise;
+  }
+
+  private async openStream(): Promise<boolean> {
+    const session = ++this.session;
+    let ctx: AudioContext | null = null;
+    let stream: MediaStream | null = null;
     try {
-      this.onPitchCallback = callback;
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioCtx = new AudioCtx();
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume();
+      ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
       }
 
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
           autoGainControl: false,
@@ -68,23 +91,48 @@ export class PitchDetector {
         },
       });
 
-      const source = this.audioCtx.createMediaStreamSource(this.mediaStream);
-      this.analyser = this.audioCtx.createAnalyser();
-      this.analyser.fftSize = 2048; // provides high frequency resolution for bass strings
-      source.connect(this.analyser);
+      // Everyone stopped listening while the permission prompt was open.
+      if (this.session !== session || this.listeners.size === 0) {
+        stream.getTracks().forEach(track => track.stop());
+        ctx.close().catch(() => {});
+        return false;
+      }
 
-      this.buffer = new Float32Array(new ArrayBuffer(this.analyser.fftSize * 4));
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048; // provides high frequency resolution for bass strings
+      source.connect(analyser);
+
+      this.audioCtx = ctx;
+      this.mediaStream = stream;
+      this.analyser = analyser;
+      this.buffer = new Float32Array(new ArrayBuffer(analyser.fftSize * 4));
       this.isListening = true;
       this.detectLoop();
       return true;
     } catch (err) {
       console.warn('Microphone access unavailable or denied:', err);
+      stream?.getTracks().forEach(track => track.stop());
+      ctx?.close().catch(() => {});
+      this.listeners.clear();
       this.isListening = false;
       return false;
     }
   }
 
-  public stopListening() {
+  /** Removes one listener (the mic closes when none are left); with no argument, removes all of them. */
+  public stopListening(callback?: PitchListener) {
+    if (callback) {
+      this.listeners.delete(callback);
+      callback(null);
+      if (this.listeners.size > 0) return;
+    } else {
+      const all = [...this.listeners];
+      this.listeners.clear();
+      all.forEach(cb => cb(null));
+    }
+
+    this.session++;
     this.isListening = false;
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -96,15 +144,17 @@ export class PitchDetector {
     }
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       this.audioCtx.close().catch(() => {});
-      this.audioCtx = null;
     }
-    if (this.onPitchCallback) {
-      this.onPitchCallback(null);
-    }
+    this.audioCtx = null;
+    this.analyser = null;
   }
 
   public getIsListening(): boolean {
     return this.isListening;
+  }
+
+  private emit(res: PitchDetectionResult | null) {
+    this.listeners.forEach(cb => cb(res));
   }
 
   private detectLoop = () => {
@@ -121,7 +171,7 @@ export class PitchDetector {
 
     // Gate out background silence / floor noise
     if (rms < 0.015) {
-      if (this.onPitchCallback) this.onPitchCallback(null);
+      this.emit(null);
       this.animationFrameId = requestAnimationFrame(this.detectLoop);
       return;
     }
@@ -133,20 +183,18 @@ export class PitchDetector {
       const tuningDirection: 'flat' | 'sharp' | 'in-tune' =
         inTune ? 'in-tune' : noteData.cents < 0 ? 'flat' : 'sharp';
 
-      if (this.onPitchCallback) {
-        this.onPitchCallback({
-          frequency: Math.round(pitchData.frequency * 10) / 10,
-          note: noteData.note,
-          octave: noteData.octave,
-          cents: noteData.cents,
-          clarity: pitchData.clarity,
-          inTune,
-          tuningDirection,
-          rmsVolume: Math.min(1, rms * 5),
-        });
-      }
+      this.emit({
+        frequency: Math.round(pitchData.frequency * 10) / 10,
+        note: noteData.note,
+        octave: noteData.octave,
+        cents: noteData.cents,
+        clarity: pitchData.clarity,
+        inTune,
+        tuningDirection,
+        rmsVolume: Math.min(1, rms * 5),
+      });
     } else {
-      if (this.onPitchCallback) this.onPitchCallback(null);
+      this.emit(null);
     }
 
     this.animationFrameId = requestAnimationFrame(this.detectLoop);

@@ -128,6 +128,64 @@ class GuitarSynthesizer {
   }
 
   /**
+   * Sustained, steady tones played together (a pure sine plus a soft 2nd harmonic so small
+   * speakers can reproduce low notes). Used for beat-note demos, where a decaying pluck would
+   * hide the wobble. Returns a controller to retune the tones live or fade them out.
+   */
+  public holdTones(freqs: number[], level: number = 0.1): { setFrequencies: (next: number[]) => void; stop: () => void } {
+    if (this.isMuted) return { setFrequencies: () => {}, stop: () => {} };
+    const ctx = this.initContext();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.linearRampToValueAtTime(level, now + 0.06);
+    master.connect(ctx.destination);
+
+    const oscs = freqs.map(freq => {
+      const fundamental = ctx.createOscillator();
+      fundamental.type = 'sine';
+      fundamental.frequency.setValueAtTime(freq, now);
+      const second = ctx.createOscillator();
+      second.type = 'sine';
+      second.frequency.setValueAtTime(freq * 2, now);
+      const secondGain = ctx.createGain();
+      secondGain.gain.value = 0.3;
+      fundamental.connect(master);
+      second.connect(secondGain);
+      secondGain.connect(master);
+      fundamental.start(now);
+      second.start(now);
+      return { fundamental, second };
+    });
+
+    let stopped = false;
+    return {
+      setFrequencies: next => {
+        if (stopped) return;
+        const t = ctx.currentTime;
+        oscs.forEach((o, i) => {
+          if (next[i] === undefined) return;
+          o.fundamental.frequency.setTargetAtTime(next[i], t, 0.01);
+          o.second.frequency.setTargetAtTime(next[i] * 2, t, 0.01);
+        });
+      },
+      stop: () => {
+        if (stopped) return;
+        stopped = true;
+        const t = ctx.currentTime;
+        master.gain.cancelScheduledValues(t);
+        master.gain.setValueAtTime(master.gain.value, t);
+        master.gain.linearRampToValueAtTime(0.0001, t + 0.12);
+        oscs.forEach(o => {
+          o.fundamental.stop(t + 0.15);
+          o.second.stop(t + 0.15);
+        });
+        window.setTimeout(() => master.disconnect(), 400);
+      },
+    };
+  }
+
+  /**
    * Strum a chord across multiple strings
    * @param freqs Array of frequencies in Hz from string 6 to string 1. Negative or 0 means muted/skipped string.
    * @param direction 'down' (low to high) or 'up' (high to low)

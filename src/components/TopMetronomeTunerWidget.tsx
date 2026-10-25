@@ -74,13 +74,13 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
 
   // Listen to pitch detector if mic is active
   useEffect(() => {
-    if (isMicActive) {
-      pitchDetector.startListening(data => {
-        setPitchData(data);
-      });
-    } else {
+    if (!isMicActive) {
       setPitchData(null);
+      return;
     }
+    const listener = (data: PitchDetectionResult | null) => setPitchData(data);
+    pitchDetector.startListening(listener);
+    return () => pitchDetector.stopListening(listener);
   }, [isMicActive]);
 
   // Click outside to close if not pinned

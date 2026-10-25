@@ -22,17 +22,13 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
 
   // Sync mic detector state
   useEffect(() => {
-    if (isMicActive) {
-      pitchDetector.startListening((res) => {
-        setPitchData(res);
-      });
-    } else {
-      pitchDetector.stopListening();
+    if (!isMicActive) {
       setPitchData(null);
+      return;
     }
-    return () => {
-      pitchDetector.stopListening();
-    };
+    const listener = (res: PitchDetectionResult | null) => setPitchData(res);
+    pitchDetector.startListening(listener);
+    return () => pitchDetector.stopListening(listener);
   }, [isMicActive]);
 
   // Check challenge target note match

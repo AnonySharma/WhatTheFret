@@ -242,15 +242,18 @@ const BlindFretTrainer: React.FC = () => {
     setScore(s => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1, streak: ok ? s.streak + 1 : 0 }));
   }, []);
 
+  const listenerRef = useRef<((res: PitchDetectionResult | null) => void) | null>(null);
+
   const stopMic = useCallback(() => {
-    pitchDetector.stopListening();
+    if (listenerRef.current) pitchDetector.stopListening(listenerRef.current);
+    listenerRef.current = null;
     setMicOn(false);
     setHeard(null);
   }, []);
 
   const startMic = async () => {
     setMicError(null);
-    const ok = await pitchDetector.startListening((res: PitchDetectionResult | null) => {
+    const listener = (res: PitchDetectionResult | null) => {
       const cur = qRef.current;
       if (!res || !cur || doneRef.current || res.clarity < 0.85 || res.rmsVolume < 0.01) return;
       setHeard(`${res.note}${res.octave}`);
@@ -264,12 +267,22 @@ const BlindFretTrainer: React.FC = () => {
         setGuess(correct ? cur.fret : -1);
         setScore(s => ({ correct: s.correct + (correct ? 1 : 0), total: s.total + 1, streak: correct ? s.streak + 1 : 0 }));
       }
-    });
-    if (ok) setMicOn(true);
-    else setMicError('Could not access the microphone. Check browser permission, or use the fret buttons instead.');
+    };
+    listenerRef.current = listener;
+    const ok = await pitchDetector.startListening(listener);
+    if (ok && listenerRef.current === listener) setMicOn(true);
+    else if (!ok) {
+      listenerRef.current = null;
+      setMicError('Could not access the microphone. Check browser permission, or use the fret buttons instead.');
+    }
   };
 
-  useEffect(() => () => pitchDetector.stopListening(), []);
+  useEffect(
+    () => () => {
+      if (listenerRef.current) pitchDetector.stopListening(listenerRef.current);
+    },
+    []
+  );
 
   const strDef = q ? GUITAR_STRINGS.find(s => s.stringNumber === q.stringNumber)! : null;
   const correct = q && guess !== null && guess !== -1 && isBlindFretCorrect(q, guess);
