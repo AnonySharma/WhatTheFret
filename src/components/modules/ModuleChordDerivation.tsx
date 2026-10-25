@@ -207,7 +207,7 @@ export const ModuleChordDerivation: React.FC = () => {
                       }}
                       className={`w-8 h-8 rounded-full font-black text-xs transition-all active:scale-95 ${
                         targetChordRoot === r
-                          ? 'bg-gradient-to-br from-brand-400 to-brand-600 text-ink-950 shadow-[0_0_12px_rgba(26,168,155,0.6)] ring-2 ring-brand-300 scale-105'
+                          ? 'bg-gradient-to-br from-brand-400 to-brand-600 text-ink-950 shadow-[0_0_12px_rgba(245,158,11,0.6)] ring-2 ring-brand-300 scale-105'
                           : 'bg-ink-950 text-ink-300 border border-ink-800 hover:border-brand-500/40 hover:text-white'
                       }`}
                     >

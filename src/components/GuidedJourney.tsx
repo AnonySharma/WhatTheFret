@@ -89,7 +89,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
-        colors: ['#1aa89b', '#f5a524', '#8b5cf6', '#f87171'],
+        colors: ['#f59e0b', '#f97316', '#8b5cf6', '#f87171'],
       });
     }
   };

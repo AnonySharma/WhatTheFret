@@ -81,7 +81,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <TopMetronomeTunerWidget isMicActive={isMicActive} onToggleMic={onToggleMic} />
+            <TopMetronomeTunerWidget
+              isMicActive={isMicActive}
+              onToggleMic={onToggleMic}
+              onOpenFull={() => setActiveTab('tuner')}
+            />
 
             <button
               onClick={() => onToggleNotation(notesNotation === 'western' ? 'indian' : 'western')}

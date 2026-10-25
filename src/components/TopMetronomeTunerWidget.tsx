@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { metronome, getTempoMarking, TapTempoCalculator } from '../utils/metronome';
 import {
@@ -27,11 +28,14 @@ import { guitarAudio } from '../utils/audioSynth';
 interface TopMetronomeTunerWidgetProps {
   isMicActive: boolean;
   onToggleMic: () => void;
+  /** Opens the full Tuner & Metronome screen. */
+  onOpenFull?: () => void;
 }
 
 export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = ({
   isMicActive,
   onToggleMic,
+  onOpenFull,
 }) => {
   const [isRunning, setIsRunning] = useState<boolean>(metronome.getIsRunning());
   const [bpm, setBpm] = useState<number>(metronome.getBpm());
@@ -153,7 +157,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           className={`w-2.5 h-2.5 rounded-full transition-all duration-75 ${
             isRunning
               ? activeBeat === 0
-                ? 'bg-brand-400 scale-140 ring-4 ring-brand-400/60 shadow-[0_0_10px_rgba(26,168,155,1)]'
+                ? 'bg-brand-400 scale-140 ring-4 ring-brand-400/60 shadow-[0_0_10px_rgba(245,158,11,1)]'
                 : 'bg-gold-400 scale-110 ring-2 ring-gold-400/40'
               : 'bg-ink-600'
           }`}
@@ -187,7 +191,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
       {isOpen && (
         <div
           className="fixed sm:absolute inset-x-3 sm:inset-x-auto top-[6.5rem] sm:top-full sm:right-0 sm:mt-2 max-h-[calc(100dvh-8rem)] overflow-y-auto sm:w-96 rounded-2xl bg-ink-950/95 backdrop-blur-2xl border border-ink-800 shadow-2xl p-4 text-ink-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
-          style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(26,168,155, 0.15)' }}
+          style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(245,158,11, 0.15)' }}
         >
           {/* Header of Popover */}
           <div className="flex items-center justify-between border-b border-ink-800/80 pb-2.5">
@@ -199,6 +203,20 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
             </div>
 
             <div className="flex items-center gap-1">
+              {onOpenFull && (
+                <button
+                  onClick={() => {
+                    setIsPinned(false);
+                    setIsOpen(false);
+                    onOpenFull();
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-brand-300 hover:bg-brand-500/10 transition-colors"
+                  title="Open the full Tuner & Metronome screen"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Full version
+                </button>
+              )}
               <button
                 onClick={() => setIsPinned(prev => !prev)}
                 className={`p-1 rounded-lg text-xs transition-colors ${
@@ -307,7 +325,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                     className={`w-3.5 h-3.5 rounded-full transition-all duration-75 flex items-center justify-center text-[8px] font-black ${
                       activeBeat === i
                         ? i === 0
-                          ? 'bg-brand-400 text-ink-950 scale-125 shadow-[0_0_8px_rgba(26,168,155,1)]'
+                          ? 'bg-brand-400 text-ink-950 scale-125 shadow-[0_0_8px_rgba(245,158,11,1)]'
                           : 'bg-gold-400 text-ink-950 scale-110'
                         : 'bg-ink-800 text-ink-600 border border-ink-700/60'
                     }`}

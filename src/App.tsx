@@ -110,7 +110,7 @@ export default function App() {
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
-        colors: ['#1aa89b', '#f5a524', '#8b5cf6', '#f87171'],
+        colors: ['#f59e0b', '#f97316', '#8b5cf6', '#f87171'],
       });
     }
   };
@@ -129,7 +129,7 @@ export default function App() {
   const isCurrentLessonDone = progress.completedLessons.includes(activeModuleIndex);
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-ink-100 flex flex-col font-sans selection:bg-brand-500 selection:text-ink-950 relative">
+    <div className="min-h-screen bg-[#0c0a09] text-ink-100 flex flex-col font-sans selection:bg-brand-500 selection:text-ink-950 relative">
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-brand-600/5 rounded-full blur-[140px]" />

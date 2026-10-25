@@ -6,11 +6,11 @@ import { guitarAudio } from '../../utils/audioSynth';
 import { CAGED_MAX_FRET, cagedPositions, majorTriadNotes, type CagedId } from '../../utils/labs';
 
 const SHAPE_COLORS: Record<CagedId, { fill: string; text: string; chip: string }> = {
-  C: { fill: '#35c4b4', text: '#0a0e1a', chip: 'bg-brand-400 text-ink-950' },
-  A: { fill: '#f5a524', text: '#0a0e1a', chip: 'bg-gold-500 text-ink-950' },
+  C: { fill: '#34d399', text: '#0c0a09', chip: 'bg-emerald-400 text-ink-950' },
+  A: { fill: '#fbbf24', text: '#0c0a09', chip: 'bg-brand-400 text-ink-950' },
   G: { fill: '#8b5cf6', text: '#ffffff', chip: 'bg-violet-500 text-white' },
-  E: { fill: '#f87171', text: '#0a0e1a', chip: 'bg-red-400 text-ink-950' },
-  D: { fill: '#cfd6e6', text: '#0a0e1a', chip: 'bg-ink-200 text-ink-950' },
+  E: { fill: '#f87171', text: '#0c0a09', chip: 'bg-red-400 text-ink-950' },
+  D: { fill: '#d6d3d1', text: '#0c0a09', chip: 'bg-ink-200 text-ink-950' },
 };
 
 const STRING_LABELS = ['E', 'A', 'D', 'G', 'B', 'e'];
@@ -118,7 +118,7 @@ export const CagedLab: React.FC = () => {
           >
             {/* fret numbers */}
             {Array.from({ length: CAGED_MAX_FRET }, (_, i) => i + 1).map(f => (
-              <text key={f} x={xForFret(f)} y={12} textAnchor="middle" fontSize="9" fill="#5f6b8b" fontFamily="monospace">
+              <text key={f} x={xForFret(f)} y={12} textAnchor="middle" fontSize="9" fill="#78716c" fontFamily="monospace">
                 {f}
               </text>
             ))}
@@ -130,13 +130,13 @@ export const CagedLab: React.FC = () => {
                 x2={NUT_W + f * FRET_W}
                 y1={PAD_Y - 6}
                 y2={PAD_Y + STR_GAP * 5 + 6}
-                stroke={f === 0 ? '#cfd6e6' : '#343c56'}
+                stroke={f === 0 ? '#d6d3d1' : '#44403c'}
                 strokeWidth={f === 0 ? 5 : 1.5}
               />
             ))}
             {/* position markers */}
             {MARKERS.map(f => (
-              <circle key={f} cx={xForFret(f)} cy={PAD_Y + STR_GAP * 2.5} r={4} fill="#232a40" />
+              <circle key={f} cx={xForFret(f)} cy={PAD_Y + STR_GAP * 2.5} r={4} fill="#292524" />
             ))}
             {/* strings */}
             {STRING_LABELS.map((label, i) => (
@@ -146,10 +146,10 @@ export const CagedLab: React.FC = () => {
                   x2={WIDTH - 12}
                   y1={yForString(i)}
                   y2={yForString(i)}
-                  stroke="#5f6b8b"
+                  stroke="#78716c"
                   strokeWidth={0.8 + (5 - i) * 0.35}
                 />
-                <text x={NUT_W - 14} y={yForString(i) + 3} textAnchor="middle" fontSize="9" fill="#8791b0" fontFamily="monospace">
+                <text x={NUT_W - 14} y={yForString(i) + 3} textAnchor="middle" fontSize="9" fill="#a8a29e" fontFamily="monospace">
                   {label}
                 </text>
               </g>

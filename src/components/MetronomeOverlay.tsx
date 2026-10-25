@@ -132,7 +132,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
             className={`w-3 h-3 rounded-full transition-all duration-100 ${
               isRunning
                 ? activeBeat === 0
-                  ? 'bg-brand-400 ring-4 ring-brand-400/50 shadow-[0_0_12px_rgba(26,168,155,1)]'
+                  ? 'bg-brand-400 ring-4 ring-brand-400/50 shadow-[0_0_12px_rgba(245,158,11,1)]'
                   : 'bg-gold-400 ring-2 ring-gold-400/40'
                 : 'bg-ink-600'
             }`}
@@ -277,10 +277,10 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-75 ${
                         isCurrent
                           ? isDown
-                            ? 'bg-brand-400 text-ink-950 scale-125 ring-4 ring-brand-400/60 shadow-[0_0_15px_rgba(26,168,155,1)]'
+                            ? 'bg-brand-400 text-ink-950 scale-125 ring-4 ring-brand-400/60 shadow-[0_0_15px_rgba(245,158,11,1)]'
                             : isAccent
-                            ? 'bg-gold-500 text-white scale-115 ring-2 ring-gold-400/50 shadow-[0_0_10px_rgba(245,165,36,0.8)]'
-                            : 'bg-gold-400 text-ink-950 scale-110 ring-2 ring-gold-300/40 shadow-[0_0_8px_rgba(245,165,36,0.8)]'
+                            ? 'bg-gold-500 text-white scale-115 ring-2 ring-gold-400/50 shadow-[0_0_10px_rgba(249,115,22,0.8)]'
+                            : 'bg-gold-400 text-ink-950 scale-110 ring-2 ring-gold-300/40 shadow-[0_0_8px_rgba(249,115,22,0.8)]'
                           : isDown
                           ? 'bg-brand-950/40 border border-brand-600/40 text-brand-500/80'
                           : 'bg-ink-800/80 text-ink-500 border border-ink-700/60'

@@ -148,7 +148,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 20 100 A 80 80 0 0 1 180 100"
                   fill="none"
-                  stroke="#232a40"
+                  stroke="#292524"
                   strokeWidth="14"
                   strokeLinecap="round"
                 />
@@ -156,7 +156,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 20 100 A 80 80 0 0 1 80 27"
                   fill="none"
-                  stroke="#f5a524"
+                  stroke="#f97316"
                   strokeWidth="8"
                   strokeDasharray="4 3"
                 />
@@ -164,7 +164,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 85 24 A 80 80 0 0 1 115 24"
                   fill="none"
-                  stroke="#f5a524"
+                  stroke="#f97316"
                   strokeWidth="12"
                   strokeLinecap="round"
                 />
@@ -172,15 +172,15 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 120 27 A 80 80 0 0 1 180 100"
                   fill="none"
-                  stroke="#f5a524"
+                  stroke="#f97316"
                   strokeWidth="8"
                   strokeDasharray="4 3"
                 />
 
                 {/* Meter labels */}
-                <text x="20" y="112" fill="#5f6b8b" fontSize="10" textAnchor="middle">-50¢</text>
-                <text x="100" y="18" fill="#f5a524" fontSize="11" fontWeight="bold" textAnchor="middle">IN TUNE</text>
-                <text x="180" y="112" fill="#5f6b8b" fontSize="10" textAnchor="middle">+50¢</text>
+                <text x="20" y="112" fill="#78716c" fontSize="10" textAnchor="middle">-50¢</text>
+                <text x="100" y="18" fill="#f97316" fontSize="11" fontWeight="bold" textAnchor="middle">IN TUNE</text>
+                <text x="180" y="112" fill="#78716c" fontSize="10" textAnchor="middle">+50¢</text>
 
                 {/* Animated Needle */}
                 <g
@@ -197,15 +197,15 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                     y2="22"
                     stroke={
                       !pitchData
-                        ? '#5f6b8b'
+                        ? '#78716c'
                         : pitchData.inTune
-                        ? '#f5a524'
-                        : '#1aa89b'
+                        ? '#f97316'
+                        : '#f59e0b'
                     }
                     strokeWidth="3.5"
                     strokeLinecap="round"
                   />
-                  <circle cx="100" cy="100" r="7" fill="#44403c" stroke="#0f8a82" strokeWidth="2" />
+                  <circle cx="100" cy="100" r="7" fill="#44403c" stroke="#d97706" strokeWidth="2" />
                 </g>
               </svg>
             </div>

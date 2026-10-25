@@ -256,7 +256,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
               {/* Background Circular Plate */}
               <circle cx={center} cy={center} r={outerR + 10} fill="#0d0e11" stroke="#262626" strokeWidth="2" />
-              <circle cx={center} cy={center} r={outerR} fill="#171c2e" />
+              <circle cx={center} cy={center} r={outerR} fill="#1c1917" />
 
               {/* 12 Outer Slices: Major Keys */}
               {CIRCLE_OF_FIFTHS_DATA.map((seg, i) => {
@@ -272,20 +272,20 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 const labelPos = polarToCartesian(center, center, (outerR + midR) / 2, i * 30);
                 const accPos = polarToCartesian(center, center, outerR - 16, i * 30);
 
-                let fillClass = '#171c2e';
-                let strokeClass = '#232a40';
-                let textClass = '#cfd6e6';
+                let fillClass = '#1c1917';
+                let strokeClass = '#292524';
+                let textClass = '#d6d3d1';
 
                 if (isTonic) {
-                  fillClass = '#0f8a82'; // Amber 600
-                  strokeClass = '#35c4b4';
+                  fillClass = '#d97706'; // Amber 600
+                  strokeClass = '#fbbf24';
                   textClass = '#ffffff';
                 } else if (isSubdominant) {
                   fillClass = '#0284c7'; // Sky 600
                   strokeClass = '#a78bfa';
                   textClass = '#ffffff';
                 } else if (isDominant) {
-                  fillClass = '#d98a0b'; // Orange 600
+                  fillClass = '#ea580c'; // Orange 600
                   strokeClass = '#fbbf24';
                   textClass = '#ffffff';
                 }
@@ -333,7 +333,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                       x={accPos.x}
                       y={accPos.y}
                       textAnchor="middle"
-                      fill={isTonic ? '#d0f7ef' : '#5f6b8b'}
+                      fill={isTonic ? '#fef3c7' : '#78716c'}
                       fontSize="9"
                       fontWeight="bold"
                       className="pointer-events-none font-mono"
@@ -360,7 +360,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
                 const labelPos = polarToCartesian(center, center, (midR + innerR) / 2, i * 30);
 
-                let fillClass = '#0f1424';
+                let fillClass = '#141211';
                 let strokeClass = '#27272a';
                 let textClass = '#a1a1aa';
 
@@ -370,7 +370,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                   textClass = '#ffffff';
                 } else if (isSupertonic) {
                   fillClass = '#0891b2'; // Cyan 600
-                  strokeClass = '#35c4b4';
+                  strokeClass = '#fbbf24';
                   textClass = '#ffffff';
                 } else if (isMediant) {
                   fillClass = '#7c3aed'; // Violet 600
@@ -422,8 +422,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 cx={center}
                 cy={center}
                 r={innerR - 4}
-                fill="#0a0e1a"
-                stroke="#0f8a82"
+                fill="#0c0a09"
+                stroke="#d97706"
                 strokeWidth="2.5"
                 filter="url(#gold-glow)"
               />
@@ -432,7 +432,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center - 22}
                 textAnchor="middle"
-                fill="#1aa89b"
+                fill="#f59e0b"
                 fontSize="10"
                 fontWeight="800"
                 className="uppercase tracking-widest font-mono"
@@ -458,7 +458,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center + 26}
                 textAnchor="middle"
-                fill="#f5a524"
+                fill="#f97316"
                 fontSize="12"
                 fontWeight="700"
                 className="font-sans"
@@ -470,7 +470,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center + 42}
                 textAnchor="middle"
-                fill="#5f6b8b"
+                fill="#78716c"
                 fontSize="9"
                 fontWeight="600"
                 className="font-mono"

@@ -171,7 +171,7 @@ export const ModuleEarTuning: React.FC = () => {
                 <path
                   d="M 320 45 C 320 15, 260 5, 180 5"
                   fill="none"
-                  stroke="#f5a524"
+                  stroke="#f97316"
                   strokeWidth="2.5"
                   strokeDasharray="5 5"
                 />

@@ -378,7 +378,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
           </div>
 
           {/* VIRTUAL GUITAR NECK VISUALIZER: horizontal, nut on the left, body on the right */}
-          <div className="bg-[#0f1424] border border-ink-800/90 rounded-2xl p-3 sm:p-5 shadow-inner relative select-none">
+          <div className="bg-[#141211] border border-ink-800/90 rounded-2xl p-3 sm:p-5 shadow-inner relative select-none">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pb-3 mb-3 border-b border-ink-800">
               <div className="text-[11px] font-mono font-bold text-ink-400">
                 NUT <span className="text-ink-600">◀</span> headstock side · body side <span className="text-ink-600">▶</span>
@@ -402,8 +402,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               </div>
 
               {/* The fretboard: high E on top, low E on the bottom (same as tab) */}
-              <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-[#141a2c] to-[#0f1424]">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#0f8a82_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+              <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-[#1c1917] to-[#141211]">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
                 {/* Barre overlay */}
                 {selectedChord.barreFret && neckFrets.includes(selectedChord.barreFret) && (
@@ -465,7 +465,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                             <div
                               className={`absolute left-0 right-0 transition-colors ${
                                 isPlaying
-                                  ? 'bg-brand-400 shadow-[0_0_8px_#1aa89b]'
+                                  ? 'bg-brand-400 shadow-[0_0_8px_#f59e0b]'
                                   : 'bg-ink-400/70 group-hover/string:bg-ink-200'
                               }`}
                               style={{ height: `${gauge}px` }}

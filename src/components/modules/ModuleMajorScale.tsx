@@ -125,14 +125,14 @@ export const ModuleMajorScale: React.FC = () => {
                       <path
                         d={`M ${startX} 75 Q ${midX} ${75 - arcHeight} ${endX} 75`}
                         fill="none"
-                        stroke={isHalf ? '#ef4444' : '#1aa89b'}
+                        stroke={isHalf ? '#ef4444' : '#f59e0b'}
                         strokeWidth={activeStepIndex === idx ? '3.5' : '2'}
                         className="transition-all"
                       />
                       <text
                         x={midX}
                         y={70 - arcHeight}
-                        fill={isHalf ? '#ef4444' : '#35c4b4'}
+                        fill={isHalf ? '#ef4444' : '#fbbf24'}
                         fontSize="12"
                         fontWeight="bold"
                         textAnchor="middle"

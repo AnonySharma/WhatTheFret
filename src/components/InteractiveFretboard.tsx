@@ -294,7 +294,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
       </div>
 
       {/* Realistic Guitar Fretboard Surface */}
-      <div className="relative overflow-x-auto rounded-xl border border-ink-800/80 bg-gradient-to-b from-[#141a2c] via-[#0f1424] to-[#0b0f1c] p-3 sm:p-5 select-none shadow-inner">
+      <div className="relative overflow-x-auto rounded-xl border border-ink-800/80 bg-gradient-to-b from-[#1c1917] via-[#141211] to-[#0c0a09] p-3 sm:p-5 select-none shadow-inner">
         {/* Subtle wood grain background styling */}
         <div className="min-w-[720px] relative">
           {/* Fret number header */}
@@ -344,7 +344,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                   {/* Physical String Wire running through */}
                   <div
                     className={`absolute left-[50px] right-0 pointer-events-none transition-all duration-150 ${
-                      isVibrating ? 'brightness-150 drop-shadow-[0_0_8px_rgba(26,168,155,0.8)]' : ''
+                      isVibrating ? 'brightness-150 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]' : ''
                     }`}
                     style={{
                       height: `${gauge}px`,

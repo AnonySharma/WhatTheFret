@@ -129,14 +129,14 @@ export const ModuleTriadCode: React.FC = () => {
                 <path
                   d="M 60 95 Q 165 10 270 95"
                   fill="none"
-                  stroke="#f5a524"
+                  stroke="#f97316"
                   strokeWidth="3.5"
-                  className={activeHighlight === 'third' || activeHighlight === 'all' ? 'stroke-gold-400 drop-shadow-[0_0_8px_rgba(245,165,36,0.8)]' : ''}
+                  className={activeHighlight === 'third' || activeHighlight === 'all' ? 'stroke-gold-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : ''}
                 />
                 <text
                   x="165"
                   y="45"
-                  fill="#f5a524"
+                  fill="#f97316"
                   fontSize="12"
                   fontWeight="bold"
                   textAnchor="middle"

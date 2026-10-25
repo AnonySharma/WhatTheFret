@@ -351,7 +351,7 @@ const Slider: React.FC<{
       step={step}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
-      className="w-full accent-[#1aa89b]"
+      className="w-full accent-[#f59e0b]"
     />
   </label>
 );

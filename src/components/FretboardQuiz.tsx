@@ -500,7 +500,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
           </div>
 
           {/* Interactive Fretboard Surface for Quiz */}
-          <div className="relative overflow-x-auto rounded-xl border border-ink-800/80 bg-gradient-to-b from-[#141a2c] via-[#0f1424] to-[#0b0f1c] p-3 sm:p-5 select-none shadow-inner">
+          <div className="relative overflow-x-auto rounded-xl border border-ink-800/80 bg-gradient-to-b from-[#1c1917] via-[#141211] to-[#0c0a09] p-3 sm:p-5 select-none shadow-inner">
             <div className="min-w-[720px] relative">
               {/* Fret number header */}
               <div className="grid grid-cols-[60px_repeat(12,1fr)] gap-0 text-center text-[11px] font-mono font-bold text-ink-500 pb-2">
