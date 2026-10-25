@@ -81,6 +81,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     return Array.from({ length: count }, (_, i) => minFret + i);
   }, [minFret, maxFret]);
 
+  // Fret columns drawn after the nut (fret 0 is the nut column itself)
+  const neckFrets = useMemo(() => fretsToDisplay.filter(f => f > 0), [fretsToDisplay]);
+
   // Audio Playback
   const playSingleString = (stringIndex: number) => {
     const fret = selectedChord.frets[stringIndex];
@@ -374,144 +377,102 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
             </div>
           </div>
 
-          {/* VIRTUAL GUITAR NECK VISUALIZER */}
-          <div className="bg-[#121316] border border-stone-800/90 rounded-2xl p-6 shadow-inner relative select-none">
-            {/* Visual Headstock Nut Header */}
-            <div className="flex items-center justify-between pb-3 mb-2 border-b border-stone-800">
+          {/* VIRTUAL GUITAR NECK VISUALIZER: horizontal, nut on the left, body on the right */}
+          <div className="bg-[#121316] border border-stone-800/90 rounded-2xl p-3 sm:p-5 shadow-inner relative select-none">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pb-3 mb-3 border-b border-stone-800">
               <div className="text-[11px] font-mono font-bold text-stone-400">
-                NUT STATUS (O = Ring Open, X = Muted)
+                NUT <span className="text-stone-600">◀</span> headstock side · body side <span className="text-stone-600">▶</span>
               </div>
               <div className="text-[11px] text-stone-500">
-                Click any string or fret to pluck sound
+                Tap a string to hear it · <span className="text-emerald-400">O</span> open · <span className="text-red-400">X</span> muted
               </div>
             </div>
 
-            {/* Nut Row: O / X indicators for each string */}
-            <div className="grid grid-cols-6 gap-2 mb-3">
-              {[0, 1, 2, 3, 4, 5].map(sIdx => {
-                const fret = selectedChord.frets[sIdx];
-                const stringNumber = 6 - sIdx;
-                const strDef = GUITAR_STRINGS.find(s => s.stringNumber === stringNumber)!;
-                const isMuted = fret === -1;
-                const isOpen = fret === 0;
-
-                return (
-                  <div
-                    key={sIdx}
-                    onClick={() => playSingleString(sIdx)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl border cursor-pointer transition-all ${
-                      isMuted
-                        ? 'bg-red-950/20 border-red-900/40 text-red-400'
-                        : isOpen
-                        ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-300 shadow-sm shadow-emerald-950/40'
-                        : 'bg-stone-900/40 border-stone-800 text-stone-500'
-                    }`}
-                  >
-                    <span className="text-base font-black font-mono">
-                      {isMuted ? 'X' : isOpen ? 'O' : `F${fret}`}
-                    </span>
-                    <span className="text-[10px] font-bold mt-0.5">
-                      {strDef.name}
-                    </span>
-                    <span className="text-[9px] text-stone-400">
-                      {isMuted ? 'Muted' : isOpen ? 'Open' : `Fret ${fret}`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* The Fretboard Grid */}
-            <div className="relative border-t-4 border-stone-300 rounded-b-xl overflow-hidden bg-gradient-to-b from-[#1a1815] to-[#121110]">
-              {/* Wood Grain Texture line effect */}
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-
-              {/* Barre Finger Bracket Overlay if chord is a barre */}
-              {selectedChord.barreFret && (
-                <div
-                  className="absolute z-20 pointer-events-none transition-all flex items-center justify-center"
-                  style={{
-                    top: `${((selectedChord.barreFret - minFret) / fretsToDisplay.length) * 100}%`,
-                    left: '4%',
-                    right: '4%',
-                    height: `${100 / fretsToDisplay.length}%`,
-                  }}
-                >
-                  <div className="w-full h-7 rounded-full bg-purple-500/40 border-2 border-purple-400 shadow-lg flex items-center justify-center backdrop-blur-xs">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-200">
-                      Barre Finger 1 Across Fret {selectedChord.barreFret}
-                    </span>
-                  </div>
+            <div style={{ '--nut-w': '3.5rem', '--cols': neckFrets.length } as React.CSSProperties}>
+              {/* Fret numbers */}
+              <div className="grid mb-1" style={{ gridTemplateColumns: 'var(--nut-w) repeat(var(--cols), minmax(0, 1fr))' }}>
+                <div className="text-[10px] font-mono font-bold text-stone-500 text-center">
+                  {neckFrets[0] > 1 ? `Fret ${neckFrets[0]}+` : 'Nut'}
                 </div>
-              )}
+                {neckFrets.map(fretNum => (
+                  <div key={fretNum} className="text-center text-[10px] font-mono font-bold text-stone-500">
+                    {fretNum}
+                  </div>
+                ))}
+              </div>
 
-              {/* Fret Rows */}
-              {fretsToDisplay.map((fretNum) => {
-                const isFretMarker = [3, 5, 7, 9, 12, 15].includes(fretNum);
-                const isDoubleMarker = fretNum === 12;
+              {/* The fretboard: high E on top, low E on the bottom (same as tab) */}
+              <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-[#1a1815] to-[#121110]">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
-                return (
+                {/* Barre overlay */}
+                {selectedChord.barreFret && neckFrets.includes(selectedChord.barreFret) && (
                   <div
-                    key={fretNum}
-                    className="relative border-b-2 border-stone-600/70 h-16 flex items-center justify-between px-2 group"
+                    className="absolute z-20 pointer-events-none top-1 bottom-1 flex items-center justify-center"
+                    style={{
+                      left: `calc(var(--nut-w) + ${neckFrets.indexOf(selectedChord.barreFret)} * ((100% - var(--nut-w)) / var(--cols)) + 8%)`,
+                      width: 'calc(((100% - var(--nut-w)) / var(--cols)) * 0.84)',
+                    }}
                   >
-                    {/* Fret wire shadow effect */}
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-stone-400/80 shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+                    <div className="w-5 h-full rounded-full bg-purple-500/35 border-2 border-purple-400 shadow-lg" />
+                  </div>
+                )}
 
-                    {/* Fret Number Label on left side */}
-                    <div className="absolute -left-1 text-[10px] font-mono font-bold text-stone-500 pl-2 pointer-events-none">
-                      {fretNum > 0 ? `F${fretNum}` : 'Nut'}
-                    </div>
+                {[5, 4, 3, 2, 1, 0].map(sIdx => {
+                  const stringNumber = 6 - sIdx;
+                  const strDef = GUITAR_STRINGS.find(s => s.stringNumber === stringNumber)!;
+                  const targetFret = selectedChord.frets[sIdx];
+                  const finger = selectedChord.fingers ? selectedChord.fingers[sIdx] : 0;
+                  const fingerBadge = getFingerBadge(finger);
+                  const isMuted = targetFret === -1;
+                  const isOpen = targetFret === 0;
+                  const isPlaying = activePlayingString === stringNumber;
+                  const gauge = [4, 3.5, 3, 2.5, 2, 1.5][sIdx];
 
-                    {/* Pearl Inlay Dot Marker */}
-                    {isFretMarker && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        {isDoubleMarker ? (
-                          <div className="flex gap-4">
-                            <div className="w-3.5 h-3.5 rounded-full bg-stone-400/20 border border-stone-400/40 shadow-inner" />
-                            <div className="w-3.5 h-3.5 rounded-full bg-stone-400/20 border border-stone-400/40 shadow-inner" />
-                          </div>
-                        ) : (
-                          <div className="w-3.5 h-3.5 rounded-full bg-stone-400/20 border border-stone-400/40 shadow-inner" />
-                        )}
-                      </div>
-                    )}
+                  return (
+                    <div
+                      key={sIdx}
+                      className="grid h-10 sm:h-11 items-stretch"
+                      style={{ gridTemplateColumns: 'var(--nut-w) repeat(var(--cols), minmax(0, 1fr))' }}
+                    >
+                      {/* Nut cell: string name + open / muted state */}
+                      <button
+                        type="button"
+                        onClick={() => playSingleString(sIdx)}
+                        aria-label={`${strDef.name} string, ${isMuted ? 'muted' : isOpen ? 'open' : `fret ${targetFret}`}`}
+                        className={`relative z-10 flex items-center justify-center gap-1 border-r-[6px] border-stone-200/90 bg-stone-950/70 text-xs font-mono font-black ${
+                          isMuted ? 'text-red-400' : isOpen ? 'text-emerald-300' : 'text-stone-500'
+                        }`}
+                      >
+                        <span className="text-[10px] text-stone-400">{strDef.openNote}</span>
+                        <span className="w-4 text-center">{isMuted ? 'X' : isOpen ? 'O' : ''}</span>
+                      </button>
 
-                    {/* 6 String columns across this fret */}
-                    <div className="w-full grid grid-cols-6 h-full items-center z-10">
-                      {[0, 1, 2, 3, 4, 5].map(sIdx => {
-                        const stringNumber = 6 - sIdx;
-                        const targetFret = selectedChord.frets[sIdx];
-                        const finger = selectedChord.fingers ? selectedChord.fingers[sIdx] : 0;
+                      {neckFrets.map(fretNum => {
                         const isFrettedHere = targetFret === fretNum;
                         const noteData = getFretNote(stringNumber, fretNum);
                         const isRoot = noteData.note === selectedChord.root;
-                        const isPlaying = activePlayingString === stringNumber;
-                        const fingerBadge = getFingerBadge(finger);
-
-                        // String thickness gauge
-                        const stringGaugeHeight = [4, 3.5, 3, 2.5, 2, 1.5][sIdx];
 
                         return (
                           <div
-                            key={sIdx}
+                            key={fretNum}
                             onClick={() => playSingleString(sIdx)}
-                            className="relative h-full flex items-center justify-center cursor-pointer group/string"
+                            className="relative flex items-center justify-center cursor-pointer group/string border-r-2 border-stone-500/60"
                           >
-                            {/* Guitar String Line */}
+                            {sIdx === 2 && [3, 5, 7, 9, 12, 15].includes(fretNum) && (
+                              <div className="absolute -bottom-0 translate-y-1/2 w-3 h-3 rounded-full bg-stone-400/20 border border-stone-400/40 pointer-events-none" />
+                            )}
                             <div
                               className={`absolute left-0 right-0 transition-colors ${
                                 isPlaying
                                   ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]'
                                   : 'bg-stone-400/70 group-hover/string:bg-stone-200'
                               }`}
-                              style={{ height: `${stringGaugeHeight}px` }}
+                              style={{ height: `${gauge}px` }}
                             />
-
-                            {/* Fretted Dot with Finger Number */}
                             {isFrettedHere && (
                               <div
-                                className={`w-8 h-8 rounded-full flex flex-col items-center justify-center shadow-lg transition-transform transform hover:scale-110 z-30 border ${
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex flex-col items-center justify-center shadow-lg z-30 border ${
                                   isRoot
                                     ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-stone-950 border-amber-300 ring-2 ring-amber-400/50'
                                     : fingerBadge
@@ -519,11 +480,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                                     : 'bg-stone-100 text-stone-950 border-stone-300'
                                 }`}
                               >
-                                <span className="text-[11px] font-black leading-none">
-                                  {noteData.note}
-                                </span>
+                                <span className="text-[10px] sm:text-[11px] font-black leading-none">{noteData.note}</span>
                                 {finger > 0 && (
-                                  <span className="text-[9px] font-extrabold leading-none opacity-90 mt-0.5">
+                                  <span className="text-[8px] sm:text-[9px] font-extrabold leading-none opacity-90 mt-0.5">
                                     F{finger}
                                   </span>
                                 )}
@@ -533,19 +492,14 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         );
                       })}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Finger Legend & String Labels */}
-            <div className="grid grid-cols-6 gap-2 mt-4 pt-3 border-t border-stone-800 text-center">
-              {GUITAR_STRINGS.map((str, idx) => (
-                <div key={str.stringNumber} className="text-stone-400 text-[10px] font-mono">
-                  <div className="font-bold text-stone-200">Str {str.stringNumber}</div>
-                  <div className="text-amber-400 font-extrabold">{str.openNote}</div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
+              {selectedChord.barreFret && (
+                <p className="mt-2 text-[11px] text-purple-300 font-mono">
+                  Barre: lay finger 1 flat across fret {selectedChord.barreFret}
+                </p>
+              )}
             </div>
           </div>
 
