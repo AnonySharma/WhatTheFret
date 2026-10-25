@@ -9,15 +9,20 @@ An interactive web app that untangles music theory and maps the **+4 / +3 triad 
 ## Features
 
 - **Guided lessons**: seven interactive modules, each with its own visualiser:
-  1. The 12 tones and tuning by ear (5th-fret rule, and the 4th-fret exception on the G string)
+  1. The 12 tones and tuning by ear (5th-fret rule, the 4th-fret exception on the G string, and a **beat-note demo** that lets you hear what matched and mismatched strings sound like)
   2. Deriving the major scale (W-W-H-W-W-W-H) and the relative minor (root - 3 frets)
   3. The +4 / +3 triad code (major = +4, +3; minor = +3, +4)
   4. Diatonic harmony ("skip one, take one")
   5. Fretboard mapping and bass gravity
   6. Barre chords
   7. Chord derivation
-- **Chord library** and an **interactive fretboard** with audio playback
+- **Chord library** with symbol-aware search (`Am`, `F#m7`, `Bbmaj7`) and a horizontal neck (nut on the left), plus an **interactive fretboard** with audio playback
 - **Circle of Fifths** explorer
+- **Theory Labs** (also reachable by link, e.g. `#labs/caged`):
+  - **Transposer**: shift a progression between keys, capo shortcuts, borrowed chords from the parallel minor, pivot chords between two keys
+  - **CAGED**: all five shapes of any major chord across the neck, colour-coded, with audio
+  - **Tanpura & Jam**: a synthesised tanpura drone, taal cycles (Keherwa, Dadra, Rupak, Jhaptal, Teental) and a pad for any raaga
+  - **Ear Trainer**: name mystery intervals, or find a mystery note on your own guitar with the microphone
 - **Real-time tuner** with pitch detection (Hz and cents) from your microphone, plus a metronome
 - **Indian swaras explorer**: Sa Re Ga Ma and the Shuddha/Komal mapping to semitones
 - **Fretboard quiz** and progress tracking (saved in your browser's `localStorage`)
@@ -27,7 +32,7 @@ The tuner needs microphone permission. Audio is synthesised in the browser, and 
 
 ## Tech stack
 
-React 19, TypeScript, Vite, Tailwind CSS 4, lucide-react, canvas-confetti. Package management with [Bun](https://bun.sh).
+React 19, TypeScript, Vite, Tailwind CSS 4 (design tokens in `src/index.css`: warm stone surfaces, amber/orange accents), lucide-react, canvas-confetti. Package management with [Bun](https://bun.sh).
 
 ## Getting started
 
@@ -52,12 +57,18 @@ src/
   constants.tsx        Lesson content, chord data, swaras
   components/          UI: fretboard, tuner, chord library, ...
   components/modules/  The seven lesson modules
+  components/labs/     Transposer, CAGED, Tanpura & Jam and Ear Trainer labs
   utils/
     guitarTheory.ts    Pure theory logic (scales, triads, barre chords)
+    labs.ts            Pure logic for the labs (transposing, CAGED, taals, intervals)
+    chordSearch.ts     Chord-symbol parsing and search
+    beats.ts           Beat-note maths for the tuning lesson
     audioSynth.ts      Web Audio synthesis
-    pitchDetector.ts   Microphone pitch detection
+    drone.ts           Tanpura and taal engines
+    pitchDetector.ts   Microphone pitch detection (shared by all listeners)
     metronome.ts       Metronome
     progressStore.ts   localStorage progress
+tests/                 Unit tests (`bun run test`)
 public/assets/docs/    Companion PDF
 ```
 
