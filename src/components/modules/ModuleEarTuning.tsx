@@ -93,25 +93,25 @@ export const ModuleEarTuning: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Title & Core Principle */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-3">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-3">
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-mono text-xs font-bold border border-amber-500/20">
+          <span className="px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-400 font-mono text-xs font-bold border border-brand-500/20">
             Section 1
           </span>
-          <h2 className="text-xl font-bold text-stone-100">The 12 Tones & Tuning by Ear</h2>
+          <h2 className="text-xl font-bold text-ink-100">The 12 Tones & Tuning by Ear</h2>
         </div>
-        <p className="text-sm text-stone-300 leading-relaxed">
-          Western music is built on 12 distinct notes before repeating at the octave. Moving 1 fret up increases pitch by exactly 1 semitone. Standard guitar tuning is designed in <strong className="text-amber-300">Perfect Fourths</strong> (5 semitones), allowing you to tune the guitar to itself without any electronic tuner!
+        <p className="text-sm text-ink-300 leading-relaxed">
+          Western music is built on 12 distinct notes before repeating at the octave. Moving 1 fret up increases pitch by exactly 1 semitone. Standard guitar tuning is designed in <strong className="text-brand-300">Perfect Fourths</strong> (5 semitones), allowing you to tune the guitar to itself without any electronic tuner!
         </p>
       </div>
 
       {/* Interactive Visual Tuning Diagram (Recreating PDF Page 1) */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-bold text-stone-100 text-sm sm:text-base flex items-center gap-2">
+          <h3 className="font-bold text-ink-100 text-sm sm:text-base flex items-center gap-2">
             <span>Interactive Pitch Matcher</span>
             {currentPair.isException && (
-              <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold border border-orange-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-400 text-xs font-bold border border-gold-500/30">
                 Major 3rd Exception (4th Fret)
               </span>
             )}
@@ -126,9 +126,9 @@ export const ModuleEarTuning: React.FC = () => {
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   activePairIndex === idx
                     ? p.isException
-                      ? 'bg-orange-600 text-white border-orange-500 shadow-md'
-                      : 'bg-amber-600 text-white border-amber-500 shadow-md'
-                    : 'bg-stone-950 text-stone-300 border-stone-800 hover:bg-stone-800'
+                      ? 'bg-gold-600 text-white border-gold-500 shadow-md'
+                      : 'bg-brand-600 text-white border-brand-500 shadow-md'
+                    : 'bg-ink-950 text-ink-300 border-ink-800 hover:bg-ink-800'
                 }`}
               >
                 {p.sourceName} → {p.targetName} {p.isException && '(Maj 3rd)'}
@@ -138,27 +138,27 @@ export const ModuleEarTuning: React.FC = () => {
         </div>
 
         {/* Visual String Graphic Matching PDF Page 1 */}
-        <div className="bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 border border-stone-800 rounded-xl p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950 border border-ink-800 rounded-xl p-6 relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-8 relative py-4">
             {/* Target Open String (Upper Line) */}
             <div className="relative flex items-center justify-between">
-              <div className="w-20 font-bold text-sm text-stone-300 flex items-center gap-1.5">
-                <span className="w-6 h-6 rounded-md bg-stone-800 flex items-center justify-center text-xs text-amber-400 font-mono">
+              <div className="w-20 font-bold text-sm text-ink-300 flex items-center gap-1.5">
+                <span className="w-6 h-6 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
                   {currentPair.targetName}
                 </span>
-                <span className="text-xs text-stone-400">Open</span>
+                <span className="text-xs text-ink-400">Open</span>
               </div>
 
               {/* String Wire */}
-              <div className="flex-1 h-1.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-600 rounded-full mx-4 relative shadow-sm">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono font-bold text-emerald-400 tracking-wider">
+              <div className="flex-1 h-1.5 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 rounded-full mx-4 relative shadow-sm">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono font-bold text-gold-400 tracking-wider">
                   MATCHES OPEN STRING PITCH ({currentPair.note})
                 </div>
               </div>
 
               <button
                 onClick={playTarget}
-                className="px-3 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-gold-600/30 hover:bg-gold-600/50 border border-gold-500/50 text-gold-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Volume2 className="w-3.5 h-3.5" />
                 <span>Pluck Open {currentPair.targetName}</span>
@@ -171,7 +171,7 @@ export const ModuleEarTuning: React.FC = () => {
                 <path
                   d="M 320 45 C 320 15, 260 5, 180 5"
                   fill="none"
-                  stroke="#10b981"
+                  stroke="#f5a524"
                   strokeWidth="2.5"
                   strokeDasharray="5 5"
                 />
@@ -180,29 +180,29 @@ export const ModuleEarTuning: React.FC = () => {
 
             {/* Source String With Fretted Note (Lower Line) */}
             <div className="relative flex items-center justify-between">
-              <div className="w-20 font-bold text-sm text-stone-300 flex items-center gap-1.5">
-                <span className="w-6 h-6 rounded-md bg-stone-800 flex items-center justify-center text-xs text-amber-400 font-mono">
+              <div className="w-20 font-bold text-sm text-ink-300 flex items-center gap-1.5">
+                <span className="w-6 h-6 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
                   {currentPair.sourceName}
                 </span>
-                <span className="text-xs text-stone-400">String</span>
+                <span className="text-xs text-ink-400">String</span>
               </div>
 
               {/* String Wire */}
-              <div className="flex-1 h-2 bg-gradient-to-r from-amber-600 via-stone-500 to-amber-700 rounded-full mx-4 relative shadow-sm">
+              <div className="flex-1 h-2 bg-gradient-to-r from-brand-600 via-ink-500 to-brand-700 rounded-full mx-4 relative shadow-sm">
                 {/* Nut */}
-                <div className="absolute left-0 -top-4 -bottom-4 w-2 bg-stone-200 rounded-sm shadow-md" />
+                <div className="absolute left-0 -top-4 -bottom-4 w-2 bg-ink-200 rounded-sm shadow-md" />
 
                 {/* Fretted Marker */}
                 <div
                   className="absolute -top-3.5 flex flex-col items-center"
                   style={{ left: currentPair.isException ? '75%' : '80%' }}
                 >
-                  <span className="text-[10px] font-bold text-amber-300 -top-5 absolute whitespace-nowrap">
+                  <span className="text-[10px] font-bold text-brand-300 -top-5 absolute whitespace-nowrap">
                     {currentPair.fret}th Fret
                   </span>
                   <button
                     onClick={playSource}
-                    className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-amber-500/20 active:scale-95 transition-all"
+                    className="w-8 h-8 rounded-full bg-brand-500 hover:bg-brand-400 text-ink-950 font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-brand-500/20 active:scale-95 transition-all"
                   >
                     {currentPair.targetName}
                   </button>
@@ -211,7 +211,7 @@ export const ModuleEarTuning: React.FC = () => {
 
               <button
                 onClick={playSource}
-                className="px-3 py-1.5 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-brand-600/30 hover:bg-brand-600/50 border border-brand-500/50 text-brand-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Volume2 className="w-3.5 h-3.5" />
                 <span>Pluck {currentPair.fret}th Fret</span>
@@ -221,18 +221,18 @@ export const ModuleEarTuning: React.FC = () => {
         </div>
 
         {/* Lesson takeaway box */}
-        <div className="bg-stone-950/80 border border-stone-800/80 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-ink-950/80 border border-ink-800/80 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h4 className="font-bold text-stone-200 text-sm">
+            <h4 className="font-bold text-ink-200 text-sm">
               {currentPair.sourceName} ({currentPair.fret}th Fret) = Open {currentPair.targetName} ({currentPair.note})
             </h4>
-            <p className="text-xs text-stone-400">{currentPair.description}</p>
+            <p className="text-xs text-ink-400">{currentPair.description}</p>
           </div>
 
           <button
             onClick={playBothUnison}
             disabled={isPlayingUnison}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shrink-0 active:scale-95"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 text-white font-bold text-xs flex items-center gap-2 shadow-md shrink-0 active:scale-95"
           >
             <Volume2 className="w-4 h-4" />
             <span>Play Unison Harmony</span>

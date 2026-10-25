@@ -153,14 +153,14 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
   return (
     <div className="space-y-4">
       {/* Mode Switcher: Free Explorer vs Speed Quiz */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-1.5 bg-stone-950 p-1 rounded-xl border border-stone-800">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-1.5 bg-ink-950 p-1 rounded-xl border border-ink-800">
           <button
             onClick={() => setViewMode('explorer')}
             className={`px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
               viewMode === 'explorer'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-stone-400 hover:text-stone-200'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-ink-400 hover:text-ink-200'
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
@@ -170,13 +170,13 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             onClick={() => setViewMode('quiz')}
             className={`px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${
               viewMode === 'quiz'
-                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm'
-                : 'text-stone-400 hover:text-stone-200'
+                ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-sm'
+                : 'text-ink-400 hover:text-ink-200'
             }`}
           >
-            <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
+            <Zap className="w-3.5 h-3.5 text-brand-300 fill-current" />
             <span>Interactive Speed Quiz</span>
-            <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30">
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-brand-400/20 text-brand-300 border border-brand-400/30">
               Quiz
             </span>
           </button>
@@ -185,7 +185,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
         {viewMode === 'explorer' ? (
           <button
             onClick={() => setViewMode('quiz')}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold text-xs border border-amber-500/30 flex items-center gap-1.5 transition-all"
+            className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 font-semibold text-xs border border-brand-500/30 flex items-center gap-1.5 transition-all"
           >
             <span>Take Speed Quiz</span>
             <Zap className="w-3.5 h-3.5 fill-current" />
@@ -193,7 +193,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
         ) : (
           <button
             onClick={() => setViewMode('explorer')}
-            className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-medium text-xs border border-stone-700 flex items-center gap-1.5 transition-all"
+            className="px-3 py-1.5 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-300 hover:text-white font-medium text-xs border border-ink-700 flex items-center gap-1.5 transition-all"
           >
             <Compass className="w-3.5 h-3.5" />
             <span>Back to Explorer</span>
@@ -208,19 +208,19 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
           onExit={() => setViewMode('explorer')}
         />
       ) : (
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+        <div className="bg-ink-900 border border-ink-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
           {/* Top Controls: Preset selector, Display Mode, and Strum Action */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-stone-100">
+                <h3 className="text-base sm:text-lg font-bold text-ink-100">
                   {activeChordName || activeChord?.name || 'Interactive Fretboard'}
                 </h3>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-semibold border border-brand-500/30">
               Interactive 6-String
             </span>
           </div>
-          <p className="text-xs text-stone-400 mt-0.5">
+          <p className="text-xs text-ink-400 mt-0.5">
             Click any fret to place a finger and hear its sound. Click the nut to mute/open.
           </p>
         </div>
@@ -229,25 +229,25 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => handleStrum('down')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Strum Down</span>
           </button>
           <button
             onClick={() => handleStrum('up')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-medium text-xs border border-stone-700 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 font-medium text-xs border border-ink-700 transition-all active:scale-95"
           >
             <Volume2 className="w-3.5 h-3.5" />
             <span>Strum Up</span>
           </button>
 
           {/* Display Mode switcher */}
-          <div className="flex items-center bg-stone-950 p-0.5 rounded-lg border border-stone-800 text-xs">
+          <div className="flex items-center bg-ink-950 p-0.5 rounded-lg border border-ink-800 text-xs">
             <button
               onClick={() => setDisplayMode('notes')}
               className={`px-2 py-1 rounded-md font-medium transition-colors ${
-                displayMode === 'notes' ? 'bg-amber-600 text-white' : 'text-stone-400 hover:text-stone-200'
+                displayMode === 'notes' ? 'bg-brand-600 text-white' : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               Notes
@@ -255,7 +255,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             <button
               onClick={() => setDisplayMode('intervals')}
               className={`px-2 py-1 rounded-md font-medium transition-colors ${
-                displayMode === 'intervals' ? 'bg-amber-600 text-white' : 'text-stone-400 hover:text-stone-200'
+                displayMode === 'intervals' ? 'bg-brand-600 text-white' : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               Triad Roles
@@ -263,7 +263,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             <button
               onClick={() => setDisplayMode('sargam')}
               className={`px-2 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
-                displayMode === 'sargam' ? 'bg-amber-600 text-white' : 'text-stone-400 hover:text-stone-200'
+                displayMode === 'sargam' ? 'bg-brand-600 text-white' : 'text-ink-400 hover:text-ink-200'
               }`}
               title="Show Indian Classical Swaras (Sa Re Ga Ma Pa Dha Ni)"
             >
@@ -275,7 +275,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
       {/* Preset Quick Chips */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
-        <span className="text-stone-500 font-medium text-[11px] uppercase tracking-wider whitespace-nowrap mr-1">
+        <span className="text-ink-500 font-medium text-[11px] uppercase tracking-wider whitespace-nowrap mr-1">
           Common Chords:
         </span>
         {CHORD_DATABASE.slice(0, 8).map(chord => (
@@ -284,8 +284,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             onClick={() => loadPresetChord(chord)}
             className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition-all border ${
               selectedChordId === chord.id
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
-                : 'bg-stone-950/60 text-stone-300 border-stone-800 hover:bg-stone-800 hover:text-white'
+                ? 'bg-brand-500/20 text-brand-300 border-brand-500/40 shadow-sm'
+                : 'bg-ink-950/60 text-ink-300 border-ink-800 hover:bg-ink-800 hover:text-white'
             }`}
           >
             {chord.name}
@@ -294,24 +294,24 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
       </div>
 
       {/* Realistic Guitar Fretboard Surface */}
-      <div className="relative overflow-x-auto rounded-xl border border-stone-800/80 bg-gradient-to-b from-[#241711] via-[#1a110c] to-[#120b08] p-3 sm:p-5 select-none shadow-inner">
+      <div className="relative overflow-x-auto rounded-xl border border-ink-800/80 bg-gradient-to-b from-[#141a2c] via-[#0f1424] to-[#0b0f1c] p-3 sm:p-5 select-none shadow-inner">
         {/* Subtle wood grain background styling */}
         <div className="min-w-[720px] relative">
           {/* Fret number header */}
-          <div className="grid grid-cols-[50px_repeat(12,1fr)] gap-0 text-center text-[11px] font-mono font-bold text-stone-500 pb-2">
-            <div className="text-amber-500/80">NUT (0)</div>
+          <div className="grid grid-cols-[50px_repeat(12,1fr)] gap-0 text-center text-[11px] font-mono font-bold text-ink-500 pb-2">
+            <div className="text-brand-500/80">NUT (0)</div>
             {Array.from({ length: showFretLimit }, (_, i) => i + 1).map(fret => (
               <div key={fret} className="flex flex-col items-center">
                 <span>{fret}</span>
                 {fretDots.includes(fret) && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400/40 mt-0.5 inline-block" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400/40 mt-0.5 inline-block" />
                 )}
               </div>
             ))}
           </div>
 
           {/* Strings and Frets Grid */}
-          <div className="relative border-l-8 border-stone-300/80 rounded-l-sm bg-black/20 py-2">
+          <div className="relative border-l-8 border-ink-300/80 rounded-l-sm bg-black/20 py-2">
             {GUITAR_STRINGS.map(str => {
               const strIdx = 6 - str.stringNumber;
               const currentFret = currentFrets[strIdx];
@@ -321,10 +321,10 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
               return (
                 <div
                   key={str.stringNumber}
-                  className="grid grid-cols-[50px_repeat(12,1fr)] items-center h-9 relative border-b border-stone-800/40 last:border-b-0"
+                  className="grid grid-cols-[50px_repeat(12,1fr)] items-center h-9 relative border-b border-ink-800/40 last:border-b-0"
                 >
                   {/* Nut & String Name / Mute Toggle */}
-                  <div className="flex items-center justify-center pr-2 border-r-4 border-amber-100/90 bg-stone-950/60 h-full">
+                  <div className="flex items-center justify-center pr-2 border-r-4 border-brand-100/90 bg-ink-950/60 h-full">
                     <button
                       onClick={() => handleMuteToggle(str.stringNumber)}
                       aria-label={`${str.name} string nut status`}
@@ -332,8 +332,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                         currentFret === -1
                           ? 'bg-red-950/80 text-red-400 border border-red-800/60'
                           : currentFret === 0
-                          ? 'bg-amber-500 text-stone-950 shadow-md font-extrabold'
-                          : 'bg-stone-800 text-stone-400 hover:text-white'
+                          ? 'bg-brand-500 text-ink-950 shadow-md font-extrabold'
+                          : 'bg-ink-800 text-ink-400 hover:text-white'
                       }`}
                       title={currentFret === -1 ? 'Muted (X)' : currentFret === 0 ? 'Open String (O)' : 'Fretted'}
                     >
@@ -344,7 +344,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                   {/* Physical String Wire running through */}
                   <div
                     className={`absolute left-[50px] right-0 pointer-events-none transition-all duration-150 ${
-                      isVibrating ? 'brightness-150 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]' : ''
+                      isVibrating ? 'brightness-150 drop-shadow-[0_0_8px_rgba(26,168,155,0.8)]' : ''
                     }`}
                     style={{
                       height: `${gauge}px`,
@@ -387,16 +387,16 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                       <div
                         key={fret}
                         onClick={() => handleStringFretClick(str.stringNumber, fret)}
-                        className={`h-full relative flex items-center justify-center cursor-pointer group border-r border-stone-600/50 hover:bg-amber-500/10 transition-colors ${
-                          fret === 12 ? 'border-r-2 border-stone-400/80' : ''
+                        className={`h-full relative flex items-center justify-center cursor-pointer group border-r border-ink-600/50 hover:bg-brand-500/10 transition-colors ${
+                          fret === 12 ? 'border-r-2 border-ink-400/80' : ''
                         }`}
                       >
                         {/* Fret Wire Metal Bar */}
-                        <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-stone-400 via-stone-200 to-stone-500 pointer-events-none shadow-sm" />
+                        <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-ink-400 via-ink-200 to-ink-500 pointer-events-none shadow-sm" />
 
                         {/* Fret position Dot Marker on neck */}
                         {str.stringNumber === 3 && fretDots.includes(fret) && (
-                          <div className="absolute pointer-events-none w-2.5 h-2.5 rounded-full bg-stone-300/15 shadow-inner" />
+                          <div className="absolute pointer-events-none w-2.5 h-2.5 rounded-full bg-ink-300/15 shadow-inner" />
                         )}
 
                         {/* Interactive Note Marker / Fingering Bubble */}
@@ -404,8 +404,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                           <div
                             className={`z-10 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-lg transition-transform animate-in zoom-in-50 duration-150 ${
                               activeChord && noteData.note === activeChord.root
-                                ? 'bg-amber-400 text-stone-950 ring-2 ring-amber-300'
-                                : 'bg-orange-600 text-white border border-orange-400/80'
+                                ? 'bg-brand-400 text-ink-950 ring-2 ring-brand-300'
+                                : 'bg-gold-600 text-white border border-gold-400/80'
                             }`}
                           >
                             {badgeText}
@@ -417,8 +417,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                           <div
                             className={`opacity-0 group-hover:opacity-100 z-10 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold transition-opacity pointer-events-none ${
                               isTriadHighlighted
-                                ? 'bg-amber-500/50 text-white'
-                                : 'bg-stone-700/80 text-stone-300'
+                                ? 'bg-brand-500/50 text-white'
+                                : 'bg-ink-700/80 text-ink-300'
                             }`}
                           >
                             {hoverText}
@@ -436,28 +436,28 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
       {/* Active Chord Analysis Banner */}
       {activeChord && (
-        <div className="bg-stone-950/70 border border-stone-800 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="bg-ink-950/70 border border-ink-800 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-amber-300 text-sm">{activeChord.name}</span>
-              <span className="text-stone-400">• Triad Notes:</span>
+              <span className="font-bold text-brand-300 text-sm">{activeChord.name}</span>
+              <span className="text-ink-400">• Triad Notes:</span>
               <div className="flex items-center gap-1 font-mono font-bold">
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
                   {activeChord.triadNotes[0]} ({getSwaraForNote(activeChord.triadNotes[0], activeChord.root).shortName} - Root)
                 </span>
                 <span>+</span>
-                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-300 border border-gold-500/30">
                   {activeChord.triadNotes[1]} ({getSwaraForNote(activeChord.triadNotes[1], activeChord.root).shortName} - 3rd)
                 </span>
                 <span>+</span>
-                <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                <span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
                   {activeChord.triadNotes[2]} ({getSwaraForNote(activeChord.triadNotes[2], activeChord.root).shortName} - 5th)
                 </span>
               </div>
             </div>
-            <p className="text-stone-400">{activeChord.description}</p>
+            <p className="text-ink-400">{activeChord.description}</p>
             {activeChord.lowEMutedReason && (
-              <p className="text-amber-400/90 text-[11px] font-medium">
+              <p className="text-brand-400/90 text-[11px] font-medium">
                 💡 <span className="underline">Bass Gravity Rule:</span> {activeChord.lowEMutedReason}
               </p>
             )}
@@ -474,9 +474,9 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                 // Strum chord
                 handleStrum('down');
               }}
-              className="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold border border-stone-700 flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-200 font-semibold border border-ink-700 flex items-center gap-1.5"
             >
-              <RefreshCw className="w-3 h-3 text-amber-400" />
+              <RefreshCw className="w-3 h-3 text-brand-400" />
               <span>Play Voicing</span>
             </button>
           </div>

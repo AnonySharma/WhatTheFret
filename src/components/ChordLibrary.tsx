@@ -131,13 +131,13 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   const getFingerBadge = (fingerNum?: number) => {
     switch (fingerNum) {
       case 1:
-        return { label: '1', name: 'Index', bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-400' };
+        return { label: '1', name: 'Index', bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-400' };
       case 2:
-        return { label: '2', name: 'Middle', bg: 'bg-emerald-500', text: 'text-white', border: 'border-emerald-400' };
+        return { label: '2', name: 'Middle', bg: 'bg-gold-500', text: 'text-white', border: 'border-gold-400' };
       case 3:
-        return { label: '3', name: 'Ring', bg: 'bg-amber-500', text: 'text-stone-950', border: 'border-amber-400' };
+        return { label: '3', name: 'Ring', bg: 'bg-brand-500', text: 'text-ink-950', border: 'border-brand-400' };
       case 4:
-        return { label: '4', name: 'Pinky', bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-400' };
+        return { label: '4', name: 'Pinky', bg: 'bg-red-500', text: 'text-white', border: 'border-red-400' };
       default:
         return null;
     }
@@ -157,38 +157,38 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   return (
     <div className="space-y-6">
       {/* Top Banner & Search */}
-      <div className="bg-stone-900/90 border border-stone-800/90 rounded-2xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-ink-900/90 border border-ink-800/90 rounded-2xl p-6 shadow-2xl backdrop-blur-md relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-mono text-xs font-bold border border-amber-500/30">
+              <span className="px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-mono text-xs font-bold border border-brand-500/30">
                 PRO CHORD LAB
               </span>
-              <h1 className="text-2xl font-extrabold text-stone-100 tracking-tight">
+              <h1 className="text-2xl font-extrabold text-ink-100 tracking-tight">
                 Virtual Guitar Chord Library
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-stone-300 mt-1 max-w-2xl">
-              Explore 40+ precision chord voicings with <strong className="text-amber-300">exact finger positioning (1-4)</strong>, open/muted string acoustics, and Indian Sargam harmonic mapping.
+            <p className="text-xs sm:text-sm text-ink-300 mt-1 max-w-2xl">
+              Explore 40+ precision chord voicings with <strong className="text-brand-300">exact finger positioning (1-4)</strong>, open/muted string acoustics, and Indian Sargam harmonic mapping.
             </p>
           </div>
 
           {/* Search Bar */}
           <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-ink-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search chord (e.g. C, Am, G7, Dsus4)..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-stone-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 text-xs focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 transition-all placeholder:text-ink-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 text-xs"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-300 text-xs"
               >
                 ✕
               </button>
@@ -197,9 +197,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         </div>
 
         {/* Filter Categories */}
-        <div className="flex items-center gap-2 pt-4 border-t border-stone-800/80 mt-4 overflow-x-auto scrollbar-none pb-1">
-          <span className="text-[11px] font-bold uppercase text-stone-400 flex items-center gap-1 shrink-0">
-            <Filter className="w-3 h-3 text-amber-400" />
+        <div className="flex items-center gap-2 pt-4 border-t border-ink-800/80 mt-4 overflow-x-auto scrollbar-none pb-1">
+          <span className="text-[11px] font-bold uppercase text-ink-400 flex items-center gap-1 shrink-0">
+            <Filter className="w-3 h-3 text-brand-400" />
             Category:
           </span>
           {categories.map(cat => (
@@ -208,8 +208,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                 selectedCategory === cat.id
-                  ? 'bg-amber-600 text-white border-amber-500 shadow-md ring-1 ring-amber-400/30'
-                  : 'bg-stone-950/70 text-stone-400 border-stone-800 hover:text-white hover:bg-stone-800'
+                  ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-1 ring-brand-400/30'
+                  : 'bg-ink-950/70 text-ink-400 border-ink-800 hover:text-white hover:bg-ink-800'
               }`}
             >
               {cat.label}
@@ -219,15 +219,15 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
 
         {/* Root Selector Pills */}
         <div className="flex items-center gap-1.5 pt-3 overflow-x-auto scrollbar-none">
-          <span className="text-[11px] font-bold uppercase text-stone-400 shrink-0 mr-1">
+          <span className="text-[11px] font-bold uppercase text-ink-400 shrink-0 mr-1">
             Root:
           </span>
           <button
             onClick={() => setSelectedRoot('All')}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
               selectedRoot === 'All'
-                ? 'bg-amber-600 text-white border-amber-500'
-                : 'bg-stone-950 text-stone-400 border-stone-800 hover:text-white'
+                ? 'bg-brand-600 text-white border-brand-500'
+                : 'bg-ink-950 text-ink-400 border-ink-800 hover:text-white'
             }`}
           >
             All
@@ -238,8 +238,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               onClick={() => setSelectedRoot(root)}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                 selectedRoot === root
-                  ? 'bg-amber-600 text-white border-amber-500 shadow-sm'
-                  : 'bg-stone-950 text-stone-400 border-stone-800 hover:text-white'
+                  ? 'bg-brand-600 text-white border-brand-500 shadow-sm'
+                  : 'bg-ink-950 text-ink-400 border-ink-800 hover:text-white'
               }`}
             >
               {root}
@@ -251,19 +251,19 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
       {/* Main Grid: Chord List & Virtual Neck Display */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Filtered Chord Voicings (4 cols) */}
-        <div className="lg:col-span-4 bg-stone-900/90 border border-stone-800/90 rounded-2xl p-4 shadow-xl flex flex-col h-[640px]">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-400">
+        <div className="lg:col-span-4 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-4 shadow-xl flex flex-col h-[640px]">
+          <div className="flex items-center justify-between pb-3 border-b border-ink-800">
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-400">
               Matching Voicings ({filteredChords.length})
             </span>
-            <span className="text-[11px] text-amber-400 font-mono font-semibold">
+            <span className="text-[11px] text-brand-400 font-mono font-semibold">
               Select to inspect
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-2 pt-3 pr-1">
             {filteredChords.length === 0 ? (
-              <div className="text-center py-12 text-stone-500 text-xs">
+              <div className="text-center py-12 text-ink-500 text-xs">
                 No chords match your current filters.
                 <button
                   onClick={() => {
@@ -271,7 +271,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                     setSelectedRoot('All');
                     setSelectedCategory('All');
                   }}
-                  className="block mx-auto mt-3 px-3 py-1 rounded-lg bg-stone-800 text-amber-400 font-bold hover:bg-stone-700"
+                  className="block mx-auto mt-3 px-3 py-1 rounded-lg bg-ink-800 text-brand-400 font-bold hover:bg-ink-700"
                 >
                   Reset All Filters
                 </button>
@@ -285,25 +285,25 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                     onClick={() => setSelectedChordId(chord.id)}
                     className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
                       isSelected
-                        ? 'bg-amber-600/15 border-amber-500 shadow-md ring-1 ring-amber-500/30'
-                        : 'bg-stone-950/60 border-stone-800 hover:bg-stone-950 hover:border-stone-700'
+                        ? 'bg-brand-600/15 border-brand-500 shadow-md ring-1 ring-brand-500/30'
+                        : 'bg-ink-950/60 border-ink-800 hover:bg-ink-950 hover:border-ink-700'
                     }`}
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-stone-100 group-hover:text-amber-300">
+                        <span className="text-sm font-extrabold text-ink-100 group-hover:text-brand-300">
                           {chord.name}
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold uppercase ${
                           chord.category.startsWith('barre')
-                            ? 'bg-purple-950/80 text-purple-300 border border-purple-800/50'
-                            : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/50'
+                            ? 'bg-violet-950/80 text-violet-300 border border-violet-800/50'
+                            : 'bg-gold-950/80 text-gold-300 border border-gold-800/50'
                         }`}>
                           {chord.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] text-stone-400 mt-1">
-                        <span>Bass: <strong className="text-stone-300">{chord.bassNote}</strong></span>
+                      <div className="flex items-center gap-2 text-[11px] text-ink-400 mt-1">
+                        <span>Bass: <strong className="text-ink-300">{chord.bassNote}</strong></span>
                         <span>•</span>
                         <span>Triad: [{chord.triadNotes.join(', ')}]</span>
                       </div>
@@ -315,7 +315,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         setSelectedChordId(chord.id);
                         strumChord('down');
                       }}
-                      className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-stone-400 hover:text-amber-400 hover:border-amber-500/40 transition-colors"
+                      className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-ink-400 hover:text-brand-400 hover:border-brand-500/40 transition-colors"
                       title="Quick Preview"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
@@ -328,24 +328,24 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         </div>
 
         {/* Right Column: Virtual Guitar Neck & Finger Visualizer (8 cols) */}
-        <div className="lg:col-span-8 bg-stone-900/90 border border-stone-800/90 rounded-2xl p-6 shadow-2xl flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-8 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-6 shadow-2xl flex flex-col justify-between space-y-6">
           {/* Chord Title & Quick Strum Audio Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-stone-800/80">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-ink-800/80">
             <div>
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-black text-stone-100 tracking-tight">
+                <h2 className="text-2xl font-black text-ink-100 tracking-tight">
                   {selectedChord.name}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 text-xs font-mono font-bold border border-amber-500/30">
+                <span className="px-2.5 py-0.5 rounded-md bg-brand-500/10 text-brand-300 text-xs font-mono font-bold border border-brand-500/30">
                   {selectedChord.type}
                 </span>
                 {selectedChord.barreFret && (
-                  <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-xs font-mono font-bold border border-purple-500/30">
+                  <span className="px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 text-xs font-mono font-bold border border-violet-500/30">
                     Barre Fret {selectedChord.barreFret}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-stone-400 mt-1">
+              <p className="text-xs text-ink-400 mt-1">
                 {selectedChord.description}
               </p>
             </div>
@@ -354,7 +354,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
             <div className="flex items-center gap-2">
               <button
                 onClick={() => strumChord('down')}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Strum Down</span>
@@ -362,14 +362,14 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
 
               <button
                 onClick={() => strumChord('up')}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-950 border border-stone-800 hover:border-amber-500/40 text-stone-200 text-xs font-bold active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 hover:border-brand-500/40 text-ink-200 text-xs font-bold active:scale-95 transition-all"
               >
                 <span>Strum Up</span>
               </button>
 
               <button
                 onClick={arpeggiateChord}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-950 border border-stone-800 hover:border-amber-500/40 text-amber-300 text-xs font-bold active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 hover:border-brand-500/40 text-brand-300 text-xs font-bold active:scale-95 transition-all"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Arpeggio</span>
@@ -378,32 +378,32 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
           </div>
 
           {/* VIRTUAL GUITAR NECK VISUALIZER: horizontal, nut on the left, body on the right */}
-          <div className="bg-[#121316] border border-stone-800/90 rounded-2xl p-3 sm:p-5 shadow-inner relative select-none">
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pb-3 mb-3 border-b border-stone-800">
-              <div className="text-[11px] font-mono font-bold text-stone-400">
-                NUT <span className="text-stone-600">◀</span> headstock side · body side <span className="text-stone-600">▶</span>
+          <div className="bg-[#0f1424] border border-ink-800/90 rounded-2xl p-3 sm:p-5 shadow-inner relative select-none">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pb-3 mb-3 border-b border-ink-800">
+              <div className="text-[11px] font-mono font-bold text-ink-400">
+                NUT <span className="text-ink-600">◀</span> headstock side · body side <span className="text-ink-600">▶</span>
               </div>
-              <div className="text-[11px] text-stone-500">
-                Tap a string to hear it · <span className="text-emerald-400">O</span> open · <span className="text-red-400">X</span> muted
+              <div className="text-[11px] text-ink-500">
+                Tap a string to hear it · <span className="text-gold-400">O</span> open · <span className="text-red-400">X</span> muted
               </div>
             </div>
 
             <div style={{ '--nut-w': '3.5rem', '--cols': neckFrets.length } as React.CSSProperties}>
               {/* Fret numbers */}
               <div className="grid mb-1" style={{ gridTemplateColumns: 'var(--nut-w) repeat(var(--cols), minmax(0, 1fr))' }}>
-                <div className="text-[10px] font-mono font-bold text-stone-500 text-center">
+                <div className="text-[10px] font-mono font-bold text-ink-500 text-center">
                   {neckFrets[0] > 1 ? `Fret ${neckFrets[0]}+` : 'Nut'}
                 </div>
                 {neckFrets.map(fretNum => (
-                  <div key={fretNum} className="text-center text-[10px] font-mono font-bold text-stone-500">
+                  <div key={fretNum} className="text-center text-[10px] font-mono font-bold text-ink-500">
                     {fretNum}
                   </div>
                 ))}
               </div>
 
               {/* The fretboard: high E on top, low E on the bottom (same as tab) */}
-              <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-[#1a1815] to-[#121110]">
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+              <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-[#141a2c] to-[#0f1424]">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#0f8a82_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
                 {/* Barre overlay */}
                 {selectedChord.barreFret && neckFrets.includes(selectedChord.barreFret) && (
@@ -414,7 +414,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                       width: 'calc(((100% - var(--nut-w)) / var(--cols)) * 0.84)',
                     }}
                   >
-                    <div className="w-5 h-full rounded-full bg-purple-500/35 border-2 border-purple-400 shadow-lg" />
+                    <div className="w-5 h-full rounded-full bg-violet-500/35 border-2 border-violet-400 shadow-lg" />
                   </div>
                 )}
 
@@ -440,11 +440,11 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         type="button"
                         onClick={() => playSingleString(sIdx)}
                         aria-label={`${strDef.name} string, ${isMuted ? 'muted' : isOpen ? 'open' : `fret ${targetFret}`}`}
-                        className={`relative z-10 flex items-center justify-center gap-1 border-r-[6px] border-stone-200/90 bg-stone-950/70 text-xs font-mono font-black ${
-                          isMuted ? 'text-red-400' : isOpen ? 'text-emerald-300' : 'text-stone-500'
+                        className={`relative z-10 flex items-center justify-center gap-1 border-r-[6px] border-ink-200/90 bg-ink-950/70 text-xs font-mono font-black ${
+                          isMuted ? 'text-red-400' : isOpen ? 'text-gold-300' : 'text-ink-500'
                         }`}
                       >
-                        <span className="text-[10px] text-stone-400">{strDef.openNote}</span>
+                        <span className="text-[10px] text-ink-400">{strDef.openNote}</span>
                         <span className="w-4 text-center">{isMuted ? 'X' : isOpen ? 'O' : ''}</span>
                       </button>
 
@@ -457,16 +457,16 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                           <div
                             key={fretNum}
                             onClick={() => playSingleString(sIdx)}
-                            className="relative flex items-center justify-center cursor-pointer group/string border-r-2 border-stone-500/60"
+                            className="relative flex items-center justify-center cursor-pointer group/string border-r-2 border-ink-500/60"
                           >
                             {sIdx === 2 && [3, 5, 7, 9, 12, 15].includes(fretNum) && (
-                              <div className="absolute -bottom-0 translate-y-1/2 w-3 h-3 rounded-full bg-stone-400/20 border border-stone-400/40 pointer-events-none" />
+                              <div className="absolute -bottom-0 translate-y-1/2 w-3 h-3 rounded-full bg-ink-400/20 border border-ink-400/40 pointer-events-none" />
                             )}
                             <div
                               className={`absolute left-0 right-0 transition-colors ${
                                 isPlaying
-                                  ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]'
-                                  : 'bg-stone-400/70 group-hover/string:bg-stone-200'
+                                  ? 'bg-brand-400 shadow-[0_0_8px_#1aa89b]'
+                                  : 'bg-ink-400/70 group-hover/string:bg-ink-200'
                               }`}
                               style={{ height: `${gauge}px` }}
                             />
@@ -474,10 +474,10 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                               <div
                                 className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex flex-col items-center justify-center shadow-lg z-30 border ${
                                   isRoot
-                                    ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-stone-950 border-amber-300 ring-2 ring-amber-400/50'
+                                    ? 'bg-gradient-to-br from-brand-500 to-brand-700 text-ink-950 border-brand-300 ring-2 ring-brand-400/50'
                                     : fingerBadge
                                     ? `${fingerBadge.bg} ${fingerBadge.text} ${fingerBadge.border}`
-                                    : 'bg-stone-100 text-stone-950 border-stone-300'
+                                    : 'bg-ink-100 text-ink-950 border-ink-300'
                                 }`}
                               >
                                 <span className="text-[10px] sm:text-[11px] font-black leading-none">{noteData.note}</span>
@@ -496,7 +496,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                 })}
               </div>
               {selectedChord.barreFret && (
-                <p className="mt-2 text-[11px] text-purple-300 font-mono">
+                <p className="mt-2 text-[11px] text-violet-300 font-mono">
                   Barre: lay finger 1 flat across fret {selectedChord.barreFret}
                 </p>
               )}
@@ -506,35 +506,35 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
           {/* Finger Number Legend & Acoustic Reason breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             {/* Left Hand Finger Guide */}
-            <div className="bg-stone-950/70 border border-stone-800/80 rounded-xl p-3.5 space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="bg-ink-950/70 border border-ink-800/80 rounded-xl p-3.5 space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-brand-400" />
                 Left-Hand Finger Guide
               </span>
               <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="p-2 rounded-lg bg-sky-950/50 border border-sky-800/50">
-                  <span className="text-xs font-black text-sky-300 block">1</span>
-                  <span className="text-[10px] text-stone-300">Index</span>
+                <div className="p-2 rounded-lg bg-violet-950/50 border border-violet-800/50">
+                  <span className="text-xs font-black text-violet-300 block">1</span>
+                  <span className="text-[10px] text-ink-300">Index</span>
                 </div>
-                <div className="p-2 rounded-lg bg-emerald-950/50 border border-emerald-800/50">
-                  <span className="text-xs font-black text-emerald-300 block">2</span>
-                  <span className="text-[10px] text-stone-300">Middle</span>
+                <div className="p-2 rounded-lg bg-gold-950/50 border border-gold-800/50">
+                  <span className="text-xs font-black text-gold-300 block">2</span>
+                  <span className="text-[10px] text-ink-300">Middle</span>
                 </div>
-                <div className="p-2 rounded-lg bg-amber-950/50 border border-amber-800/50">
-                  <span className="text-xs font-black text-amber-300 block">3</span>
-                  <span className="text-[10px] text-stone-300">Ring</span>
+                <div className="p-2 rounded-lg bg-brand-950/50 border border-brand-800/50">
+                  <span className="text-xs font-black text-brand-300 block">3</span>
+                  <span className="text-[10px] text-ink-300">Ring</span>
                 </div>
-                <div className="p-2 rounded-lg bg-rose-950/50 border border-rose-800/50">
-                  <span className="text-xs font-black text-rose-300 block">4</span>
-                  <span className="text-[10px] text-stone-300">Pinky</span>
+                <div className="p-2 rounded-lg bg-red-950/50 border border-red-800/50">
+                  <span className="text-xs font-black text-red-300 block">4</span>
+                  <span className="text-[10px] text-ink-300">Pinky</span>
                 </div>
               </div>
             </div>
 
             {/* Indian Sargam & Harmonic Breakdown */}
-            <div className="bg-stone-950/70 border border-stone-800/80 rounded-xl p-3.5 space-y-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-amber-400" />
+            <div className="bg-ink-950/70 border border-ink-800/80 rounded-xl p-3.5 space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-brand-400" />
                 Indian Sargam Harmonization
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -543,17 +543,17 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                   return (
                     <div
                       key={idx}
-                      className="px-2.5 py-1 rounded-lg bg-stone-900 border border-stone-800 flex items-center gap-1.5 text-xs"
+                      className="px-2.5 py-1 rounded-lg bg-ink-900 border border-ink-800 flex items-center gap-1.5 text-xs"
                     >
-                      <span className="font-extrabold text-amber-300">{swara.shortName}</span>
-                      <span className="text-stone-400">({note})</span>
-                      <span className="text-[10px] text-stone-500 font-mono">[{swara.westernInterval}]</span>
+                      <span className="font-extrabold text-brand-300">{swara.shortName}</span>
+                      <span className="text-ink-400">({note})</span>
+                      <span className="text-[10px] text-ink-500 font-mono">[{swara.westernInterval}]</span>
                     </div>
                   );
                 })}
               </div>
               {selectedChord.lowEMutedReason && (
-                <p className="text-[11px] text-stone-400 italic pt-1 border-t border-stone-800/60">
+                <p className="text-[11px] text-ink-400 italic pt-1 border-t border-ink-800/60">
                   💡 {selectedChord.lowEMutedReason}
                 </p>
               )}

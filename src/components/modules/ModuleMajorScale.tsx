@@ -61,25 +61,25 @@ export const ModuleMajorScale: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Title & Core Principle */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-3">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-3">
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-mono text-xs font-bold border border-amber-500/20">
+          <span className="px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-400 font-mono text-xs font-bold border border-brand-500/20">
             Section 2
           </span>
-          <h2 className="text-xl font-bold text-stone-100">Deriving the Major Scale (Scale DNA)</h2>
+          <h2 className="text-xl font-bold text-ink-100">Deriving the Major Scale (Scale DNA)</h2>
         </div>
-        <p className="text-sm text-stone-300 leading-relaxed">
+        <p className="text-sm text-ink-300 leading-relaxed">
           Instead of memorizing scale shapes, understand the DNA: A scale is a curated filter of the 12 chromatic tones built by physical fret jumps:
-          <strong className="text-amber-300"> Whole, Whole, Half, Whole, Whole, Whole, Half (+2, +2, +1, +2, +2, +2, +1)</strong>.
+          <strong className="text-brand-300"> Whole, Whole, Half, Whole, Whole, Whole, Half (+2, +2, +1, +2, +2, +2, +1)</strong>.
           On guitar, a Whole step = 2 frets; a Half step = 1 fret.
         </p>
       </div>
 
       {/* Root Selector & Play Control */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Choose Root Note:</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-400">Choose Root Note:</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {popularRoots.map(root => (
                 <button
@@ -87,8 +87,8 @@ export const ModuleMajorScale: React.FC = () => {
                   onClick={() => setSelectedRoot(root)}
                   className={`w-9 h-9 rounded-xl font-extrabold text-sm transition-all border ${
                     selectedRoot === root
-                      ? 'bg-amber-600 text-white border-amber-500 shadow-md ring-2 ring-amber-500/30'
-                      : 'bg-stone-950 text-stone-300 border-stone-800 hover:bg-stone-800 hover:text-white'
+                      ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-2 ring-brand-500/30'
+                      : 'bg-ink-950 text-ink-300 border-ink-800 hover:bg-ink-800 hover:text-white'
                   }`}
                 >
                   {root}
@@ -100,7 +100,7 @@ export const ModuleMajorScale: React.FC = () => {
           <button
             onClick={handlePlayScale}
             disabled={isPlayingScale}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Hear Scale DNA ({selectedRoot} Major)</span>
@@ -108,7 +108,7 @@ export const ModuleMajorScale: React.FC = () => {
         </div>
 
         {/* Visual Jumping Arc Diagram (Recreating PDF Page 2) */}
-        <div className="bg-stone-950 border border-stone-800 rounded-xl p-6 relative overflow-x-auto">
+        <div className="bg-ink-950 border border-ink-800 rounded-xl p-6 relative overflow-x-auto">
           <div className="min-w-[560px] max-w-3xl mx-auto py-6">
             {/* Arcs SVG */}
             <div className="relative h-20">
@@ -125,14 +125,14 @@ export const ModuleMajorScale: React.FC = () => {
                       <path
                         d={`M ${startX} 75 Q ${midX} ${75 - arcHeight} ${endX} 75`}
                         fill="none"
-                        stroke={isHalf ? '#ef4444' : '#f59e0b'}
+                        stroke={isHalf ? '#ef4444' : '#1aa89b'}
                         strokeWidth={activeStepIndex === idx ? '3.5' : '2'}
                         className="transition-all"
                       />
                       <text
                         x={midX}
                         y={70 - arcHeight}
-                        fill={isHalf ? '#ef4444' : '#fbbf24'}
+                        fill={isHalf ? '#ef4444' : '#35c4b4'}
                         fontSize="12"
                         fontWeight="bold"
                         textAnchor="middle"
@@ -146,7 +146,7 @@ export const ModuleMajorScale: React.FC = () => {
             </div>
 
             {/* Note Circles along horizontal fret line */}
-            <div className="relative border-t-2 border-stone-700 pt-3">
+            <div className="relative border-t-2 border-ink-700 pt-3">
               <div className="flex items-center justify-between px-6">
                 {[...scaleData.notes, scaleData.root].map((note, idx) => {
                   const isRoot = idx === 0 || idx === 7;
@@ -157,18 +157,18 @@ export const ModuleMajorScale: React.FC = () => {
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shadow-lg transition-all ${
                           isActive
-                            ? 'bg-amber-400 text-stone-950 scale-125 ring-4 ring-amber-400/30'
+                            ? 'bg-brand-400 text-ink-950 scale-125 ring-4 ring-brand-400/30'
                             : isRoot
-                            ? 'bg-amber-600 text-white ring-2 ring-amber-400/50'
-                            : 'bg-stone-800 text-stone-200 border border-stone-700'
+                            ? 'bg-brand-600 text-white ring-2 ring-brand-400/50'
+                            : 'bg-ink-800 text-ink-200 border border-ink-700'
                         }`}
                       >
                         {note}
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-stone-500 mt-1">
+                      <span className="text-[10px] font-mono font-bold text-ink-500 mt-1">
                         {idx === 0 ? 'Root' : idx === 7 ? '8ve' : `Deg ${idx + 1}`}
                       </span>
-                      <span className="text-[10px] font-bold text-amber-400/90 font-mono">
+                      <span className="text-[10px] font-bold text-brand-400/90 font-mono">
                         {['Sa', 'Re', 'Ga', 'ma', 'Pa', 'Dha', 'Ni', "Sa'"][idx]}
                       </span>
                     </div>
@@ -180,54 +180,54 @@ export const ModuleMajorScale: React.FC = () => {
         </div>
 
         {/* Natural Half-Steps Explainer & Indian Sargam Equivalence */}
-        <div className="bg-stone-950/60 border border-stone-800 rounded-xl p-4 text-xs text-stone-300 space-y-2">
-          <div className="flex items-center gap-2 text-amber-400 font-bold">
+        <div className="bg-ink-950/60 border border-ink-800 rounded-xl p-4 text-xs text-ink-300 space-y-2">
+          <div className="flex items-center gap-2 text-brand-400 font-bold">
             <Sparkles className="w-4 h-4" />
             <span>Why C Major has Zero Sharps or Flats (And Bilawal Thaat):</span>
           </div>
-          <p className="text-stone-400 leading-relaxed">
-            In the natural musical alphabet, the half steps occur naturally between <strong className="text-stone-200">E and F</strong> (+1) and between <strong className="text-stone-200">B and C</strong> (+1).
+          <p className="text-ink-400 leading-relaxed">
+            In the natural musical alphabet, the half steps occur naturally between <strong className="text-ink-200">E and F</strong> (+1) and between <strong className="text-ink-200">B and C</strong> (+1).
             Because the Major Scale DNA formula requires +1 jumps at steps 3→4 and 7→8, starting on C aligns naturally with E→F and B→C with 0 accidentals!
           </p>
-          <p className="text-amber-300/90 leading-relaxed pt-1 border-t border-stone-800/80 font-medium">
-            🪕 <strong className="underline">Indian Classical Connection:</strong> This exact scale is known as <strong className="text-amber-200">Bilawal Thaat</strong> in Indian classical music (<span className="font-mono font-bold">Sa - Re - Ga - ma - Pa - Dha - Ni</span>). Notice how <strong className="text-stone-100">Ga ➔ ma</strong> (+1) and <strong className="text-stone-100">Ni ➔ Sa</strong> (+1) are the exact physical half-step jumps!
+          <p className="text-brand-300/90 leading-relaxed pt-1 border-t border-ink-800/80 font-medium">
+            🪕 <strong className="underline">Indian Classical Connection:</strong> This exact scale is known as <strong className="text-brand-200">Bilawal Thaat</strong> in Indian classical music (<span className="font-mono font-bold">Sa - Re - Ga - ma - Pa - Dha - Ni</span>). Notice how <strong className="text-ink-100">Ga ➔ ma</strong> (+1) and <strong className="text-ink-100">Ni ➔ Sa</strong> (+1) are the exact physical half-step jumps!
           </p>
         </div>
 
         {/* Relative Minor Card (The Formula from Page 2) */}
-        <div className="bg-gradient-to-r from-emerald-950/40 via-stone-900 to-emerald-950/40 border border-emerald-500/30 rounded-xl p-5 space-y-3">
+        <div className="bg-gradient-to-r from-gold-950/40 via-ink-900 to-gold-950/40 border border-gold-500/30 rounded-xl p-5 space-y-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs uppercase font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="text-xs uppercase font-extrabold px-2 py-0.5 rounded bg-gold-500/20 text-gold-400 border border-gold-500/30">
                   The Relative Minor Formula
                 </span>
-                <span className="text-sm font-bold text-stone-200">
+                <span className="text-sm font-bold text-ink-200">
                   Relative Minor = Root − 3 Frets (3 Semitones)
                 </span>
               </div>
-              <p className="text-xs text-stone-400 mt-1">
-                Every major scale has a twin minor scale sharing the <strong className="text-stone-200">exact same notes</strong>, just starting from a different emotional center.
+              <p className="text-xs text-ink-400 mt-1">
+                Every major scale has a twin minor scale sharing the <strong className="text-ink-200">exact same notes</strong>, just starting from a different emotional center.
               </p>
             </div>
 
             <button
               onClick={handlePlayRelativeMinor}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-700/60 hover:bg-emerald-600 border border-emerald-500/60 text-emerald-100 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+              className="px-3.5 py-1.5 rounded-xl bg-gold-700/60 hover:bg-gold-600 border border-gold-500/60 text-gold-100 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
             >
               <Volume2 className="w-3.5 h-3.5" />
               <span>Hear {scaleData.relativeMinor} Minor Twin</span>
             </button>
           </div>
 
-          <div className="bg-stone-950/90 border border-stone-800 rounded-lg p-3 text-xs flex flex-wrap items-center gap-2 text-stone-300">
-            <span className="font-bold text-amber-400">{selectedRoot} Major</span>
+          <div className="bg-ink-950/90 border border-ink-800 rounded-lg p-3 text-xs flex flex-wrap items-center gap-2 text-ink-300">
+            <span className="font-bold text-brand-400">{selectedRoot} Major</span>
             <span>minus 3 frets ➔</span>
-            <span className="font-extrabold text-emerald-400 text-sm px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+            <span className="font-extrabold text-gold-400 text-sm px-2 py-0.5 rounded bg-gold-500/10 border border-gold-500/20">
               {scaleData.relativeMinor} Minor
             </span>
-            <span className="text-stone-500">| Identical Notes:</span>
-            <span className="font-mono text-stone-300">
+            <span className="text-ink-500">| Identical Notes:</span>
+            <span className="font-mono text-ink-300">
               ({scaleData.notes.join(' - ')})
             </span>
           </div>

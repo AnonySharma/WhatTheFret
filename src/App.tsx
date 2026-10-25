@@ -89,7 +89,7 @@ export default function App() {
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
-        colors: ['#f59e0b', '#10b981', '#3b82f6', '#ec4899'],
+        colors: ['#1aa89b', '#f5a524', '#8b5cf6', '#f87171'],
       });
     }
   };
@@ -108,11 +108,11 @@ export default function App() {
   const isCurrentLessonDone = progress.completedLessons.includes(activeModuleIndex);
 
   return (
-    <div className="min-h-screen bg-[#0b0c0e] text-stone-100 flex flex-col font-sans selection:bg-amber-500 selection:text-stone-950 relative">
+    <div className="min-h-screen bg-[#0a0e1a] text-ink-100 flex flex-col font-sans selection:bg-brand-500 selection:text-ink-950 relative">
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-amber-600/5 rounded-full blur-[140px]" />
-        <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-orange-600/5 rounded-full blur-[140px]" />
+        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-brand-600/5 rounded-full blur-[140px]" />
+        <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-gold-600/5 rounded-full blur-[140px]" />
       </div>
 
       {/* Top Navbar */}
@@ -135,43 +135,43 @@ export default function App() {
         {activeTab === 'modules' && (
           <div className="space-y-6">
             {/* Unified Acoustic Studio Lesson Navigator */}
-            <div className="relative rounded-2xl bg-gradient-to-b from-stone-900/95 via-stone-900/70 to-stone-950/90 border border-stone-800/80 shadow-2xl overflow-hidden backdrop-blur-xl">
+            <div className="relative rounded-2xl bg-gradient-to-b from-ink-900/95 via-ink-900/70 to-ink-950/90 border border-ink-800/80 shadow-2xl overflow-hidden backdrop-blur-xl">
               {/* Top Golden Brass Line */}
-              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-500/60 to-transparent" />
 
               <div className="p-4 sm:p-5 space-y-4">
                 {/* Upper Row: Lesson Title, Breadcrumb, and Completion Toggle */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-800/60 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800/60 pb-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-300 font-mono text-[11px] font-bold border border-amber-500/30">
+                    <span className="px-2.5 py-1 rounded-md bg-brand-500/15 text-brand-300 font-mono text-[11px] font-bold border border-brand-500/30">
                       LESSON 0{activeModuleIndex + 1}
                     </span>
-                    <h2 className="text-base sm:text-lg font-black text-stone-100 tracking-tight">
+                    <h2 className="text-base sm:text-lg font-black text-ink-100 tracking-tight">
                       {moduleTitles[activeModuleIndex]}
                     </h2>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-stone-400 font-medium hidden sm:inline">
-                      Overall Mastery: <strong className="text-amber-300 font-bold">{stats.percentage}%</strong> ({stats.count}/7 Done)
+                    <span className="text-xs text-ink-400 font-medium hidden sm:inline">
+                      Overall Mastery: <strong className="text-brand-300 font-bold">{stats.percentage}%</strong> ({stats.count}/7 Done)
                     </span>
 
                     <button
                       onClick={handleToggleCurrentLesson}
                       className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 border ${
                         isCurrentLessonDone
-                          ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 hover:bg-emerald-900/60'
-                          : 'bg-stone-950 border-stone-700 hover:border-amber-500/50 text-stone-300 hover:text-white'
+                          ? 'bg-gold-950/80 border-gold-500/60 text-gold-300 hover:bg-gold-900/60'
+                          : 'bg-ink-950 border-ink-700 hover:border-brand-500/50 text-ink-300 hover:text-white'
                       }`}
                     >
                       {isCurrentLessonDone ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <CheckCircle2 className="w-4 h-4 text-gold-400" />
                           <span>Completed! (+100 Pts)</span>
                         </>
                       ) : (
                         <>
-                          <Circle className="w-4 h-4 text-stone-500" />
+                          <Circle className="w-4 h-4 text-ink-500" />
                           <span>Mark as Completed</span>
                         </>
                       )}
@@ -192,19 +192,19 @@ export default function App() {
                           onClick={() => setActiveModuleIndex(idx)}
                           className={`relative px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap ${
                             isSelected
-                              ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/30 ring-1 ring-amber-400/50'
+                              ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/30 ring-1 ring-brand-400/50'
                               : isDone
-                              ? 'bg-stone-950/70 text-emerald-300 border border-emerald-500/20 hover:bg-stone-850'
-                              : 'bg-stone-950/40 text-stone-400 border border-stone-800/60 hover:text-stone-200 hover:bg-stone-850/60'
+                              ? 'bg-ink-950/70 text-gold-300 border border-gold-500/20 hover:bg-ink-850'
+                              : 'bg-ink-950/40 text-ink-400 border border-ink-800/60 hover:text-ink-200 hover:bg-ink-850/60'
                           }`}
                         >
                           <span
                             className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
                               isSelected
-                                ? 'bg-stone-950 text-amber-300'
+                                ? 'bg-ink-950 text-brand-300'
                                 : isDone
-                                ? 'bg-emerald-500/20 text-emerald-400'
-                                : 'bg-stone-800 text-stone-500'
+                                ? 'bg-gold-500/20 text-gold-400'
+                                : 'bg-ink-800 text-ink-500'
                             }`}
                           >
                             {isDone ? '✓' : idx + 1}
@@ -220,7 +220,7 @@ export default function App() {
                     <button
                       disabled={activeModuleIndex === 0}
                       onClick={() => setActiveModuleIndex(prev => Math.max(0, prev - 1))}
-                      className="p-2 rounded-xl bg-stone-950/80 text-stone-400 hover:text-white border border-stone-800 hover:border-stone-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                      className="p-2 rounded-xl bg-ink-950/80 text-ink-400 hover:text-white border border-ink-800 hover:border-ink-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Previous Lesson"
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -228,7 +228,7 @@ export default function App() {
                     <button
                       disabled={activeModuleIndex === moduleTitles.length - 1}
                       onClick={() => setActiveModuleIndex(prev => Math.min(moduleTitles.length - 1, prev + 1))}
-                      className="p-2 rounded-xl bg-stone-950/80 text-stone-400 hover:text-white border border-stone-800 hover:border-stone-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+                      className="p-2 rounded-xl bg-ink-950/80 text-ink-400 hover:text-white border border-ink-800 hover:border-ink-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Next Lesson"
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -248,11 +248,11 @@ export default function App() {
             {activeModuleIndex === 6 && <ModuleChordDerivation />}
 
             {/* Lesson Navigation Footer */}
-            <div className="flex items-center justify-between pt-4 border-t border-stone-800/80">
+            <div className="flex items-center justify-between pt-4 border-t border-ink-800/80">
               <button
                 disabled={activeModuleIndex === 0}
                 onClick={() => setActiveModuleIndex(prev => Math.max(0, prev - 1))}
-                className="px-4 py-2 rounded-xl bg-stone-900 border border-stone-800 hover:bg-stone-800 text-stone-300 font-bold text-xs flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none"
+                className="px-4 py-2 rounded-xl bg-ink-900 border border-ink-800 hover:bg-ink-800 text-ink-300 font-bold text-xs flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous Lesson</span>
@@ -263,8 +263,8 @@ export default function App() {
                   onClick={handleToggleCurrentLesson}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                     isCurrentLessonDone
-                      ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
-                      : 'bg-amber-600/20 border-amber-500/40 text-amber-300 hover:bg-amber-600/30'
+                      ? 'bg-gold-950/60 border-gold-500/50 text-gold-300'
+                      : 'bg-brand-600/20 border-brand-500/40 text-brand-300 hover:bg-brand-600/30'
                   }`}
                 >
                   {isCurrentLessonDone ? '✓ Finished' : 'Mark Complete'}
@@ -274,7 +274,7 @@ export default function App() {
               <button
                 disabled={activeModuleIndex === moduleTitles.length - 1}
                 onClick={() => setActiveModuleIndex(prev => Math.min(moduleTitles.length - 1, prev + 1))}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none shadow-md"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none shadow-md"
               >
                 <span>Next Lesson</span>
                 <ChevronRight className="w-4 h-4" />
@@ -351,19 +351,19 @@ export default function App() {
 
       {/* Suggested Theory Labs Bar */}
       <section className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 relative z-10">
-        <div className="bg-gradient-to-r from-stone-900/90 via-stone-900 to-amber-950/30 border border-stone-800/90 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md">
+        <div className="bg-gradient-to-r from-ink-900/90 via-ink-900 to-brand-950/30 border border-ink-800/90 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-lg border border-amber-500/20 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center font-bold text-lg border border-brand-500/20 shrink-0">
               💡
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-stone-100 flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-ink-100 flex items-center gap-2">
                 <span>Suggested Advanced Theory Labs</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold">
                   EXPANSION
                 </span>
               </h3>
-              <p className="text-xs text-stone-400 mt-0.5">
+              <p className="text-xs text-ink-400 mt-0.5">
                 Circle of Fifths, 3D CAGED system topology, Tanpura modal jam rooms, and interval training.
               </p>
             </div>
@@ -371,19 +371,19 @@ export default function App() {
 
           <button
             onClick={() => setShowSuggestedLabsModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/30 hover:border-amber-500/60 text-xs font-bold transition-all shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ink-900 hover:bg-ink-800 text-brand-300 border border-brand-500/30 hover:border-brand-500/60 text-xs font-bold transition-all shrink-0"
           >
-            <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+            <Lightbulb className="w-3.5 h-3.5 text-brand-400" />
             <span>Explore Suggested Labs ({SUGGESTED_THEORY_LABS.length})</span>
           </button>
         </div>
       </section>
 
       {/* Modern, Classy Footer */}
-      <footer className="border-t border-stone-800/80 bg-stone-950/90 backdrop-blur-md py-6 text-xs text-stone-500 mt-6 relative z-10">
+      <footer className="border-t border-ink-800/80 bg-ink-950/90 backdrop-blur-md py-6 text-xs text-ink-500 mt-6 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-stone-300">WhatTheFret</span>
+            <span className="font-extrabold text-ink-300">WhatTheFret</span>
             <span>•</span>
             <span>Western Physics & Indian Sargam Mechanics</span>
           </div>
@@ -391,25 +391,25 @@ export default function App() {
           <div className="flex items-center gap-4 text-xs">
             <button
               onClick={() => setActiveTab('chord-library')}
-              className="text-stone-400 hover:text-amber-400 transition-colors"
+              className="text-ink-400 hover:text-brand-400 transition-colors"
             >
               Chord Library
             </button>
             <button
               onClick={() => setActiveTab('swaras')}
-              className="text-stone-400 hover:text-amber-400 transition-colors"
+              className="text-ink-400 hover:text-brand-400 transition-colors"
             >
               Indian Raagas & Swaras
             </button>
             <button
               onClick={() => setActiveTab('journey')}
-              className="text-stone-400 hover:text-amber-400 transition-colors font-bold text-amber-400/90"
+              className="text-ink-400 hover:text-brand-400 transition-colors font-bold text-brand-400/90"
             >
               Mastery: {stats.percentage}%
             </button>
             <button
               onClick={() => setActiveTab('pdf')}
-              className="text-stone-400 hover:text-amber-400 transition-colors"
+              className="text-ink-400 hover:text-brand-400 transition-colors"
             >
               PDF Notes
             </button>
@@ -419,23 +419,23 @@ export default function App() {
 
       {/* Suggested Theory Labs Interactive Modal */}
       {showSuggestedLabsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md">
-          <div className="bg-stone-900 border border-stone-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md">
+          <div className="bg-ink-900 border border-ink-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-ink-800">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">💡</span>
                 <div>
-                  <h3 className="text-lg font-black text-stone-100">
+                  <h3 className="text-lg font-black text-ink-100">
                     Suggested Interactive Theory Labs & Features
                   </h3>
-                  <p className="text-xs text-stone-400">
+                  <p className="text-xs text-ink-400">
                     Recommendations to push your intuitive guitar learning journey even further
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowSuggestedLabsModal(false)}
-                className="p-2 rounded-xl bg-stone-950 text-stone-400 hover:text-white border border-stone-800"
+                className="p-2 rounded-xl bg-ink-950 text-ink-400 hover:text-white border border-ink-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -445,28 +445,28 @@ export default function App() {
               {SUGGESTED_THEORY_LABS.map((lab: FutureTheoryLab, idx: number) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-2xl bg-stone-950 border border-stone-800 flex flex-col justify-between space-y-3 hover:border-amber-500/40 transition-colors"
+                  className="p-4 rounded-2xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3 hover:border-brand-500/40 transition-colors"
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{lab.icon}</span>
-                      <h4 className="font-extrabold text-stone-100 text-sm">{lab.title}</h4>
+                      <h4 className="font-extrabold text-ink-100 text-sm">{lab.title}</h4>
                     </div>
-                    <span className="text-[11px] text-amber-400 font-semibold block mt-1">
+                    <span className="text-[11px] text-brand-400 font-semibold block mt-1">
                       {lab.tagline}
                     </span>
-                    <p className="text-xs text-stone-400 mt-2 leading-relaxed">
+                    <p className="text-xs text-ink-400 mt-2 leading-relaxed">
                       {lab.concept}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-stone-800/70 text-[11px] text-stone-300 space-y-1">
+                  <div className="pt-2 border-t border-ink-800/70 text-[11px] text-ink-300 space-y-1">
                     <div>
-                      <strong className="text-emerald-400">Interactive: </strong>
+                      <strong className="text-gold-400">Interactive: </strong>
                       {lab.howItWorks}
                     </div>
                     <div>
-                      <strong className="text-amber-400">Mastery Gain: </strong>
+                      <strong className="text-brand-400">Mastery Gain: </strong>
                       {lab.benefit}
                     </div>
                   </div>
@@ -474,10 +474,10 @@ export default function App() {
               ))}
             </div>
 
-            <div className="pt-3 border-t border-stone-800 flex justify-end">
+            <div className="pt-3 border-t border-ink-800 flex justify-end">
               <button
                 onClick={() => setShowSuggestedLabsModal(false)}
-                className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all"
+                className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all"
               >
                 Got It, Back to Studio!
               </button>

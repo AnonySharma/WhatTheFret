@@ -48,28 +48,28 @@ export const ModuleBarreChords: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Title & Core Principle */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-3">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-3">
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-mono text-xs font-bold border border-amber-500/20">
+          <span className="px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-400 font-mono text-xs font-bold border border-brand-500/20">
             Section 6
           </span>
-          <h2 className="text-xl font-bold text-stone-100">Barre Chords: Shifting the Nut</h2>
+          <h2 className="text-xl font-bold text-ink-100">Barre Chords: Shifting the Nut</h2>
         </div>
-        <p className="text-sm text-stone-300 leading-relaxed">
-          The guitar is geometric. Think of an open chord: the guitar nut holds the 0th fret across open strings. When you shift the chord shape up the neck, your <strong className="text-amber-300">index finger lays completely flat to act as a movable, human nut (the Barre)</strong>. The fretboard calculates all the intervals for you!
+        <p className="text-sm text-ink-300 leading-relaxed">
+          The guitar is geometric. Think of an open chord: the guitar nut holds the 0th fret across open strings. When you shift the chord shape up the neck, your <strong className="text-brand-300">index finger lays completely flat to act as a movable, human nut (the Barre)</strong>. The fretboard calculates all the intervals for you!
         </p>
       </div>
 
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
         {/* Controls: Shape Family and Flavor */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {/* Shape toggle */}
-            <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs">
+            <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
               <button
                 onClick={() => setShapeFamily('E-Shape')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  shapeFamily === 'E-Shape' ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400'
+                  shapeFamily === 'E-Shape' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
               >
                 E-Shape (6th String Root)
@@ -77,7 +77,7 @@ export const ModuleBarreChords: React.FC = () => {
               <button
                 onClick={() => setShapeFamily('A-Shape')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  shapeFamily === 'A-Shape' ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400'
+                  shapeFamily === 'A-Shape' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
               >
                 A-Shape (5th String Root)
@@ -85,11 +85,11 @@ export const ModuleBarreChords: React.FC = () => {
             </div>
 
             {/* Flavor toggle */}
-            <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs">
+            <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
               <button
                 onClick={() => setFlavor('Major')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  flavor === 'Major' ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400'
+                  flavor === 'Major' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
               >
                 Major
@@ -97,7 +97,7 @@ export const ModuleBarreChords: React.FC = () => {
               <button
                 onClick={() => setFlavor('Minor')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  flavor === 'Minor' ? 'bg-amber-600 text-white shadow-sm' : 'text-stone-400'
+                  flavor === 'Minor' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
               >
                 Minor
@@ -107,7 +107,7 @@ export const ModuleBarreChords: React.FC = () => {
 
           <button
             onClick={playBarreSound}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Hear {rootNote} {flavor} Barre</span>
@@ -115,13 +115,13 @@ export const ModuleBarreChords: React.FC = () => {
         </div>
 
         {/* Interactive Movable Nut Slider */}
-        <div className="bg-stone-950 border border-stone-800 rounded-xl p-5 space-y-4">
+        <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-              <Sliders className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
+              <Sliders className="w-4 h-4 text-brand-400" />
               <span>Slide The Nut Along The Neck:</span>
             </span>
-            <span className="text-sm font-extrabold text-amber-300">
+            <span className="text-sm font-extrabold text-brand-300">
               Fret {fretPosition} ➔ {rootNote} {flavor}
             </span>
           </div>
@@ -136,7 +136,7 @@ export const ModuleBarreChords: React.FC = () => {
               setFretPosition(val);
               setTimeout(playBarreSound, 40);
             }}
-            className="w-full accent-amber-500 h-2 bg-stone-800 rounded-lg cursor-pointer"
+            className="w-full accent-brand-500 h-2 bg-ink-800 rounded-lg cursor-pointer"
           />
 
           {/* Quick Fret Preset Buttons */}
@@ -150,8 +150,8 @@ export const ModuleBarreChords: React.FC = () => {
                 }}
                 className={`px-2.5 py-1 rounded-lg border font-semibold whitespace-nowrap transition-all ${
                   fretPosition === preset.fret
-                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                    : 'bg-stone-900 border-stone-800 text-stone-400 hover:text-white'
+                    ? 'bg-brand-500/20 border-brand-500 text-brand-300'
+                    : 'bg-ink-900 border-ink-800 text-ink-400 hover:text-white'
                 }`}
               >
                 {preset.label}
@@ -161,23 +161,23 @@ export const ModuleBarreChords: React.FC = () => {
         </div>
 
         {/* Visual Movable Barre Neck Graphic (Recreating PDF Page 6) */}
-        <div className="bg-stone-950 border border-stone-800 rounded-xl p-5 overflow-x-auto">
+        <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 overflow-x-auto">
           <div className="min-w-[540px] max-w-xl mx-auto space-y-3">
-            <div className="flex items-center justify-between text-xs text-stone-400 mb-2">
-              <span className="font-bold text-amber-300">
+            <div className="flex items-center justify-between text-xs text-ink-400 mb-2">
+              <span className="font-bold text-brand-300">
                 Chord: {rootNote} {flavor} ({shapeFamily})
               </span>
-              <span className="font-mono text-stone-500">
+              <span className="font-mono text-ink-500">
                 Frets: [{chordVoicing.frets.map(f => (f === -1 ? 'X' : f)).join(' ')}]
               </span>
             </div>
 
             {/* Fret grid */}
-            <div className="relative border-4 border-stone-800 rounded-xl bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 p-4">
+            <div className="relative border-4 border-ink-800 rounded-xl bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950 p-4">
               {/* Index Finger Barre Overlay Bar */}
               {fretPosition > 0 && (
                 <div
-                  className="absolute top-2 bottom-2 w-7 rounded-md bg-sky-500/40 border-2 border-sky-400 z-10 flex flex-col items-center justify-center text-[10px] font-bold text-sky-200 pointer-events-none shadow-lg backdrop-blur-[1px]"
+                  className="absolute top-2 bottom-2 w-7 rounded-md bg-violet-500/40 border-2 border-violet-400 z-10 flex flex-col items-center justify-center text-[10px] font-bold text-violet-200 pointer-events-none shadow-lg backdrop-blur-[1px]"
                   style={{
                     left: `${Math.min(90, Math.max(10, 8 + fretPosition * 7.5))}%`,
                   }}
@@ -192,17 +192,17 @@ export const ModuleBarreChords: React.FC = () => {
                   const f = chordVoicing.frets[idx];
                   return (
                     <div key={sNum} className="relative flex items-center h-4">
-                      <span className="w-8 text-[11px] font-bold text-stone-400">Str {sNum}</span>
-                      <div className="flex-1 h-0.5 bg-stone-600 relative">
+                      <span className="w-8 text-[11px] font-bold text-ink-400">Str {sNum}</span>
+                      <div className="flex-1 h-0.5 bg-ink-600 relative">
                         {f === -1 ? (
                           <span className="absolute left-1 -top-2 text-xs font-bold text-red-400">X</span>
                         ) : f === 0 ? (
-                          <span className="absolute left-1 -top-2.5 w-4 h-4 rounded-full border border-amber-400 text-[10px] font-bold text-amber-300 flex items-center justify-center bg-stone-950">
+                          <span className="absolute left-1 -top-2.5 w-4 h-4 rounded-full border border-brand-400 text-[10px] font-bold text-brand-300 flex items-center justify-center bg-ink-950">
                             0
                           </span>
                         ) : (
                           <div
-                            className="absolute -top-2.5 w-5 h-5 rounded-full bg-amber-500 text-stone-950 font-bold text-[10px] flex items-center justify-center shadow-md z-20"
+                            className="absolute -top-2.5 w-5 h-5 rounded-full bg-brand-500 text-ink-950 font-bold text-[10px] flex items-center justify-center shadow-md z-20"
                             style={{
                               left: `${Math.min(90, Math.max(5, f * 8.5))}%`,
                             }}
@@ -217,7 +217,7 @@ export const ModuleBarreChords: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-stone-400 pt-1">
+            <p className="text-xs text-ink-400 pt-1">
               {chordVoicing.description}
             </p>
           </div>

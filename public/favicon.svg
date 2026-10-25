@@ -1,28 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#292524"/>
-      <stop offset="1" stop-color="#0c0a09"/>
+      <stop offset="0" stop-color="#171c2e"/>
+      <stop offset="1" stop-color="#0a0e1a"/>
     </linearGradient>
     <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fbbf24" stop-opacity=".55"/>
-      <stop offset="1" stop-color="#b45309" stop-opacity=".15"/>
+      <stop offset="0" stop-color="#35c4b4" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity=".2"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <rect x=".75" y=".75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="url(#rim)" stroke-width="1.5"/>
-  <g stroke="#57534e" stroke-width="1.6" stroke-linecap="round">
-    <path d="M10 17H54M10 27H54M10 37H54M10 47H54"/>
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+  <rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="url(#rim)" stroke-width="1.5"/>
+  <!-- strings -->
+  <g stroke="#5f6b8b" stroke-width="1.8" stroke-linecap="round">
+    <path d="M12 18H56M12 26H56M12 34H56M12 42H56M12 50H56"/>
   </g>
-  <g stroke="#44403c" stroke-width="1.4" stroke-linecap="round">
-    <path d="M22 13V51M34 13V51M46 13V51M54 13V51"/>
+  <!-- frets -->
+  <g stroke="#343c56" stroke-width="1.6" stroke-linecap="round">
+    <path d="M26 14V54M40 14V54M54 14V54"/>
   </g>
-  <path d="M10 12V52" stroke="#d6d3d1" stroke-width="3" stroke-linecap="round"/>
-  <path d="M16 47L40 37L50 27" fill="none" stroke="#fbbf24" stroke-opacity=".55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="16" cy="47" r="8" fill="#f59e0b" fill-opacity=".22"/>
-  <circle cx="40" cy="37" r="8" fill="#10b981" fill-opacity=".22"/>
-  <circle cx="50" cy="27" r="8" fill="#3b82f6" fill-opacity=".22"/>
-  <circle cx="16" cy="47" r="4.6" fill="#f59e0b"/>
-  <circle cx="40" cy="37" r="4.6" fill="#10b981"/>
-  <circle cx="50" cy="27" r="4.6" fill="#3b82f6"/>
+  <!-- nut on the left -->
+  <path d="M11 12V56" stroke="#cfd6e6" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- the "click": a fretted note with a ripple -->
+  <circle cx="33" cy="34" r="11" fill="none" stroke="#35c4b4" stroke-opacity=".45" stroke-width="1.6"/>
+  <circle cx="33" cy="34" r="7.5" fill="#1aa89b" fill-opacity=".3"/>
+  <circle cx="33" cy="34" r="4.8" fill="#f5a524"/>
+  <circle cx="19" cy="18" r="3" fill="#35c4b4"/>
+  <circle cx="47" cy="50" r="3" fill="#8b5cf6"/>
 </svg>

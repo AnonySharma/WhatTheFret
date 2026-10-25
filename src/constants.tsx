@@ -1492,7 +1492,7 @@ export const QUIZ_RANKS: QuizRank[] = [
     maxAvgReactionMs: 1600,
     title: 'Fretboard Virtuoso',
     badge: '🏆 Virtuoso',
-    color: 'from-amber-400 to-amber-600',
+    color: 'from-brand-400 to-brand-600',
     description: 'Instinctual fretboard mastery! You locate notes as fast as a professional guitarist.',
   },
   {
@@ -1501,7 +1501,7 @@ export const QUIZ_RANKS: QuizRank[] = [
     maxAvgReactionMs: 2500,
     title: 'Fretboard Maestro',
     badge: '⚡ Maestro',
-    color: 'from-emerald-400 to-emerald-600',
+    color: 'from-gold-400 to-gold-600',
     description: 'Rapid recognition across the neck with sharp accuracy.',
   },
   {
@@ -1510,7 +1510,7 @@ export const QUIZ_RANKS: QuizRank[] = [
     maxAvgReactionMs: 3500,
     title: 'Fretboard Explorer',
     badge: '🎸 Explorer',
-    color: 'from-blue-400 to-blue-600',
+    color: 'from-violet-400 to-violet-600',
     description: 'Solid foundation. Keep training reaction speed on lower frets.',
   },
   {
@@ -1519,7 +1519,7 @@ export const QUIZ_RANKS: QuizRank[] = [
     maxAvgReactionMs: 99999,
     title: 'Fretboard Apprentice',
     badge: '🌱 Apprentice',
-    color: 'from-stone-400 to-stone-600',
+    color: 'from-ink-400 to-ink-600',
     description: 'Great start! Memorize open strings and 5th fret reference markers to climb higher.',
   },
 ];

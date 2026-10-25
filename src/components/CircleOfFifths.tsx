@@ -163,27 +163,27 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
   return (
     <div className="space-y-6">
       {/* Title & Concept Header */}
-      <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 border border-stone-800 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-ink-900 via-ink-850 to-ink-900 border border-ink-800 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="p-2 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
               <Compass className="w-5 h-5" />
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-stone-100">
+            <h2 className="text-xl sm:text-2xl font-bold text-ink-100">
               Interactive Circle of Fifths & Modal Transposer
             </h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30">
               Harmonic Clock
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-stone-400 mt-1">
+          <p className="text-xs sm:text-sm text-ink-400 mt-1">
             Click any segment to hear its acoustic voicing, visualize relative minor chords, and see corresponding Indian Thaats and scale degrees.
           </p>
         </div>
 
         {/* Notation Toggle */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs">
+          <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
             <button
               onClick={() => {
                 setNotationMode('western');
@@ -191,8 +191,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 notationMode === 'western'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               Western Notes (C, G, D)
@@ -204,8 +204,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 notationMode === 'indian'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               Indian Sargam (Sa, Pa, Re)
@@ -217,25 +217,25 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
       {/* Main Interactive Dial and Theory Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Visual SVG Circle Dial (7 cols) */}
-        <div className="lg:col-span-7 bg-stone-900/90 border border-stone-800 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-sm">
+        <div className="lg:col-span-7 bg-ink-900/90 border border-ink-800 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-sm">
           {/* Subtle Ambient Radial Lighting */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="w-[320px] h-[320px] rounded-full bg-amber-500/5 blur-[90px]" />
+            <div className="w-[320px] h-[320px] rounded-full bg-brand-500/5 blur-[90px]" />
           </div>
 
           {/* Harmonic Neighbor Legend Bar */}
-          <div className="w-full flex flex-wrap items-center justify-center gap-2 pb-4 text-[11px] font-semibold border-b border-stone-800/80">
-            <span className="text-stone-500 uppercase tracking-wider text-[10px] mr-1">Harmonic Family:</span>
-            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <div className="w-full flex flex-wrap items-center justify-center gap-2 pb-4 text-[11px] font-semibold border-b border-ink-800/80">
+            <span className="text-ink-500 uppercase tracking-wider text-[10px] mr-1">Harmonic Family:</span>
+            <span className="px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 border border-brand-500/30">
               I • Tonic (Center)
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30">
+            <span className="px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30">
               IV • Subdominant (Left)
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/30">
+            <span className="px-2 py-0.5 rounded-md bg-gold-500/20 text-gold-300 border border-gold-500/30">
               V • Dominant (Right)
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded-md bg-gold-500/20 text-gold-300 border border-gold-500/30">
               vi • Relative Minor (Inner)
             </span>
           </div>
@@ -256,7 +256,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
               {/* Background Circular Plate */}
               <circle cx={center} cy={center} r={outerR + 10} fill="#0d0e11" stroke="#262626" strokeWidth="2" />
-              <circle cx={center} cy={center} r={outerR} fill="#16171b" />
+              <circle cx={center} cy={center} r={outerR} fill="#171c2e" />
 
               {/* 12 Outer Slices: Major Keys */}
               {CIRCLE_OF_FIFTHS_DATA.map((seg, i) => {
@@ -272,21 +272,21 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 const labelPos = polarToCartesian(center, center, (outerR + midR) / 2, i * 30);
                 const accPos = polarToCartesian(center, center, outerR - 16, i * 30);
 
-                let fillClass = '#1c1917';
-                let strokeClass = '#292524';
-                let textClass = '#d6d3d1';
+                let fillClass = '#171c2e';
+                let strokeClass = '#232a40';
+                let textClass = '#cfd6e6';
 
                 if (isTonic) {
-                  fillClass = '#d97706'; // Amber 600
-                  strokeClass = '#fbbf24';
+                  fillClass = '#0f8a82'; // Amber 600
+                  strokeClass = '#35c4b4';
                   textClass = '#ffffff';
                 } else if (isSubdominant) {
                   fillClass = '#0284c7'; // Sky 600
-                  strokeClass = '#38bdf8';
+                  strokeClass = '#a78bfa';
                   textClass = '#ffffff';
                 } else if (isDominant) {
-                  fillClass = '#ea580c'; // Orange 600
-                  strokeClass = '#fb923c';
+                  fillClass = '#d98a0b'; // Orange 600
+                  strokeClass = '#fbbf24';
                   textClass = '#ffffff';
                 }
 
@@ -333,7 +333,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                       x={accPos.x}
                       y={accPos.y}
                       textAnchor="middle"
-                      fill={isTonic ? '#fef3c7' : '#78716c'}
+                      fill={isTonic ? '#d0f7ef' : '#5f6b8b'}
                       fontSize="9"
                       fontWeight="bold"
                       className="pointer-events-none font-mono"
@@ -360,17 +360,17 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
                 const labelPos = polarToCartesian(center, center, (midR + innerR) / 2, i * 30);
 
-                let fillClass = '#141416';
+                let fillClass = '#0f1424';
                 let strokeClass = '#27272a';
                 let textClass = '#a1a1aa';
 
                 if (isRelativeMinor) {
                   fillClass = '#059669'; // Emerald 600
-                  strokeClass = '#34d399';
+                  strokeClass = '#fbbf24';
                   textClass = '#ffffff';
                 } else if (isSupertonic) {
                   fillClass = '#0891b2'; // Cyan 600
-                  strokeClass = '#22d3ee';
+                  strokeClass = '#35c4b4';
                   textClass = '#ffffff';
                 } else if (isMediant) {
                   fillClass = '#7c3aed'; // Violet 600
@@ -422,8 +422,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 cx={center}
                 cy={center}
                 r={innerR - 4}
-                fill="#0b0c0e"
-                stroke="#d97706"
+                fill="#0a0e1a"
+                stroke="#0f8a82"
                 strokeWidth="2.5"
                 filter="url(#gold-glow)"
               />
@@ -432,7 +432,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center - 22}
                 textAnchor="middle"
-                fill="#f59e0b"
+                fill="#1aa89b"
                 fontSize="10"
                 fontWeight="800"
                 className="uppercase tracking-widest font-mono"
@@ -458,7 +458,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center + 26}
                 textAnchor="middle"
-                fill="#10b981"
+                fill="#f5a524"
                 fontSize="12"
                 fontWeight="700"
                 className="font-sans"
@@ -470,7 +470,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center + 42}
                 textAnchor="middle"
-                fill="#78716c"
+                fill="#5f6b8b"
                 fontSize="9"
                 fontWeight="600"
                 className="font-mono"
@@ -486,7 +486,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <button
               onClick={() => playChordVoicing(activeSegment.majorKey, 'Major')}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5"
             >
               <Volume2 className="w-3.5 h-3.5" />
               <span>Strum {activeSegment.majorKey} Major</span>
@@ -494,7 +494,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
             <button
               onClick={() => playChordVoicing(activeSegment.minorKey, 'Minor')}
-              className="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-300 font-semibold text-xs border border-emerald-500/30 transition-all active:scale-95 flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-gold-300 font-semibold text-xs border border-gold-500/30 transition-all active:scale-95 flex items-center gap-1.5"
             >
               <Volume2 className="w-3.5 h-3.5" />
               <span>Strum {activeSegment.minorKey} Minor</span>
@@ -503,7 +503,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
             <button
               onClick={playCadence}
               disabled={isPlayingProgression}
-              className="px-3.5 py-2 rounded-xl bg-stone-950 hover:bg-stone-850 text-amber-300 font-semibold text-xs border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-2 rounded-xl bg-ink-950 hover:bg-ink-850 text-brand-300 font-semibold text-xs border border-brand-500/40 transition-all active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>{isPlayingProgression ? 'Playing Cadence...' : 'Play I - IV - V - I'}</span>
@@ -514,39 +514,39 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
         {/* Right Column: Harmonic Details, Indian Thaat, and Scale Degrees (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           {/* Active Key Profile Card */}
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-xl space-y-3">
+          <div className="bg-ink-900 border border-ink-800 rounded-2xl p-5 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-brand-400 font-bold">
                   Key Harmonic Profile
                 </span>
                 <h3 className="text-2xl font-black text-white mt-0.5">
                   {activeSegment.majorKey} Major
-                  <span className="text-base text-stone-400 font-medium ml-2">/ {activeSegment.minorDisplay}</span>
+                  <span className="text-base text-ink-400 font-medium ml-2">/ {activeSegment.minorDisplay}</span>
                 </h3>
               </div>
 
-              <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
+              <span className="px-2.5 py-1 rounded-xl bg-brand-500/20 text-brand-300 font-bold text-xs border border-brand-500/30">
                 {activeSegment.accidentals}
               </span>
             </div>
 
             {/* Indian Thaat & Sargam System Alignment */}
-            <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-3.5 space-y-1.5">
+            <div className="bg-ink-950/80 border border-ink-800 rounded-xl p-3.5 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-stone-400 font-bold flex items-center gap-1.5">
+                <span className="text-ink-400 font-bold flex items-center gap-1.5">
                   <span>🪕 Indian Classical Thaat:</span>
                 </span>
-                <span className="text-amber-300 font-extrabold">{activeSegment.thaat}</span>
+                <span className="text-brand-300 font-extrabold">{activeSegment.thaat}</span>
               </div>
-              <p className="text-xs text-stone-400 leading-relaxed">
+              <p className="text-xs text-ink-400 leading-relaxed">
                 {activeSegment.thaatExplanation}
               </p>
             </div>
 
             {/* Scale Notes Strip */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-ink-400">
                 Major Scale Degrees (7 Tones):
               </span>
               <div className="grid grid-cols-7 gap-1 text-center">
@@ -561,14 +561,14 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                       key={idx}
                       className={`p-2 rounded-xl border flex flex-col items-center justify-center ${
                         isRoot
-                          ? 'bg-amber-600/30 border-amber-500 text-amber-200 font-black'
+                          ? 'bg-brand-600/30 border-brand-500 text-brand-200 font-black'
                           : isThird || isFifth
-                          ? 'bg-stone-950 border-amber-500/30 text-stone-200 font-bold'
-                          : 'bg-stone-950 border-stone-800 text-stone-400'
+                          ? 'bg-ink-950 border-brand-500/30 text-ink-200 font-bold'
+                          : 'bg-ink-950 border-ink-800 text-ink-400'
                       }`}
                     >
                       <span className="text-xs font-extrabold">{n}</span>
-                      <span className="text-[10px] text-amber-400/80 font-mono">
+                      <span className="text-[10px] text-brand-400/80 font-mono">
                         {notationMode === 'indian' ? swara.shortName : `Deg ${idx + 1}`}
                       </span>
                     </div>
@@ -579,15 +579,15 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
           </div>
 
           {/* Diatonic Chord Family Matrix (I, ii, iii, IV, V, vi, vii°) */}
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-xl space-y-3">
+          <div className="bg-ink-900 border border-ink-800 rounded-2xl p-5 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-amber-400" />
-                <h4 className="font-bold text-sm text-stone-100">
+                <Layers className="w-4 h-4 text-brand-400" />
+                <h4 className="font-bold text-sm text-ink-100">
                   Diatonic Chords in {activeSegment.majorKey} Major
                 </h4>
               </div>
-              <span className="text-[10px] text-stone-400 font-mono">Click to play</span>
+              <span className="text-[10px] text-ink-400 font-mono">Click to play</span>
             </div>
 
             <div className="space-y-2">
@@ -597,26 +597,26 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 const isDominant = chord.degreeNumeral === 'V';
                 const isRelMinor = chord.degreeNumeral === 'vi';
 
-                let badgeColor = 'bg-stone-800 text-stone-300 border-stone-700';
-                if (isTonicChord) badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold';
-                else if (isSubdominant) badgeColor = 'bg-sky-500/20 text-sky-300 border-sky-500/40 font-bold';
-                else if (isDominant) badgeColor = 'bg-orange-500/20 text-orange-300 border-orange-500/40 font-bold';
-                else if (isRelMinor) badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold';
+                let badgeColor = 'bg-ink-800 text-ink-300 border-ink-700';
+                if (isTonicChord) badgeColor = 'bg-brand-500/20 text-brand-300 border-brand-500/40 font-bold';
+                else if (isSubdominant) badgeColor = 'bg-violet-500/20 text-violet-300 border-violet-500/40 font-bold';
+                else if (isDominant) badgeColor = 'bg-gold-500/20 text-gold-300 border-gold-500/40 font-bold';
+                else if (isRelMinor) badgeColor = 'bg-gold-500/20 text-gold-300 border-gold-500/40 font-bold';
 
                 return (
                   <div
                     key={chord.degreeNumeral}
-                    className="bg-stone-950/80 border border-stone-800/90 rounded-xl p-2.5 flex items-center justify-between gap-3 text-xs hover:border-amber-500/30 transition-all"
+                    className="bg-ink-950/80 border border-ink-800/90 rounded-xl p-2.5 flex items-center justify-between gap-3 text-xs hover:border-brand-500/30 transition-all"
                   >
                     <div className="flex items-center gap-2.5">
                       <span className={`w-8 h-7 rounded-lg flex items-center justify-center font-mono text-xs border ${badgeColor}`}>
                         {chord.degreeNumeral}
                       </span>
                       <div>
-                        <div className="font-extrabold text-stone-200">
+                        <div className="font-extrabold text-ink-200">
                           {chord.rootNote} {chord.chordType}
                         </div>
-                        <div className="text-[10px] text-stone-400">
+                        <div className="text-[10px] text-ink-400">
                           Triad: {chord.notes.join(' - ')}
                         </div>
                       </div>
@@ -624,9 +624,9 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
                     <button
                       onClick={() => playChordVoicing(chord.rootNote, chord.chordType === 'Minor' ? 'Minor' : 'Major')}
-                      className="px-2.5 py-1 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 text-[11px] font-semibold flex items-center gap-1 active:scale-95"
+                      className="px-2.5 py-1 rounded-lg bg-ink-900 hover:bg-ink-800 text-ink-300 hover:text-white border border-ink-800 text-[11px] font-semibold flex items-center gap-1 active:scale-95"
                     >
-                      <Volume2 className="w-3 h-3 text-amber-400" />
+                      <Volume2 className="w-3 h-3 text-brand-400" />
                       <span>Hear</span>
                     </button>
                   </div>

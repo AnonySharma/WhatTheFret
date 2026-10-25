@@ -141,10 +141,10 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
         }}
         className={`flex items-center gap-2 px-2.5 sm:px-3 h-9 rounded-xl border text-xs font-bold transition-all shadow-sm ${
           isRunning || isMicActive
-            ? 'bg-amber-950/60 border-amber-500/50 text-amber-300 ring-1 ring-amber-500/20'
+            ? 'bg-brand-950/60 border-brand-500/50 text-brand-300 ring-1 ring-brand-500/20'
             : isOpen || isPinned
-            ? 'bg-stone-850 border-stone-700 text-stone-200'
-            : 'bg-stone-900 border-stone-800 text-stone-300 hover:border-amber-500/40 hover:text-white'
+            ? 'bg-ink-850 border-ink-700 text-ink-200'
+            : 'bg-ink-900 border-ink-800 text-ink-300 hover:border-brand-500/40 hover:text-white'
         }`}
         title="Hover to open Quick Metronome & Tuner Settings"
       >
@@ -153,56 +153,56 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           className={`w-2.5 h-2.5 rounded-full transition-all duration-75 ${
             isRunning
               ? activeBeat === 0
-                ? 'bg-amber-400 scale-140 ring-4 ring-amber-400/60 shadow-[0_0_10px_rgba(245,158,11,1)]'
-                : 'bg-emerald-400 scale-110 ring-2 ring-emerald-400/40'
-              : 'bg-stone-600'
+                ? 'bg-brand-400 scale-140 ring-4 ring-brand-400/60 shadow-[0_0_10px_rgba(26,168,155,1)]'
+                : 'bg-gold-400 scale-110 ring-2 ring-gold-400/40'
+              : 'bg-ink-600'
           }`}
         />
 
         {/* Metronome Icon & BPM */}
         <div className="flex items-center gap-1">
-          <Activity className="w-3.5 h-3.5 text-amber-400" />
-          <span className="font-mono font-extrabold text-[11px] text-stone-100">{bpm}</span>
-          <span className="text-[10px] text-stone-400 font-normal">BPM</span>
+          <Activity className="w-3.5 h-3.5 text-brand-400" />
+          <span className="font-mono font-extrabold text-[11px] text-ink-100">{bpm}</span>
+          <span className="text-[10px] text-ink-400 font-normal">BPM</span>
         </div>
 
-        <span className="text-stone-700 hidden sm:inline">•</span>
+        <span className="text-ink-700 hidden sm:inline">•</span>
 
         {/* Tuner Indicator */}
         <div className="items-center gap-1 hidden sm:flex">
-          <Mic className={`w-3 h-3 ${isMicActive ? 'text-emerald-400 animate-pulse' : 'text-stone-500'}`} />
+          <Mic className={`w-3 h-3 ${isMicActive ? 'text-gold-400 animate-pulse' : 'text-ink-500'}`} />
           {isMicActive && pitchData ? (
-            <span className="px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+            <span className="px-1 py-0.2 rounded bg-gold-500/20 text-gold-300 text-[10px] font-mono font-bold">
               {pitchData.note} ({pitchData.cents > 0 ? `+${pitchData.cents}` : pitchData.cents}¢)
             </span>
           ) : (
-            <span className="text-[10px] text-stone-400">{isMicActive ? 'Listening' : 'Tuner'}</span>
+            <span className="text-[10px] text-ink-400">{isMicActive ? 'Listening' : 'Tuner'}</span>
           )}
         </div>
 
-        <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3 h-3 text-ink-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Floating Hover Tooltip / Popover Panel ("Tooltip Thingy") */}
       {isOpen && (
         <div
-          className="fixed sm:absolute inset-x-3 sm:inset-x-auto top-[6.5rem] sm:top-full sm:right-0 sm:mt-2 max-h-[calc(100dvh-8rem)] overflow-y-auto sm:w-96 rounded-2xl bg-stone-950/95 backdrop-blur-2xl border border-stone-800 shadow-2xl p-4 text-stone-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
-          style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(245, 158, 11, 0.15)' }}
+          className="fixed sm:absolute inset-x-3 sm:inset-x-auto top-[6.5rem] sm:top-full sm:right-0 sm:mt-2 max-h-[calc(100dvh-8rem)] overflow-y-auto sm:w-96 rounded-2xl bg-ink-950/95 backdrop-blur-2xl border border-ink-800 shadow-2xl p-4 text-ink-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
+          style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(26,168,155, 0.15)' }}
         >
           {/* Header of Popover */}
-          <div className="flex items-center justify-between border-b border-stone-800/80 pb-2.5">
+          <div className="flex items-center justify-between border-b border-ink-800/80 pb-2.5">
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded-md bg-amber-500/10 text-amber-400">
+              <span className="p-1 rounded-md bg-brand-500/10 text-brand-400">
                 <Activity className="w-3.5 h-3.5" />
               </span>
-              <span className="text-xs font-bold text-stone-200">Metronome & Tuner Hub</span>
+              <span className="text-xs font-bold text-ink-200">Metronome & Tuner Hub</span>
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsPinned(prev => !prev)}
                 className={`p-1 rounded-lg text-xs transition-colors ${
-                  isPinned ? 'bg-amber-500/20 text-amber-300' : 'text-stone-500 hover:text-stone-300'
+                  isPinned ? 'bg-brand-500/20 text-brand-300' : 'text-ink-500 hover:text-ink-300'
                 }`}
                 title={isPinned ? 'Unpin popover' : 'Pin popover open'}
               >
@@ -213,7 +213,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                   setIsPinned(false);
                   setIsOpen(false);
                 }}
-                className="p-1 rounded-lg text-stone-500 hover:text-stone-300 text-xs"
+                className="p-1 rounded-lg text-ink-500 hover:text-ink-300 text-xs"
               >
                 ✕
               </button>
@@ -223,13 +223,13 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           {/* Section 1: Metronome Controls */}
           <div className="space-y-3">
             {/* Play/Pause & Big BPM */}
-            <div className="bg-stone-900/80 p-3 rounded-xl border border-stone-800 flex items-center justify-between gap-3">
+            <div className="bg-ink-900/80 p-3 rounded-xl border border-ink-800 flex items-center justify-between gap-3">
               <button
                 onClick={() => metronome.toggle()}
                 className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold shadow-md transition-all active:scale-95 shrink-0 ${
                   isRunning
                     ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/30'
-                    : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/40'
+                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-900/40'
                 }`}
               >
                 {isRunning ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
@@ -238,10 +238,10 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
               <div className="flex-1">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-2xl font-black font-mono text-white">{bpm}</span>
-                  <span className="text-[10px] font-bold text-amber-400 uppercase">BPM</span>
+                  <span className="text-[10px] font-bold text-brand-400 uppercase">BPM</span>
                 </div>
-                <div className="text-[10px] text-stone-400">
-                  <span className="text-amber-300 font-semibold">{tempoMarking.italian}</span> • {tempoMarking.name}
+                <div className="text-[10px] text-ink-400">
+                  <span className="text-brand-300 font-semibold">{tempoMarking.italian}</span> • {tempoMarking.name}
                 </div>
               </div>
 
@@ -249,19 +249,19 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleBpmChange(bpm - 5)}
-                  className="px-1.5 py-1 rounded bg-stone-950 hover:bg-stone-800 border border-stone-800 text-[10px] font-bold text-stone-300"
+                  className="px-1.5 py-1 rounded bg-ink-950 hover:bg-ink-800 border border-ink-800 text-[10px] font-bold text-ink-300"
                 >
                   -5
                 </button>
                 <button
                   onClick={() => handleBpmChange(bpm + 5)}
-                  className="px-1.5 py-1 rounded bg-stone-950 hover:bg-stone-800 border border-stone-800 text-[10px] font-bold text-stone-300"
+                  className="px-1.5 py-1 rounded bg-ink-950 hover:bg-ink-800 border border-ink-800 text-[10px] font-bold text-ink-300"
                 >
                   +5
                 </button>
                 <button
                   onClick={handleTapTempo}
-                  className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-[10px] font-bold text-amber-300 active:scale-90"
+                  className="px-2 py-1 rounded bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/30 text-[10px] font-bold text-brand-300 active:scale-90"
                 >
                   {tapFeedback}
                 </button>
@@ -275,7 +275,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
               max={METRONOME_CONFIG.MAX_BPM}
               value={bpm}
               onChange={e => handleBpmChange(Number(e.target.value))}
-              className="w-full h-1.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              className="w-full h-1.5 bg-ink-800 rounded-lg appearance-none cursor-pointer accent-brand-500"
             />
 
             {/* Time Signatures & Beat Dots */}
@@ -290,8 +290,8 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                     }}
                     className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all border ${
                       timeSignature.label === ts.label
-                        ? 'bg-amber-600/30 border-amber-500 text-amber-300'
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:text-white'
+                        ? 'bg-brand-600/30 border-brand-500 text-brand-300'
+                        : 'bg-ink-900 border-ink-800 text-ink-400 hover:text-white'
                     }`}
                   >
                     {ts.label}
@@ -307,9 +307,9 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                     className={`w-3.5 h-3.5 rounded-full transition-all duration-75 flex items-center justify-center text-[8px] font-black ${
                       activeBeat === i
                         ? i === 0
-                          ? 'bg-amber-400 text-stone-950 scale-125 shadow-[0_0_8px_rgba(245,158,11,1)]'
-                          : 'bg-emerald-400 text-stone-950 scale-110'
-                        : 'bg-stone-800 text-stone-600 border border-stone-700/60'
+                          ? 'bg-brand-400 text-ink-950 scale-125 shadow-[0_0_8px_rgba(26,168,155,1)]'
+                          : 'bg-gold-400 text-ink-950 scale-110'
+                        : 'bg-ink-800 text-ink-600 border border-ink-700/60'
                     }`}
                   >
                     {i + 1}
@@ -320,18 +320,18 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           </div>
 
           {/* Section 2: Quick Tuner & Pitch Readout */}
-          <div className="bg-stone-900/90 p-3 rounded-xl border border-stone-800 space-y-2">
+          <div className="bg-ink-900/90 p-3 rounded-xl border border-ink-800 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Mic className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-xs font-bold text-stone-200">Instant Guitar Tuner</span>
+                <Mic className="w-3.5 h-3.5 text-brand-400" />
+                <span className="text-xs font-bold text-ink-200">Instant Guitar Tuner</span>
               </div>
               <button
                 onClick={onToggleMic}
                 className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-colors ${
                   isMicActive
                     ? 'bg-red-950/80 border-red-800 text-red-300'
-                    : 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
+                    : 'bg-gold-950/80 border-gold-800 text-gold-300'
                 }`}
               >
                 {isMicActive ? 'Turn Off Mic' : 'Activate Mic'}
@@ -341,15 +341,15 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
             {/* Pitch Gauge Readout */}
             {isMicActive ? (
               pitchData ? (
-                <div className="bg-stone-950 p-2.5 rounded-lg border border-stone-800 flex items-center justify-between">
+                <div className="bg-ink-950 p-2.5 rounded-lg border border-ink-800 flex items-center justify-between">
                   <div>
-                    <span className="text-2xl font-black text-amber-400">{pitchData.note}</span>
-                    <span className="text-[10px] text-stone-400 font-mono ml-1.5">Oct {pitchData.octave}</span>
+                    <span className="text-2xl font-black text-brand-400">{pitchData.note}</span>
+                    <span className="text-[10px] text-ink-400 font-mono ml-1.5">Oct {pitchData.octave}</span>
                   </div>
                   <div className="text-right">
                     <span
                       className={`text-xs font-extrabold flex items-center gap-1 ${
-                        pitchData.inTune ? 'text-emerald-400' : 'text-amber-400'
+                        pitchData.inTune ? 'text-gold-400' : 'text-brand-400'
                       }`}
                     >
                       {pitchData.inTune ? (
@@ -363,32 +363,32 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                         </>
                       )}
                     </span>
-                    <span className="text-[9px] text-stone-500 font-mono">{pitchData.frequency} Hz</span>
+                    <span className="text-[9px] text-ink-500 font-mono">{pitchData.frequency} Hz</span>
                   </div>
                 </div>
               ) : (
-                <div className="text-[11px] text-stone-500 italic text-center py-2">
+                <div className="text-[11px] text-ink-500 italic text-center py-2">
                   Pluck a guitar string or hum into microphone...
                 </div>
               )
             ) : (
-              <div className="text-[11px] text-stone-400 text-center py-1">
+              <div className="text-[11px] text-ink-400 text-center py-1">
                 Click "Activate Mic" to detect guitar pitch in real time.
               </div>
             )}
 
             {/* Quick String Reference Plucks */}
             <div className="pt-1">
-              <span className="text-[9px] uppercase font-bold text-stone-500 block mb-1">Hear Reference Pitch:</span>
+              <span className="text-[9px] uppercase font-bold text-ink-500 block mb-1">Hear Reference Pitch:</span>
               <div className="grid grid-cols-6 gap-1">
                 {GUITAR_STRINGS.map(s => (
                   <button
                     key={s.stringNumber}
                     onClick={() => guitarAudio.pluck(s.openFrequencyHz, 2.5)}
-                    className="p-1 rounded bg-stone-950 hover:bg-stone-850 border border-stone-800 text-center transition-colors"
+                    className="p-1 rounded bg-ink-950 hover:bg-ink-850 border border-ink-800 text-center transition-colors"
                     title={`String ${s.stringNumber}: ${s.name} (${s.openFrequencyHz} Hz)`}
                   >
-                    <span className="text-[10px] font-black text-amber-300">{s.openNote}</span>
+                    <span className="text-[10px] font-black text-brand-300">{s.openNote}</span>
                   </button>
                 ))}
               </div>

@@ -80,24 +80,24 @@ export function calculateProgressStats(completedLessons: number[], totalLessons:
   const percentage = Math.min(100, Math.round((count / totalLessons) * 100));
 
   let levelTitle = 'Novice Explorer';
-  let levelColor = 'text-stone-400';
+  let levelColor = 'text-ink-400';
   let badgeIcon = '🌱';
 
   if (percentage >= 100) {
     levelTitle = 'Certified Guitar Maestro';
-    levelColor = 'text-amber-400';
+    levelColor = 'text-brand-400';
     badgeIcon = '👑';
   } else if (percentage >= 70) {
     levelTitle = 'Barre & Harmony Specialist';
-    levelColor = 'text-emerald-400';
+    levelColor = 'text-gold-400';
     badgeIcon = '🎸';
   } else if (percentage >= 40) {
     levelTitle = 'Triad & Scale Decoder';
-    levelColor = 'text-sky-400';
+    levelColor = 'text-violet-400';
     badgeIcon = '✨';
   } else if (percentage > 15) {
     levelTitle = 'Ear Tuning Apprentice';
-    levelColor = 'text-amber-300';
+    levelColor = 'text-brand-300';
     badgeIcon = '🎧';
   }
 

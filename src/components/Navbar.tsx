@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleNotation,
 }) => {
   return (
-    <header className="bg-stone-950/85 backdrop-blur-xl border-b border-stone-800/80 text-stone-100 sticky top-0 z-50">
+    <header className="bg-ink-950/85 backdrop-blur-xl border-b border-ink-800/80 text-ink-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Top row: brand + quick controls */}
         <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
@@ -69,10 +69,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl shadow-md shadow-black/40 group-hover:scale-105 transition-transform"
             />
             <div className="min-w-0 text-left">
-              <div className="font-black text-sm sm:text-lg tracking-tight leading-tight truncate bg-gradient-to-r from-amber-100 via-amber-200 to-amber-500 bg-clip-text text-transparent">
+              <div className="font-black text-sm sm:text-lg tracking-tight leading-tight truncate bg-gradient-to-r from-brand-100 via-brand-200 to-brand-500 bg-clip-text text-transparent">
                 WhatTheFret
               </div>
-              <p className="text-[10px] text-stone-400 font-medium leading-tight hidden sm:block truncate">
+              <p className="text-[10px] text-ink-400 font-medium leading-tight hidden sm:block truncate">
                 The math of the fretboard, finally clicking
               </p>
             </div>
@@ -83,11 +83,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onToggleNotation(notesNotation === 'western' ? 'indian' : 'western')}
-              className="flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-stone-900 border border-stone-800 hover:border-amber-500/40 text-xs font-semibold text-stone-200 transition-all"
+              className="flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-ink-900 border border-ink-800 hover:border-brand-500/40 text-xs font-semibold text-ink-200 transition-all"
               title="Toggle between Western (C D E) and Indian Sargam (Sa Re Ga Ma)"
             >
-              <span className="text-[10px] text-amber-400 font-bold uppercase hidden lg:inline">Notation:</span>
-              <span className="font-extrabold text-amber-300 text-[11px]">
+              <span className="text-[10px] text-brand-400 font-bold uppercase hidden lg:inline">Notation:</span>
+              <span className="font-extrabold text-brand-300 text-[11px]">
                 {notesNotation === 'western' ? 'ABC' : 'Sa Re'}
               </span>
             </button>
@@ -95,10 +95,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('journey')}
-              className="hidden md:flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-stone-900 border border-amber-500/30 text-amber-300 text-xs font-bold hover:border-amber-500/60 transition-colors"
+              className="hidden md:flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-ink-900 border border-brand-500/30 text-brand-300 text-xs font-bold hover:border-brand-500/60 transition-colors"
               title="View Guided Journey progress"
             >
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <Award className="w-3.5 h-3.5 text-brand-400" />
               <span className="text-[11px]">{completedCount}/7</span>
             </button>
 
@@ -108,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all ${
                 isMuted
                   ? 'bg-red-950/70 border-red-800/50 text-red-400'
-                  : 'bg-stone-900 border-stone-800 text-amber-400 hover:bg-stone-800 hover:border-stone-700'
+                  : 'bg-ink-900 border-ink-800 text-brand-400 hover:bg-ink-800 hover:border-ink-700'
               }`}
               title={isMuted ? 'Unmute sound' : 'Mute sound'}
             >
@@ -131,14 +131,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
                   active
-                    ? 'bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-500/40'
-                    : 'text-stone-400 hover:text-stone-100 hover:bg-stone-800/60'
+                    ? 'bg-brand-500/15 text-brand-300 ring-1 ring-inset ring-brand-500/40'
+                    : 'text-ink-400 hover:text-ink-100 hover:bg-ink-800/60'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${active ? 'text-amber-400' : ''}`} />
+                <Icon className={`w-3.5 h-3.5 ${active ? 'text-brand-400' : ''}`} />
                 <span>{label}</span>
                 {id === 'journey' && (
-                  <span className="ml-0.5 px-1.5 text-[10px] rounded-full bg-amber-500/20 text-amber-300 font-black">
+                  <span className="ml-0.5 px-1.5 text-[10px] rounded-full bg-brand-500/20 text-brand-300 font-black">
                     {progressPercentage}%
                   </span>
                 )}

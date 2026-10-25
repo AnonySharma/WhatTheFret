@@ -1,6 +1,43 @@
 @import "tailwindcss";
 
 @theme {
+  /* WhatTheFret design language: midnight "ink" surfaces, teal brand, gold accent, violet secondary */
+  --color-ink-50: #f4f6fb;
+  --color-ink-100: #e6eaf3;
+  --color-ink-200: #cfd6e6;
+  --color-ink-300: #aeb8d0;
+  --color-ink-400: #8791b0;
+  --color-ink-500: #5f6b8b;
+  --color-ink-600: #465170;
+  --color-ink-700: #343c56;
+  --color-ink-800: #232a40;
+  --color-ink-900: #171c2e;
+  --color-ink-950: #0a0e1a;
+
+  --color-brand-50: #e8fbf7;
+  --color-brand-100: #d0f7ef;
+  --color-brand-200: #a3eedf;
+  --color-brand-300: #6fe0cd;
+  --color-brand-400: #35c4b4;
+  --color-brand-500: #1aa89b;
+  --color-brand-600: #0f8a82;
+  --color-brand-700: #0f6e69;
+  --color-brand-800: #115853;
+  --color-brand-900: #12483f;
+  --color-brand-950: #082b2a;
+
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #d0f7ef;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #35c4b4;
+  --color-gold-500: #f5a524;
+  --color-gold-600: #d98a0b;
+  --color-gold-700: #b46a0a;
+  --color-gold-800: #92520e;
+  --color-gold-900: #78430f;
+  --color-gold-950: #452307;
+
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -12,7 +49,7 @@ html {
 
 html,
 body {
-  background: #0b0c0e;
+  background: #0a0e1a;
   overflow-x: clip;
 }
 
@@ -34,7 +71,7 @@ body {
 /* Slim, dark scrollbars for panels that really need them (fretboards etc.) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #44403c transparent;
+  scrollbar-color: #343c56 transparent;
 }
 
 /* No double-tap zoom delay on touch devices */

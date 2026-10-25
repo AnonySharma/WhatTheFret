@@ -89,7 +89,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
-        colors: ['#f59e0b', '#10b981', '#3b82f6', '#ec4899'],
+        colors: ['#1aa89b', '#f5a524', '#8b5cf6', '#f87171'],
       });
     }
   };
@@ -106,32 +106,32 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
   return (
     <div className="space-y-6">
       {/* High-End Hero Progress Dashboard Banner */}
-      <div className="bg-gradient-to-br from-stone-900 via-stone-900/90 to-amber-950/30 border border-stone-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-ink-900 via-ink-900/90 to-brand-950/30 border border-ink-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         {/* Subtle decorative glowing background shapes */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-orange-600/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-gold-600/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-inner">
+              <span className="p-2 rounded-xl bg-brand-500/15 text-brand-300 border border-brand-500/30 shadow-inner">
                 <Trophy className="w-5 h-5" />
               </span>
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-400">
                 Persistent Progress Tracking
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-stone-100 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-ink-100 tracking-tight">
               Intuitive Guitar Mastery Journey
             </h2>
 
-            <p className="text-xs sm:text-sm text-stone-300 max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-ink-300 max-w-xl leading-relaxed">
               Every lesson you complete is automatically recorded in your browser’s localStorage. Follow the 7 theoretical milestones to unlock your Certified Maestro status!
             </p>
 
             <div className="pt-1 flex items-center gap-2 text-xs">
-              <span className="font-bold text-stone-400">Current Rank:</span>
+              <span className="font-bold text-ink-400">Current Rank:</span>
               <span className={`font-black text-sm ${stats.levelColor} flex items-center gap-1`}>
                 <span>{stats.badgeIcon}</span>
                 <span>{stats.levelTitle}</span>
@@ -140,27 +140,27 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
           </div>
 
           {/* Progress Circular & Linear Meter */}
-          <div className="bg-stone-950/80 border border-stone-800/90 rounded-2xl p-5 shadow-inner flex flex-col items-center justify-center min-w-[240px] shrink-0 space-y-3">
+          <div className="bg-ink-950/80 border border-ink-800/90 rounded-2xl p-5 shadow-inner flex flex-col items-center justify-center min-w-[240px] shrink-0 space-y-3">
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500">
+              <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-200 via-brand-400 to-brand-500">
                 {stats.percentage}%
               </span>
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Completed</span>
+              <span className="text-xs font-bold text-ink-400 uppercase tracking-wider">Completed</span>
             </div>
 
             {/* Linear Bar */}
-            <div className="w-full h-3 bg-stone-900 rounded-full overflow-hidden p-0.5 border border-stone-800">
+            <div className="w-full h-3 bg-ink-900 rounded-full overflow-hidden p-0.5 border border-ink-800">
               <div
-                className="h-full bg-gradient-to-r from-amber-600 via-amber-500 to-orange-400 rounded-full transition-all duration-500 shadow-sm"
+                className="h-full bg-gradient-to-r from-brand-600 via-brand-500 to-gold-400 rounded-full transition-all duration-500 shadow-sm"
                 style={{ width: `${stats.percentage}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between w-full text-[11px] font-bold text-stone-400">
+            <div className="flex items-center justify-between w-full text-[11px] font-bold text-ink-400">
               <span>{stats.count} of {stats.totalLessons} Lessons Done</span>
               <button
                 onClick={handleResetProgress}
-                className="text-stone-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                className="text-ink-500 hover:text-red-400 transition-colors flex items-center gap-1"
                 title="Reset progress"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -181,8 +181,8 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
               key={stage.title}
               className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-sm ${
                 isDone
-                  ? 'bg-stone-900/90 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
-                  : 'bg-stone-900/50 border-stone-800/80 hover:border-stone-700/90 hover:bg-stone-900/70'
+                  ? 'bg-ink-900/90 border-gold-500/50 shadow-lg shadow-gold-950/20'
+                  : 'bg-ink-900/50 border-ink-800/80 hover:border-ink-700/90 hover:bg-ink-900/70'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -191,31 +191,31 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
                   onClick={() => handleToggleComplete(stage.lessonIndex)}
                   className={`mt-0.5 w-7 h-7 rounded-xl flex items-center justify-center transition-all ${
                     isDone
-                      ? 'bg-emerald-500 text-stone-950 shadow-md shadow-emerald-950/50'
-                      : 'border-2 border-stone-700 hover:border-amber-400/80 text-transparent hover:text-stone-500'
+                      ? 'bg-gold-500 text-ink-950 shadow-md shadow-gold-950/50'
+                      : 'border-2 border-ink-700 hover:border-brand-400/80 text-transparent hover:text-ink-500'
                   }`}
                   aria-label={isDone ? `Mark stage ${idx + 1} incomplete` : `Mark stage ${idx + 1} complete`}
                   title={isDone ? 'Mark as incomplete' : 'Mark as complete'}
                 >
-                  <Check className={`w-4 h-4 stroke-[3] ${isDone ? 'text-stone-950' : ''}`} />
+                  <Check className={`w-4 h-4 stroke-[3] ${isDone ? 'text-ink-950' : ''}`} />
                 </button>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-stone-800 text-amber-400">
+                    <span className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-ink-800 text-brand-400">
                       STEP 0{idx + 1}
                     </span>
-                    <h3 className="font-extrabold text-stone-100 text-sm sm:text-base">
+                    <h3 className="font-extrabold text-ink-100 text-sm sm:text-base">
                       {stage.title}
                     </h3>
                   </div>
 
-                  <p className="text-xs text-stone-300 leading-relaxed max-w-xl">
+                  <p className="text-xs text-ink-300 leading-relaxed max-w-xl">
                     {stage.subtitle}
                   </p>
 
-                  <div className="pt-1 text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
-                    <span className="text-amber-400 font-bold">🎯 Milestone Check:</span>
+                  <div className="pt-1 text-[11px] text-ink-400 flex items-center gap-1.5 font-medium">
+                    <span className="text-brand-400 font-bold">🎯 Milestone Check:</span>
                     <span>{stage.challengeText}</span>
                   </div>
                 </div>
@@ -226,8 +226,8 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
                 <span
                   className={`text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-colors ${
                     isDone
-                      ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 shadow-sm'
-                      : 'bg-stone-950 border-stone-800 text-stone-400'
+                      ? 'bg-gold-950/80 border-gold-500/50 text-gold-300 shadow-sm'
+                      : 'bg-ink-950 border-ink-800 text-ink-400'
                   }`}
                 >
                   <span>{stage.badgeIcon}</span>
@@ -236,7 +236,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
 
                 <button
                   onClick={() => onSelectLesson(stage.lessonIndex)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
                 >
                   <span>Launch Lesson</span>
                   <ArrowRight className="w-3.5 h-3.5" />

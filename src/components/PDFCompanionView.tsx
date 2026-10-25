@@ -65,15 +65,15 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="p-2 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
               <FileText className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-bold text-stone-100">Original Theory Document Companion</h2>
+            <h2 className="text-xl font-bold text-ink-100">Original Theory Document Companion</h2>
           </div>
-          <p className="text-xs sm:text-sm text-stone-400 mt-1">
+          <p className="text-xs sm:text-sm text-ink-400 mt-1">
             "Intuitive Guitar Theory: Understanding the Mechanics of Music" (7 Pages)
           </p>
         </div>
@@ -82,9 +82,9 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
           href={`assets/docs/Intuitive_Guitar_Theory.pdf`}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-semibold text-xs flex items-center gap-2 shadow-sm transition-colors"
+          className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 border border-ink-700 font-semibold text-xs flex items-center gap-2 shadow-sm transition-colors"
         >
-          <ExternalLink className="w-4 h-4 text-amber-400" />
+          <ExternalLink className="w-4 h-4 text-brand-400" />
           <span>Open Full PDF Document</span>
         </a>
       </div>
@@ -97,8 +97,8 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
             onClick={() => setSelectedPage(p.page)}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
               selectedPage === p.page
-                ? 'bg-amber-600 text-white border-amber-500 shadow-md'
-                : 'bg-stone-900 text-stone-300 border-stone-800 hover:bg-stone-800'
+                ? 'bg-brand-600 text-white border-brand-500 shadow-md'
+                : 'bg-ink-900 text-ink-300 border-ink-800 hover:bg-ink-800'
             }`}
           >
             Page {p.page}: {p.title.split('. ')[1]}
@@ -107,16 +107,16 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
       </div>
 
       {/* Selected Page Excerpt Card */}
-      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-stone-800 pb-4">
+      <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-ink-800 pb-4">
           <div>
-            <span className="text-xs font-mono font-bold text-amber-400">PDF Page {currentPage.page} of 7</span>
-            <h3 className="text-lg font-bold text-stone-100 mt-0.5">{currentPage.title}</h3>
+            <span className="text-xs font-mono font-bold text-brand-400">PDF Page {currentPage.page} of 7</span>
+            <h3 className="text-lg font-bold text-ink-100 mt-0.5">{currentPage.title}</h3>
           </div>
 
           <button
             onClick={() => onSelectModule(currentPage.lessonIndex)}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 text-white font-bold text-xs flex items-center gap-2 shadow-md active:scale-95"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 text-white font-bold text-xs flex items-center gap-2 shadow-md active:scale-95"
           >
             <span>Launch Interactive Simulator</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -124,18 +124,18 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
         </div>
 
         {/* Verbatim quote from PDF */}
-        <div className="bg-stone-950 border-l-4 border-amber-500 rounded-r-xl p-5 text-stone-300 text-sm italic leading-relaxed space-y-3 font-serif">
+        <div className="bg-ink-950 border-l-4 border-brand-500 rounded-r-xl p-5 text-ink-300 text-sm italic leading-relaxed space-y-3 font-serif">
           <p>"{currentPage.quote}"</p>
         </div>
 
         {/* Key take-away */}
-        <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+        <div className="bg-ink-950/80 border border-ink-800 rounded-xl p-4 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gold-500/10 text-gold-400 border border-gold-500/20 shrink-0">
             <CheckCircle2 className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Core Takeaway:</span>
-            <p className="text-xs text-stone-300 mt-0.5">{currentPage.keyConcept}</p>
+            <span className="text-xs font-bold uppercase tracking-wider text-gold-400">Core Takeaway:</span>
+            <p className="text-xs text-ink-300 mt-0.5">{currentPage.keyConcept}</p>
           </div>
         </div>
       </div>
