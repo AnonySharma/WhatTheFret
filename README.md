@@ -1,4 +1,6 @@
-# What The Fret
+# WhatTheFret
+
+> Captures the exact feeling a student has when the math of the fretboard finally clicks.
 
 An interactive web app that untangles music theory and maps the **+4 / +3 triad logic** directly onto the guitar neck. Instead of memorising chord and scale shapes, you learn the interval math behind them and see it on a live fretboard.
 

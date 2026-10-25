@@ -22,6 +22,7 @@ import {
 } from '../constants';
 import { getFretNote, getSwaraForNote, shiftSemitones } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
+import { searchChords } from '../utils/chordSearch';
 
 interface ChordLibraryProps {
   notesNotation?: 'western' | 'indian';
@@ -35,15 +36,13 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   const [strumSpeed, setStrumSpeed] = useState<number>(35); // ms between strings
   const [activePlayingString, setActivePlayingString] = useState<number | null>(null);
 
-  // Filter chord database
+  // Filter chord database (symbol-aware search: "Am", "A minor", "F#m7", "Bb" ...)
   const filteredChords = useMemo(() => {
-    return CHORD_DATABASE.filter(chord => {
-      // Root filter
+    const byFilters = CHORD_DATABASE.filter(chord => {
       if (selectedRoot !== 'All' && chord.root !== selectedRoot) {
         return false;
       }
 
-      // Category filter
       if (selectedCategory !== 'All') {
         if (selectedCategory === 'open' && chord.category !== 'open') return false;
         if (selectedCategory === 'barre' && !chord.category.startsWith('barre')) return false;
@@ -54,18 +53,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         if (selectedCategory === 'Extended' && !chord.type.match(/(add|9|11|13|dim|aug)/i)) return false;
       }
 
-      // Text query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = chord.name.toLowerCase().includes(q);
-        const matchesRoot = chord.root.toLowerCase() === q;
-        const matchesType = chord.type.toLowerCase().includes(q);
-        const matchesTriad = chord.triadNotes.some(n => n.toLowerCase() === q);
-        return matchesName || matchesRoot || matchesType || matchesTriad;
-      }
-
       return true;
     });
+    return searchChords(byFilters, searchQuery);
   }, [searchQuery, selectedRoot, selectedCategory]);
 
   const selectedChord: ChordVoicing = useMemo(() => {

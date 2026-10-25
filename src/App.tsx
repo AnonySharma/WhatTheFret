@@ -383,7 +383,7 @@ export default function App() {
       <footer className="border-t border-stone-800/80 bg-stone-950/90 backdrop-blur-md py-6 text-xs text-stone-500 mt-6 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-stone-300">Intuitive Guitar Studio</span>
+            <span className="font-extrabold text-stone-300">WhatTheFret</span>
             <span>•</span>
             <span>Western Physics & Indian Sargam Mechanics</span>
           </div>

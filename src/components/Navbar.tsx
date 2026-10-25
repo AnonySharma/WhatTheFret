@@ -70,10 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
             <div className="min-w-0 text-left">
               <div className="font-black text-sm sm:text-lg tracking-tight leading-tight truncate bg-gradient-to-r from-amber-100 via-amber-200 to-amber-500 bg-clip-text text-transparent">
-                What The Fret
+                WhatTheFret
               </div>
               <p className="text-[10px] text-stone-400 font-medium leading-tight hidden sm:block truncate">
-                Intuitive Guitar Studio · Acoustic Physics & Sargam
+                The math of the fretboard, finally clicking
               </p>
             </div>
           </button>

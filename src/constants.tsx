@@ -319,7 +319,7 @@ export const CHORD_DATABASE: ChordVoicing[] = [
     frets: [3, 2, 0, 0, 0, 1],
     fingers: [3, 2, 0, 0, 0, 1],
     description: 'The dominant V chord in the key of C that creates powerful yearning to resolve back home.',
-    category: 'jazz',
+    category: 'open',
     triadNotes: ['G', 'B', 'D'],
     allNotes: ['G', 'B', 'D', 'F'],
     bassNote: 'G',
@@ -536,21 +536,6 @@ export const CHORD_DATABASE: ChordVoicing[] = [
   },
 
   // --- ADDITIONAL CHORDS TO COMPLETE 40+ CHORD LIBRARY ---
-  {
-    id: 'g7-open',
-    name: 'G Dominant 7th (G7)',
-    root: 'G',
-    type: '7',
-    family: '7th / Jazz',
-    frets: [3, 2, 0, 0, 0, 1],
-    fingers: [3, 2, 0, 0, 0, 1],
-    description: 'The primary dominant tension chord resolving to C Major. Index finger holds Komal Ni (F).',
-    category: 'open',
-    triadNotes: ['G', 'B', 'D'],
-    allNotes: ['G', 'B', 'D', 'F'],
-    bassNote: 'G',
-    difficulty: 'Beginner',
-  },
   {
     id: 'b7-open',
     name: 'B Dominant 7th (B7)',

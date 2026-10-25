@@ -1,7 +1,7 @@
 {
-  "name": "Intuitive Guitar Studio",
-  "short_name": "Guitar Studio",
-  "description": "Master guitar mechanics, interval math, chord visualizers, and real-time pitch feedback.",
+  "name": "WhatTheFret",
+  "short_name": "WhatTheFret",
+  "description": "Captures the exact feeling a student has when the math of the fretboard finally clicks.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
