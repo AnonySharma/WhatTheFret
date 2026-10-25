@@ -8,7 +8,7 @@ import {
   getFretNote,
   calculateBarreChord,
   shiftSemitones,
-} from './guitarTheory';
+} from '../src/utils/guitarTheory';
 
 test('1. Ear Tuning: 5th fret rule holds for standard strings and 4th fret holds for G string', () => {
   // String 6 (Low E) 5th fret must be 'A'
@@ -105,7 +105,7 @@ test('5. Barre Chords: Sliding the Nut and geometric mapping', () => {
 });
 
 test('6. Pitch detection frequencyToNote maps guitar standard strings accurately', async () => {
-  const { frequencyToNote } = await import('./pitchDetector');
+  const { frequencyToNote } = await import('../src/utils/pitchDetector');
   
   const lowE = frequencyToNote(82.41);
   assert.equal(lowE.note, 'E');
@@ -126,7 +126,7 @@ test('6. Pitch detection frequencyToNote maps guitar standard strings accurately
 });
 
 test('7. Indian Swaras (Sargam): Achala, Komal (Less) and Teevra (Extra)', async () => {
-  const { getSwaraForNote, INDIAN_SWARAS } = await import('./guitarTheory');
+  const { getSwaraForNote, INDIAN_SWARAS } = await import('../src/utils/guitarTheory');
 
   // Key of C (Sa = C)
   const sa = getSwaraForNote('C', 'C');
@@ -160,7 +160,7 @@ test('7. Indian Swaras (Sargam): Achala, Komal (Less) and Teevra (Extra)', async
 });
 
 test('8. Progress tracking statistics calculation', async () => {
-  const { calculateProgressStats } = await import('./progressStore');
+  const { calculateProgressStats } = await import('../src/utils/progressStore');
 
   const empty = calculateProgressStats([]);
   assert.equal(empty.percentage, 0);
@@ -176,7 +176,7 @@ test('8. Progress tracking statistics calculation', async () => {
 });
 
 test('9. Central constants: CHORD_DATABASE integrity check', async () => {
-  const { CHORD_DATABASE } = await import('../constants');
+  const { CHORD_DATABASE } = await import('../src/constants');
 
   assert.ok(CHORD_DATABASE.length >= 40, `Expected at least 40 chords, found ${CHORD_DATABASE.length}`);
 
@@ -190,7 +190,7 @@ test('9. Central constants: CHORD_DATABASE integrity check', async () => {
 });
 
 test('10. Central constants: INDIAN_RAAGAS and THAATS integrity check', async () => {
-  const { INDIAN_RAAGAS, INDIAN_THAATS } = await import('../constants');
+  const { INDIAN_RAAGAS, INDIAN_THAATS } = await import('../src/constants');
 
   assert.ok(INDIAN_RAAGAS.length >= 10, `Expected at least 10 raagas, found ${INDIAN_RAAGAS.length}`);
   assert.ok(INDIAN_THAATS.length >= 10, `Expected 10 parent thaats, found ${INDIAN_THAATS.length}`);
@@ -211,7 +211,7 @@ test('11. Interactive Fretboard Quiz: Question Generation and Valid Coordinates'
   const {
     generateQuizQuestion,
     getFretCoordinatesForNote,
-  } = await import('./guitarTheory');
+  } = await import('../src/utils/guitarTheory');
 
   // Any C note within frets 0-12
   const cPositions = getFretCoordinatesForNote('C', 12);
@@ -233,7 +233,7 @@ test('11. Interactive Fretboard Quiz: Question Generation and Valid Coordinates'
 });
 
 test('12. Interactive Fretboard Quiz: Scoring Formula, Speed Bonuses & Streaks', async () => {
-  const { calculateQuizScore } = await import('./guitarTheory');
+  const { calculateQuizScore } = await import('../src/utils/guitarTheory');
 
   // Incorrect answer yields 0 points
   const incorrect = calculateQuizScore(false, 800, 5);
@@ -255,7 +255,7 @@ test('12. Interactive Fretboard Quiz: Scoring Formula, Speed Bonuses & Streaks',
 });
 
 test('13. Interactive Fretboard Quiz: Performance Ranking Thresholds', async () => {
-  const { calculateQuizRank } = await import('./guitarTheory');
+  const { calculateQuizRank } = await import('../src/utils/guitarTheory');
 
   // Virtuoso criteria: score >= 1800, acc >= 90%, speed <= 1600ms
   const rankVirtuoso = calculateQuizRank(2200, 95, 1200);
@@ -271,8 +271,8 @@ test('13. Interactive Fretboard Quiz: Performance Ranking Thresholds', async () 
 });
 
 test('14. Metronome: Time Signatures, Tempo Markings and Tap Tempo Calculator', async () => {
-  const { getTempoMarking, TapTempoCalculator } = await import('./metronome');
-  const { METRONOME_TIME_SIGNATURES } = await import('../constants');
+  const { getTempoMarking, TapTempoCalculator } = await import('../src/utils/metronome');
+  const { METRONOME_TIME_SIGNATURES } = await import('../src/constants');
 
   // Verify time signatures
   assert.ok(METRONOME_TIME_SIGNATURES.length >= 6);
@@ -303,8 +303,8 @@ test('14. Metronome: Time Signatures, Tempo Markings and Tap Tempo Calculator', 
 });
 
 test('15. Circle of Fifths: 12 Key Segments, Relative Minors & Sargam Harmonies', async () => {
-  const { CIRCLE_OF_FIFTHS_DATA } = await import('../constants');
-  const { deriveDiatonicHarmony } = await import('./guitarTheory');
+  const { CIRCLE_OF_FIFTHS_DATA } = await import('../src/constants');
+  const { deriveDiatonicHarmony } = await import('../src/utils/guitarTheory');
 
   // Verify all 12 keys are present
   assert.equal(CIRCLE_OF_FIFTHS_DATA.length, 12, 'Circle of Fifths must have 12 key positions');
