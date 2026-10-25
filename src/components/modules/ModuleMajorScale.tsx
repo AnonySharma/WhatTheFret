@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Play, Volume2, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
-import { deriveMajorScale, NoteName, NOTE_NAMES, shiftSemitones } from '../../utils/guitarTheory';
+import { ascendingFrequencies, deriveMajorScale, NoteName, NOTE_NAMES, shiftSemitones } from '../../utils/guitarTheory';
+import { useTimeouts } from '../labs/useTimeouts';
 import { guitarAudio } from '../../utils/audioSynth';
 
 export const ModuleMajorScale: React.FC = () => {
@@ -10,25 +11,22 @@ export const ModuleMajorScale: React.FC = () => {
 
   const scaleData = deriveMajorScale(selectedRoot);
 
+  const { after } = useTimeouts();
+
   const handlePlayScale = () => {
     if (isPlayingScale) return;
     setIsPlayingScale(true);
 
-    const freqs = scaleData.notes.map((note, idx) => {
-      // Base C3 ~ 130.8 Hz
-      const noteIdx = NOTE_NAMES.indexOf(note);
-      return 130.8 * Math.pow(2, (noteIdx + (idx >= 7 ? 12 : 0)) / 12);
-    });
-
-    scaleData.notes.forEach((note, idx) => {
-      setTimeout(() => {
-        setActiveStepIndex(idx);
-        const noteIdx = NOTE_NAMES.indexOf(note);
-        const freq = 146.8 * Math.pow(2, (noteIdx >= NOTE_NAMES.indexOf(selectedRoot) ? (noteIdx - NOTE_NAMES.indexOf(selectedRoot)) : (noteIdx - NOTE_NAMES.indexOf(selectedRoot) + 12)) / 12);
+    // the scale rises from the root and finishes on the octave, so it resolves
+    const notes = [...scaleData.notes, scaleData.root];
+    const freqs = ascendingFrequencies(scaleData.notes, 146.8, true);
+    freqs.forEach((freq, idx) => {
+      after(() => {
+        setActiveStepIndex(Math.min(idx, notes.length - 1));
         guitarAudio.pluck(freq, 0.8, 0.85);
 
-        if (idx === scaleData.notes.length - 1) {
-          setTimeout(() => {
+        if (idx === freqs.length - 1) {
+          after(() => {
             setIsPlayingScale(false);
             setActiveStepIndex(null);
           }, 600);
@@ -38,21 +36,15 @@ export const ModuleMajorScale: React.FC = () => {
   };
 
   const handlePlayRelativeMinor = () => {
-    // Relative minor scale starting on relativeMinor
-    const relMinor = scaleData.relativeMinor;
-    const relScale = deriveMajorScale(selectedRoot); // uses same notes, just starting from relMinor
-    const startIdx = relScale.notes.indexOf(relMinor);
+    // Relative minor scale: the same seven notes, starting on the relative minor root
+    const startIdx = scaleData.notes.indexOf(scaleData.relativeMinor);
     const reordered: NoteName[] = [];
     for (let i = 0; i < 7; i++) {
-      reordered.push(relScale.notes[(startIdx + i) % 7]);
+      reordered.push(scaleData.notes[(startIdx + i) % 7]);
     }
 
-    reordered.forEach((note, idx) => {
-      setTimeout(() => {
-        const noteIdx = NOTE_NAMES.indexOf(note);
-        const freq = 110.0 * Math.pow(2, noteIdx / 12);
-        guitarAudio.pluck(freq, 1.0, 0.85);
-      }, idx * 350);
+    ascendingFrequencies(reordered, 110.0, true).forEach((freq, idx) => {
+      after(() => guitarAudio.pluck(freq, 1.0, 0.85), idx * 350);
     });
   };
 

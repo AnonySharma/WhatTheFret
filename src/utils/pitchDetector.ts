@@ -209,9 +209,7 @@ export class PitchDetector {
     const minPeriod = Math.floor(sampleRate / 1200);
     const maxPeriod = Math.floor(sampleRate / 65);
 
-    let bestPeriod = -1;
-    let maxCorrelation = 0;
-
+    const corr = new Float32Array(maxPeriod + 2);
     // Center clipping to suppress overtones
     const clipBuf = new Float32Array(SIZE);
     let maxAmp = 0;
@@ -225,7 +223,7 @@ export class PitchDetector {
       else clipBuf[i] = 0;
     }
 
-    for (let offset = minPeriod; offset <= maxPeriod; offset++) {
+    for (let offset = minPeriod; offset <= maxPeriod + 1; offset++) {
       let correlation = 0;
       let norm1 = 0;
       let norm2 = 0;
@@ -237,28 +235,46 @@ export class PitchDetector {
       }
 
       const norm = Math.sqrt(norm1 * norm2);
-      if (norm > 0) {
-        correlation = correlation / norm;
-      }
-
-      if (correlation > maxCorrelation && correlation > 0.65) {
-        maxCorrelation = correlation;
-        bestPeriod = offset;
-      }
+      corr[offset] = norm > 0 ? correlation / norm : 0;
     }
 
-    if (bestPeriod === -1 || maxCorrelation < 0.65) {
+    let best = -1;
+    let maxCorrelation = 0;
+    for (let offset = minPeriod; offset <= maxPeriod; offset++) {
+      if (corr[offset] > maxCorrelation) {
+        maxCorrelation = corr[offset];
+        best = offset;
+      }
+    }
+    if (best === -1 || maxCorrelation < 0.65) {
       return null;
     }
 
-    // Parabolic interpolation for fine tuning
-    const shift = 0; // fallback
-    const exactPeriod = bestPeriod + shift;
+    // A note's period repeats at 2x, 3x...; prefer the shortest lag that is nearly as strong as the
+    // best one, otherwise a noisy frame can read an octave (or more) too low.
+    let bestPeriod = best;
+    for (let offset = minPeriod + 1; offset < best; offset++) {
+      const isPeak = corr[offset] >= corr[offset - 1] && corr[offset] >= corr[offset + 1];
+      if (isPeak && corr[offset] >= maxCorrelation * 0.93 && corr[offset] > 0.65) {
+        bestPeriod = offset;
+        break;
+      }
+    }
+
+    // Parabolic interpolation around the peak gives sub-sample precision (matters for cents)
+    let exactPeriod = bestPeriod;
+    if (bestPeriod > minPeriod && bestPeriod <= maxPeriod) {
+      const y0 = corr[bestPeriod - 1];
+      const y1 = corr[bestPeriod];
+      const y2 = corr[bestPeriod + 1];
+      const denom = y0 - 2 * y1 + y2;
+      if (denom < 0) exactPeriod = bestPeriod + (0.5 * (y0 - y2)) / denom;
+    }
     const frequency = sampleRate / exactPeriod;
 
     return {
       frequency,
-      clarity: maxCorrelation,
+      clarity: corr[bestPeriod],
     };
   }
 }

@@ -485,3 +485,18 @@ export function calculateQuizRank(score: number, accuracy: number, avgReactionMs
   return QUIZ_RANKS[QUIZ_RANKS.length - 1];
 }
 
+
+/**
+ * Frequencies for playing `notes` as one rising line starting at `startHz`: each note is the
+ * nearest one above the previous. With `closeOctave`, the first note is repeated an octave up.
+ */
+export function ascendingFrequencies(notes: string[], startHz: number, closeOctave = false): number[] {
+  if (notes.length === 0) return [];
+  const out = [startHz];
+  for (let i = 1; i < notes.length; i++) {
+    const step = (getNoteIndex(notes[i]) - getNoteIndex(notes[i - 1]) + 12) % 12;
+    out.push(out[i - 1] * Math.pow(2, (step === 0 ? 12 : step) / 12));
+  }
+  if (closeOctave) out.push(startHz * 2);
+  return out;
+}

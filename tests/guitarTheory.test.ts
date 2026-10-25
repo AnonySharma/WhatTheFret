@@ -336,3 +336,16 @@ test('15. Circle of Fifths: 12 Key Segments, Relative Minors & Sargam Harmonies'
   assert.equal(gDiatonic[4].rootNote, 'D'); // V
   assert.equal(gDiatonic[5].rootNote, 'E'); // vi (relative minor)
 });
+
+test('ascendingFrequencies always rises, even when the note list wraps past B', async () => {
+  const { ascendingFrequencies, deriveMajorScale } = await import('../src/utils/guitarTheory');
+  const scale = deriveMajorScale('C');
+  const aMinor = ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(n => n);
+  const f = ascendingFrequencies(aMinor, 110, true);
+  assert.equal(f.length, 8);
+  assert.ok(f.every((v, i) => i === 0 || v > f[i - 1]), 'strictly rising');
+  assert.ok(Math.abs(f[2] - 110 * Math.pow(2, 3 / 12)) < 1e-9, 'C is a minor third above A');
+  assert.equal(f[7], 220);
+  assert.equal(ascendingFrequencies(scale.notes, 146.8).length, 7);
+  assert.deepEqual(ascendingFrequencies([], 100), []);
+});
