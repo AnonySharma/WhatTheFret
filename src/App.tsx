@@ -12,6 +12,7 @@ import { GuidedJourney } from './components/GuidedJourney';
 import { PDFCompanionView } from './components/PDFCompanionView';
 import { IndianSwarasExplorer } from './components/IndianSwarasExplorer';
 import { CircleOfFifths } from './components/CircleOfFifths';
+import { LabsHub, LabId } from './components/labs/LabsHub';
 
 // 7 Interactive Modules from PDF
 import { ModuleEarTuning } from './components/modules/ModuleEarTuning';
@@ -45,12 +46,32 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+/** Same order as SUGGESTED_THEORY_LABS in constants. */
+const LAB_ORDER: LabId[] = ['transposer', 'caged', 'drone', 'ear'];
+
+/** Deep links such as `#labs/ear` or `#chord-library` open that screen directly. */
+function initialRoute(): { tab: ActiveTab; lab: LabId } {
+  const [tab, lab] = window.location.hash.replace('#', '').split('/');
+  const tabs: ActiveTab[] = ['modules', 'chord-library', 'fretboard', 'circle-of-fifths', 'tuner', 'journey', 'swaras', 'pdf', 'labs'];
+  return {
+    tab: tabs.includes(tab as ActiveTab) ? (tab as ActiveTab) : 'modules',
+    lab: LAB_ORDER.includes(lab as LabId) ? (lab as LabId) : 'transposer',
+  };
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('modules');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => initialRoute().tab);
   const [activeModuleIndex, setActiveModuleIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isMicActive, setIsMicActive] = useState<boolean>(false);
   const [showSuggestedLabsModal, setShowSuggestedLabsModal] = useState<boolean>(false);
+  const [activeLab, setActiveLab] = useState<LabId>(() => initialRoute().lab);
+  const openLab = (lab: LabId) => {
+    setActiveLab(lab);
+    setActiveTab('labs');
+    setShowSuggestedLabsModal(false);
+    window.scrollTo({ top: 0 });
+  };
 
   // User progress from localStorage
   const [progress, setProgress] = useState<UserProgressState>(() => loadUserProgress());
@@ -307,6 +328,11 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB: ADVANCED THEORY LABS */}
+        {activeTab === 'labs' && (
+          <LabsHub lab={activeLab} onLabChange={setActiveLab} notation={progress.notesNotation} />
+        )}
+
         {/* TAB 4: REAL-TIME TUNER & PITCH FEEDBACK */}
         {activeTab === 'tuner' && (
           <div className="space-y-6">
@@ -358,13 +384,13 @@ export default function App() {
             </div>
             <div>
               <h3 className="text-sm font-extrabold text-ink-100 flex items-center gap-2">
-                <span>Suggested Advanced Theory Labs</span>
+                <span>Advanced Theory Labs</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold">
-                  EXPANSION
+                  4 LABS
                 </span>
               </h3>
               <p className="text-xs text-ink-400 mt-0.5">
-                Circle of Fifths, 3D CAGED system topology, Tanpura modal jam rooms, and interval training.
+                Key transposer, CAGED system, tanpura and tabla jam pad, and interval ear training.
               </p>
             </div>
           </div>
@@ -374,7 +400,7 @@ export default function App() {
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ink-900 hover:bg-ink-800 text-brand-300 border border-brand-500/30 hover:border-brand-500/60 text-xs font-bold transition-all shrink-0"
           >
             <Lightbulb className="w-3.5 h-3.5 text-brand-400" />
-            <span>Explore Suggested Labs ({SUGGESTED_THEORY_LABS.length})</span>
+            <span>Explore the Labs</span>
           </button>
         </div>
       </section>
@@ -426,10 +452,10 @@ export default function App() {
                 <span className="text-xl">💡</span>
                 <div>
                   <h3 className="text-lg font-black text-ink-100">
-                    Suggested Interactive Theory Labs & Features
+                    Advanced Theory Labs
                   </h3>
                   <p className="text-xs text-ink-400">
-                    Recommendations to push your intuitive guitar learning journey even further
+                    Pick a lab to open it
                   </p>
                 </div>
               </div>
@@ -470,6 +496,13 @@ export default function App() {
                       {lab.benefit}
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => openLab(LAB_ORDER[idx])}
+                    className="w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors"
+                  >
+                    Open this lab
+                  </button>
                 </div>
               ))}
             </div>
@@ -479,7 +512,7 @@ export default function App() {
                 onClick={() => setShowSuggestedLabsModal(false)}
                 className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all"
               >
-                Got It, Back to Studio!
+                Close
               </button>
             </div>
           </div>

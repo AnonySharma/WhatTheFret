@@ -11,10 +11,11 @@ import {
   Layers,
   Compass,
   Mic,
+  FlaskConical,
 } from 'lucide-react';
 import { TopMetronomeTunerWidget } from './TopMetronomeTunerWidget';
 
-export type ActiveTab = 'modules' | 'chord-library' | 'fretboard' | 'circle-of-fifths' | 'tuner' | 'journey' | 'swaras' | 'pdf';
+export type ActiveTab = 'modules' | 'chord-library' | 'fretboard' | 'circle-of-fifths' | 'tuner' | 'journey' | 'swaras' | 'pdf' | 'labs';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -35,6 +36,7 @@ const TABS: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
   { id: 'fretboard', label: 'Fretboard', icon: Sliders },
   { id: 'circle-of-fifths', label: 'Circle of 5ths', icon: Compass },
   { id: 'tuner', label: 'Tuner', icon: Mic },
+  { id: 'labs', label: 'Theory Labs', icon: FlaskConical },
   { id: 'swaras', label: 'Raagas & Swaras', icon: Globe },
   { id: 'journey', label: 'Journey', icon: Sparkles },
   { id: 'pdf', label: 'PDF Notes', icon: Music },

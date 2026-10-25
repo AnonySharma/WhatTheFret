@@ -19,6 +19,11 @@ class GuitarSynthesizer {
     return this.ctx;
   }
 
+  /** Shared AudioContext (created / resumed on demand) for other synth engines such as the drone. */
+  public getContext(): AudioContext {
+    return this.initContext();
+  }
+
   public setMuted(muted: boolean) {
     this.isMuted = muted;
   }
