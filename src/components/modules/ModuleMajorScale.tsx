@@ -78,9 +78,9 @@ export const ModuleMajorScale: React.FC = () => {
       {/* Root Selector & Play Control */}
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Choose Root Note:</span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {popularRoots.map(root => (
                 <button
                   key={root}

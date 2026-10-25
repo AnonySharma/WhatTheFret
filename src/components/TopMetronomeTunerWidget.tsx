@@ -139,7 +139,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           setIsPinned(prev => !prev);
           setIsOpen(true);
         }}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+        className={`flex items-center gap-2 px-2.5 sm:px-3 h-9 rounded-xl border text-xs font-bold transition-all shadow-sm ${
           isRunning || isMicActive
             ? 'bg-amber-950/60 border-amber-500/50 text-amber-300 ring-1 ring-amber-500/20'
             : isOpen || isPinned
@@ -166,10 +166,10 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
           <span className="text-[10px] text-stone-400 font-normal">BPM</span>
         </div>
 
-        <span className="text-stone-700">•</span>
+        <span className="text-stone-700 hidden sm:inline">•</span>
 
         {/* Tuner Indicator */}
-        <div className="flex items-center gap-1">
+        <div className="items-center gap-1 hidden sm:flex">
           <Mic className={`w-3 h-3 ${isMicActive ? 'text-emerald-400 animate-pulse' : 'text-stone-500'}`} />
           {isMicActive && pitchData ? (
             <span className="px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
@@ -186,7 +186,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
       {/* Floating Hover Tooltip / Popover Panel ("Tooltip Thingy") */}
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-stone-950/95 backdrop-blur-2xl border border-stone-800 shadow-2xl p-4 text-stone-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
+          className="fixed sm:absolute inset-x-3 sm:inset-x-auto top-[6.5rem] sm:top-full sm:right-0 sm:mt-2 max-h-[calc(100dvh-8rem)] overflow-y-auto sm:w-96 rounded-2xl bg-stone-950/95 backdrop-blur-2xl border border-stone-800 shadow-2xl p-4 text-stone-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
           style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(245, 158, 11, 0.15)' }}
         >
           {/* Header of Popover */}
