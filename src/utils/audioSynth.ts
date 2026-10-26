@@ -7,6 +7,8 @@
 class GuitarSynthesizer {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
+  /** Output bus for sustained tones, so Mute can silence tones that are already ringing. */
+  private holdBus: GainNode | null = null;
 
   private initContext(): AudioContext {
     if (!this.ctx) {
@@ -26,6 +28,20 @@ class GuitarSynthesizer {
 
   public setMuted(muted: boolean) {
     this.isMuted = muted;
+    if (this.ctx && this.holdBus) {
+      const t = this.ctx.currentTime;
+      this.holdBus.gain.cancelScheduledValues(t);
+      this.holdBus.gain.setTargetAtTime(muted ? 0 : 1, t, 0.02);
+    }
+  }
+
+  private getHoldBus(ctx: AudioContext): GainNode {
+    if (!this.holdBus) {
+      this.holdBus = ctx.createGain();
+      this.holdBus.gain.value = this.isMuted ? 0 : 1;
+      this.holdBus.connect(ctx.destination);
+    }
+    return this.holdBus;
   }
 
   public isAudioMuted(): boolean {
@@ -131,6 +147,8 @@ class GuitarSynthesizer {
    * Sustained, steady tones played together (a pure sine plus a soft 2nd harmonic so small
    * speakers can reproduce low notes). Used for beat-note demos, where a decaying pluck would
    * hide the wobble. Returns a controller to retune the tones live or fade them out.
+   * Starting while muted returns an inert controller; muting later fades running tones to silence
+   * (they keep running, so unmuting brings them back).
    */
   public holdTones(freqs: number[], level: number = 0.1): { setFrequencies: (next: number[]) => void; stop: () => void } {
     if (this.isMuted) return { setFrequencies: () => {}, stop: () => {} };
@@ -139,7 +157,7 @@ class GuitarSynthesizer {
     const master = ctx.createGain();
     master.gain.setValueAtTime(0.0001, now);
     master.gain.linearRampToValueAtTime(level, now + 0.06);
-    master.connect(ctx.destination);
+    master.connect(this.getHoldBus(ctx));
 
     const oscs = freqs.map(freq => {
       const fundamental = ctx.createOscillator();

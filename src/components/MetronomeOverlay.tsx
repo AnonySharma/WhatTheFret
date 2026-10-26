@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
   Play,
   Pause,
   Volume2,
   VolumeX,
-  Plus,
-  Minus,
-  Sparkles,
-  Music,
   Activity,
-  Sliders,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -20,6 +15,9 @@ import {
   type TempoMarking,
 } from '../constants';
 import { metronome, getTempoMarking, TapTempoCalculator } from '../utils/metronome';
+import { useTimeouts } from './labs/useTimeouts';
+
+const subscribeMetronome = (listener: () => void) => metronome.subscribe(listener);
 
 interface MetronomeOverlayProps {
   isDocked?: boolean;
@@ -30,15 +28,16 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
   isDocked = false,
   onClose,
 }) => {
-  const [isRunning, setIsRunning] = useState<boolean>(metronome.getIsRunning());
-  const [bpm, setBpm] = useState<number>(metronome.getBpm());
-  const [timeSignature, setTimeSignature] = useState<TimeSignatureDef>(metronome.getTimeSignature());
-  const [volume, setVolume] = useState<number>(metronome.getVolume());
-  const [isMuted, setIsMuted] = useState<boolean>(metronome.getIsMuted());
+  // Everything but the beat flash lives in the shared metronome, so this and the navbar pill never drift apart
+  const isRunning = useSyncExternalStore(subscribeMetronome, () => metronome.getIsRunning());
+  const bpm = useSyncExternalStore(subscribeMetronome, () => metronome.getBpm());
+  const timeSignature = useSyncExternalStore(subscribeMetronome, () => metronome.getTimeSignature());
+  const volume = useSyncExternalStore(subscribeMetronome, () => metronome.getVolume());
+  const isMuted = useSyncExternalStore(subscribeMetronome, () => metronome.getIsMuted());
+  const { after } = useTimeouts();
 
   // Active beat animation state
   const [activeBeat, setActiveBeat] = useState<number>(-1);
-  const [isDownbeat, setIsDownbeat] = useState<boolean>(false);
   const [tapFeedback, setTapFeedback] = useState<string>('Tap Tempo');
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
@@ -47,17 +46,13 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
 
   // Sync state listeners with metronome engine
   useEffect(() => {
-    const unsubBeat = metronome.onBeat((beatIndex, _totalBeats, downbeat) => {
+    const unsubBeat = metronome.onBeat(beatIndex => {
       setActiveBeat(beatIndex);
-      setIsDownbeat(downbeat);
       // Quick reset after 120ms so pulse is snappy
-      setTimeout(() => {
-        setActiveBeat(-1);
-      }, 120);
+      after(() => setActiveBeat(-1), 120);
     });
 
     const unsubState = metronome.onStateChange(running => {
-      setIsRunning(running);
       if (!running) {
         setActiveBeat(-1);
       }
@@ -67,7 +62,15 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
       unsubBeat();
       unsubState();
     };
-  }, []);
+  }, [after]);
+
+  // Don't let the tap-reset timer fire after the overlay is gone
+  useEffect(
+    () => () => {
+      if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+    },
+    []
+  );
 
   const handleTogglePlay = () => {
     metronome.toggle();
@@ -75,7 +78,6 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
 
   const handleBpmChange = (newBpm: number) => {
     const clamped = Math.max(METRONOME_CONFIG.MIN_BPM, Math.min(METRONOME_CONFIG.MAX_BPM, newBpm));
-    setBpm(clamped);
     metronome.setBpm(clamped);
   };
 
@@ -84,19 +86,15 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
   };
 
   const handleTimeSignatureSelect = (ts: TimeSignatureDef) => {
-    setTimeSignature(ts);
     metronome.setTimeSignature(ts);
   };
 
   const handleVolumeChange = (newVol: number) => {
-    setVolume(newVol);
     metronome.setVolume(newVol);
   };
 
   const handleToggleMute = () => {
-    const next = !isMuted;
-    setIsMuted(next);
-    metronome.setMuted(next);
+    metronome.setMuted(!isMuted);
   };
 
   const handleTapTempo = () => {
@@ -151,6 +149,8 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
             onClick={() => setIsExpanded(prev => !prev)}
             className="p-1 rounded-lg text-ink-400 hover:text-ink-200 hover:bg-ink-800 transition-colors"
             title={isExpanded ? 'Collapse' : 'Expand'}
+            aria-label={isExpanded ? 'Collapse metronome' : 'Expand metronome'}
+            aria-expanded={isExpanded}
           >
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -159,6 +159,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
               onClick={onClose}
               className="p-1 rounded-lg text-ink-400 hover:text-ink-200 hover:bg-ink-800 transition-colors"
               title="Close Metronome"
+              aria-label="Close metronome"
             >
               ✕
             </button>
@@ -180,6 +181,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                   : 'bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 hover:from-brand-400 hover:to-brand-600 text-white shadow-brand-900/40 ring-4 ring-brand-500/20'
               }`}
               title={isRunning ? 'Stop Metronome' : 'Start Metronome'}
+              aria-label={isRunning ? 'Stop metronome' : 'Start metronome'}
             >
               {isRunning ? (
                 <Pause className="w-7 h-7 fill-current" />
@@ -209,6 +211,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                 onClick={() => handleAdjustBpm(-5)}
                 className="px-2.5 py-1.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-xs font-bold text-ink-300 active:scale-95"
                 title="Decrease 5 BPM"
+                aria-label="Decrease 5 BPM"
               >
                 -5
               </button>
@@ -216,6 +219,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                 onClick={() => handleAdjustBpm(-1)}
                 className="px-2 py-1.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-xs font-bold text-ink-300 active:scale-95"
                 title="Decrease 1 BPM"
+                aria-label="Decrease 1 BPM"
               >
                 -1
               </button>
@@ -223,6 +227,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                 onClick={() => handleAdjustBpm(1)}
                 className="px-2 py-1.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-xs font-bold text-ink-300 active:scale-95"
                 title="Increase 1 BPM"
+                aria-label="Increase 1 BPM"
               >
                 +1
               </button>
@@ -230,6 +235,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                 onClick={() => handleAdjustBpm(5)}
                 className="px-2.5 py-1.5 rounded-lg bg-ink-900 hover:bg-ink-800 border border-ink-800 text-xs font-bold text-ink-300 active:scale-95"
                 title="Increase 5 BPM"
+                aria-label="Increase 5 BPM"
               >
                 +5
               </button>
@@ -334,6 +340,8 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                     : 'bg-ink-800 border-ink-700 text-ink-300 hover:text-white'
                 }`}
                 title={isMuted ? 'Unmute Audio Click' : 'Mute Click (Silent Visual Metronome)'}
+                aria-label={isMuted ? 'Unmute click' : 'Mute click'}
+                aria-pressed={isMuted}
               >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
@@ -351,6 +359,7 @@ export const MetronomeOverlay: React.FC<MetronomeOverlayProps> = ({
                 step="0.05"
                 value={volume}
                 onChange={e => handleVolumeChange(Number(e.target.value))}
+                aria-label="Metronome volume"
                 className="w-20 sm:w-28 h-1.5 bg-ink-800 rounded-lg appearance-none accent-brand-500"
               />
             </div>

@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 import { TopMetronomeTunerWidget } from './TopMetronomeTunerWidget';
 
-export type ActiveTab = 'modules' | 'chord-library' | 'fretboard' | 'circle-of-fifths' | 'tuner' | 'journey' | 'swaras' | 'pdf' | 'labs';
-
 interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
@@ -26,11 +24,15 @@ interface NavbarProps {
   onToggleMic: () => void;
   progressPercentage: number;
   completedCount: number;
+  totalLessons: number;
+  /** Short message when the microphone could not be opened; shown under the top row. */
+  micError?: string | null;
+  onDismissMicError?: () => void;
   notesNotation: 'western' | 'indian';
   onToggleNotation: (mode: 'western' | 'indian') => void;
 }
 
-const TABS: { id: ActiveTab; label: string; icon: React.ElementType; indianOnly?: boolean }[] = [
+const TAB_DEFS = [
   { id: 'modules', label: 'Lessons', icon: BookOpen },
   { id: 'chord-library', label: 'Chord Library', icon: Layers },
   { id: 'fretboard', label: 'Fretboard', icon: Sliders },
@@ -40,7 +42,16 @@ const TABS: { id: ActiveTab; label: string; icon: React.ElementType; indianOnly?
   { id: 'swaras', label: 'Raagas & Swaras', icon: Globe, indianOnly: true },
   { id: 'journey', label: 'Journey', icon: Sparkles },
   { id: 'pdf', label: 'PDF Notes', icon: Music },
-];
+] as const;
+
+export type ActiveTab = (typeof TAB_DEFS)[number]['id'];
+
+/** The single list of screens: drives the nav bar, the ActiveTab type and the `#hash` route allow-list. */
+export const TABS: readonly { id: ActiveTab; label: string; icon: React.ElementType; indianOnly?: boolean }[] = TAB_DEFS;
+
+export function isActiveTab(value: string | undefined): value is ActiveTab {
+  return TABS.some(t => t.id === value);
+}
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
@@ -51,6 +62,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleMic,
   progressPercentage,
   completedCount,
+  totalLessons,
+  micError,
+  onDismissMicError,
   notesNotation,
   onToggleNotation,
 }) => {
@@ -117,12 +131,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('journey')}
               className="hidden md:flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-ink-900 border border-brand-500/30 text-brand-300 text-xs font-bold hover:border-brand-500/60 transition-colors"
               title="View Guided Journey progress"
+              aria-label={`Guided journey: ${completedCount} of ${totalLessons} lessons completed`}
             >
               <Award className="w-3.5 h-3.5 text-brand-400" />
-              <span className="text-[11px]">{completedCount}/7</span>
+              <span className="text-[11px]">{completedCount}/{totalLessons}</span>
             </button>
 
             <button
+              type="button"
               onClick={onToggleMute}
               aria-label={isMuted ? 'Unmute Sound' : 'Mute Sound'}
               className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all ${
@@ -137,6 +153,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
+        {micError && (
+          <div
+            role="alert"
+            className="mb-2 flex items-center justify-between gap-3 rounded-xl border border-red-800/50 bg-red-950/50 px-3 py-1.5 text-xs text-red-300"
+          >
+            <span>{micError}</span>
+            <button
+              type="button"
+              onClick={onDismissMicError}
+              aria-label="Dismiss microphone message"
+              className="shrink-0 rounded-md px-1.5 font-bold text-red-200 hover:bg-red-900/50"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Tab row: scrolls sideways inside itself, never the page */}
         <nav
           aria-label="Main Navigation"
@@ -147,6 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             return (
               <button
                 key={id}
+                type="button"
                 onClick={() => setActiveTab(id)}
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${

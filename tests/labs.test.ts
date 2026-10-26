@@ -20,6 +20,8 @@ import {
   symbolToChord,
   transposeChordSymbol,
   transposeProgression,
+  transposeProgressionDetailed,
+  triadUsesFlats,
   vibhagStarts,
 } from '../src/utils/labs';
 
@@ -151,4 +153,72 @@ test('blind fret: any fret with the same pitch class is correct', () => {
   }
   const note: NoteName = 'E';
   assert.equal(getFretNote(1, 0).note, note);
+});
+
+test('transposer reads lower-case roots and keeps every slash bass', () => {
+  assert.equal(transposeChordSymbol('am', 2), 'Bm');
+  assert.equal(transposeChordSymbol('bb7', 2), 'C7');
+  assert.equal(transposeChordSymbol('f#m7b5', 1), 'Gm7b5');
+  assert.equal(transposeChordSymbol('C/G/B', 2), 'D/A/C#');
+  assert.equal(transposeChordSymbol('Cmaj7#11', 2), 'Dmaj7#11');
+  assert.equal(transposeChordSymbol('C6/9', 2), 'D6/9');
+  assert.equal(transposeChordSymbol('Dsus4', 2), 'Esus4');
+  assert.equal(transposeChordSymbol('E♭', 2), 'F');
+});
+
+test('transposeProgressionDetailed reports tokens it cannot read', () => {
+  const r = transposeProgressionDetailed('C Am xyz N.C. | H7 G/Q', 2);
+  assert.deepEqual(r.unparsed, ['xyz', 'H7', 'G/Q']);
+  assert.deepEqual(
+    r.tokens.map(t => t.output),
+    ['D', 'Bm', 'xyz', 'N.C.', 'H7', 'G/Q']
+  );
+  assert.equal(transposeProgressionDetailed('', 3).tokens.length, 0);
+  // the plain variant keeps its old behaviour
+  assert.deepEqual(transposeProgression('C xyz', 2), ['D', 'xyz']);
+});
+
+test('borrowed chords follow the key spelling for i / iv / v and use flats only for flat degrees', () => {
+  const fs = Object.fromEntries(borrowedChords('F#').map(x => [x.numeral, x.display]));
+  assert.equal(fs['i'], 'F#m');
+  assert.equal(fs['iv'], 'Bm');
+  assert.equal(fs['v'], 'C#m');
+  assert.equal(fs['♭III'], 'A');
+  assert.equal(fs['♭VI'], 'D');
+  assert.equal(fs['♭VII'], 'E');
+  const f = Object.fromEntries(borrowedChords('F').map(x => [x.numeral, x.display]));
+  assert.equal(f['i'], 'Fm');
+  assert.equal(f['♭III'], 'Ab');
+  assert.equal(f['♭VII'], 'Eb');
+  const g = Object.fromEntries(borrowedChords('G').map(x => [x.numeral, x.display]));
+  assert.equal(g['i'], 'Gm');
+  assert.equal(g['♭III'], 'Bb');
+  assert.equal(g['♭VI'], 'Eb');
+  // the roots stay the sharp-named NoteName values the synth uses
+  assert.ok(borrowedChords('C').every(x => NOTE_NAMES.includes(x.root)));
+});
+
+test('sequenceOffsets: Bhimpalasi starts on the lower-octave ni and is monotonic both ways', () => {
+  const r = INDIAN_RAAGAS.find(x => x.id === 'raag-bhimpalasi')!;
+  assert.deepEqual(sequenceOffsets(r.arohana, 'asc'), [-2, 0, 3, 5, 7, 10, 12]);
+  assert.deepEqual(sequenceOffsets(r.avarohana, 'desc'), [12, 10, 9, 7, 5, 3, 2, 0]);
+});
+
+test('triad spelling: minor and diminished chords follow their parent key', () => {
+  assert.equal(triadUsesFlats('G', 'Minor'), true); // G-Bb-D
+  assert.equal(triadUsesFlats('A', 'Minor'), false); // A-C-E
+  assert.equal(triadUsesFlats('F', 'Major'), true);
+  assert.equal(triadUsesFlats('D', 'Minor'), true); // D-F-A, Bb key
+  assert.equal(triadUsesFlats('C', 'Augmented'), false);
+});
+
+test('TAALS match the classical structures', () => {
+  const by = Object.fromEntries(TAALS.map(t => [t.id, t]));
+  assert.deepEqual(by.keherwa.grouping, [4, 4]);
+  assert.deepEqual(by.dadra.grouping, [3, 3]);
+  assert.deepEqual(by.rupak.grouping, [3, 2, 2]);
+  assert.deepEqual(by.jhaptal.grouping, [2, 3, 2, 3]);
+  assert.deepEqual(by.teental.grouping, [4, 4, 4, 4]);
+  assert.deepEqual(by.jhaptal.khali, [6]);
+  assert.deepEqual(by.teental.khali, [9]);
 });

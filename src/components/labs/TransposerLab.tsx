@@ -7,12 +7,11 @@ import {
   capoOptions,
   getChordFrequencies,
   keyUsesFlats,
-  parseProgression,
   pivotChords,
   semitonesBetween,
   spellNote,
   symbolToChord,
-  transposeProgression,
+  transposeProgressionDetailed,
 } from '../../utils/labs';
 import { useTimeouts } from './useTimeouts';
 
@@ -22,6 +21,32 @@ const PRESETS: { label: string; text: string }[] = [
   { label: 'Minor feel (vi IV I V)', text: 'Am F C G' },
   { label: 'Rock (I IV V I)', text: 'C F G C' },
 ];
+
+const KeyPicker: React.FC<{ value: NoteName; onChange: (k: NoteName) => void; label: string }> = ({
+  value,
+  onChange,
+  label,
+}) => (
+  <div>
+    <div className="text-[11px] font-bold uppercase tracking-wider text-ink-400 mb-1.5">{label}</div>
+    <div className="grid grid-cols-6 gap-1.5">
+      {NOTE_NAMES.map(k => (
+        <button
+          key={k}
+          onClick={() => onChange(k)}
+          aria-pressed={value === k}
+          className={`h-9 rounded-lg text-xs font-extrabold border transition-colors ${
+            value === k
+              ? 'bg-brand-600 border-brand-400 text-white'
+              : 'bg-ink-950 border-ink-800 text-ink-300 hover:bg-ink-800'
+          }`}
+        >
+          {k}
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 const keyLabel = (k: NoteName, flats: boolean) => spellNote(NOTE_NAMES.indexOf(k), flats);
 
@@ -34,8 +59,9 @@ export const TransposerLab: React.FC = () => {
 
   const shift = semitonesBetween(fromKey, toKey);
   const flats = keyUsesFlats(toKey);
-  const original = useMemo(() => parseProgression(text), [text]);
-  const transposed = useMemo(() => transposeProgression(text, shift, flats), [text, shift, flats]);
+  const parsed = useMemo(() => transposeProgressionDetailed(text, shift, flats), [text, shift, flats]);
+  const original = useMemo(() => parsed.tokens.map(t => t.input), [parsed]);
+  const transposed = useMemo(() => parsed.tokens.map(t => t.output), [parsed]);
   const capos = useMemo(() => capoOptions(toKey), [toKey]);
   const borrowed = useMemo(() => borrowedChords(toKey), [toKey]);
   const pivots = useMemo(() => pivotChords(fromKey, toKey), [fromKey, toKey]);
@@ -56,32 +82,6 @@ export const TransposerLab: React.FC = () => {
       }, i * 900);
     });
   };
-
-  const KeyPicker: React.FC<{ value: NoteName; onChange: (k: NoteName) => void; label: string }> = ({
-    value,
-    onChange,
-    label,
-  }) => (
-    <div>
-      <div className="text-[11px] font-bold uppercase tracking-wider text-ink-400 mb-1.5">{label}</div>
-      <div className="grid grid-cols-6 gap-1.5">
-        {NOTE_NAMES.map(k => (
-          <button
-            key={k}
-            onClick={() => onChange(k)}
-            aria-pressed={value === k}
-            className={`h-9 rounded-lg text-xs font-extrabold border transition-colors ${
-              value === k
-                ? 'bg-brand-600 border-brand-400 text-white'
-                : 'bg-ink-950 border-ink-800 text-ink-300 hover:bg-ink-800'
-            }`}
-          >
-            {k}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-4">
@@ -108,8 +108,15 @@ export const TransposerLab: React.FC = () => {
             value={text}
             onChange={e => setText(e.target.value)}
             spellCheck={false}
+            aria-describedby={parsed.unparsed.length > 0 ? 'prog-unparsed' : undefined}
+            aria-invalid={parsed.unparsed.length > 0}
             className="w-full h-10 px-3 rounded-xl bg-ink-950 border border-ink-800 focus:border-brand-500 outline-none font-mono text-sm text-ink-100"
           />
+          {parsed.unparsed.length > 0 && (
+            <p id="prog-unparsed" role="status" className="text-[11px] text-gold-300">
+              Couldn't read: <span className="font-mono">{parsed.unparsed.join(', ')}</span>. Those are left as typed.
+            </p>
+          )}
           <div className="flex flex-wrap gap-1.5">
             {PRESETS.map(p => (
               <button

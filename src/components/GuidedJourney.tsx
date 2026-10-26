@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Circle, ArrowRight, Sparkles, Award, Play, RotateCcw, Trophy, Check } from 'lucide-react';
+import { ArrowRight, RotateCcw, Trophy, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { loadUserProgress, toggleLessonCompletion, saveUserProgress, calculateProgressStats } from '../utils/progressStore';
+import { loadUserProgress, toggleLessonCompletion, resetLessonProgress, calculateProgressStats } from '../utils/progressStore';
 
 interface GuidedJourneyProps {
   onSelectLesson: (lessonIndex: number) => void;
@@ -96,7 +96,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
 
   const handleResetProgress = () => {
     if (window.confirm('Reset all lesson progress back to 0%?')) {
-      const updated = saveUserProgress({ completedLessons: [] });
+      const updated = resetLessonProgress();
       setCompletedStages(updated.completedLessons);
     }
   };

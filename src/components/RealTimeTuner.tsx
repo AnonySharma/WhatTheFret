@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, CheckCircle2, AlertCircle, Award, Target, Activity } from 'lucide-react';
-import { pitchDetector, PitchDetectionResult } from '../utils/pitchDetector';
-import { GUITAR_STRINGS, NoteName, NOTE_NAMES } from '../utils/guitarTheory';
+import { pitchDetector, PitchDetectionResult, noteFrequency, micErrorMessage } from '../utils/pitchDetector';
+import { GUITAR_STRINGS, NoteName } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
 import { MetronomeOverlay } from './MetronomeOverlay';
 import confetti from 'canvas-confetti';
@@ -18,7 +18,10 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
   const [challengeStreak, setChallengeStreak] = useState<number>(0);
   const [challengeSuccess, setChallengeSuccess] = useState<boolean>(false);
   const [showMetronome, setShowMetronome] = useState<boolean>(true);
+  const [micError, setMicError] = useState<string | null>(null);
   const successTimeoutRef = useRef<number | null>(null);
+  const onToggleMicRef = useRef(onToggleMic);
+  onToggleMicRef.current = onToggleMic;
 
   // Sync mic detector state
   useEffect(() => {
@@ -26,10 +29,28 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
       setPitchData(null);
       return;
     }
+    setMicError(null);
+    let cancelled = false;
     const listener = (res: PitchDetectionResult | null) => setPitchData(res);
-    pitchDetector.startListening(listener);
-    return () => pitchDetector.stopListening(listener);
+    pitchDetector.startListening(listener).then(ok => {
+      if (ok || cancelled) return;
+      // Permission denied / no microphone: say so and switch the shared mic state back off
+      setMicError(micErrorMessage(pitchDetector.getLastError()));
+      if (pitchDetector.claimFailure()) onToggleMicRef.current();
+    });
+    return () => {
+      cancelled = true;
+      pitchDetector.stopListening(listener);
+    };
   }, [isMicActive]);
+
+  // Don't let the success timer fire after the tuner is gone
+  useEffect(
+    () => () => {
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+    },
+    []
+  );
 
   // Check challenge target note match
   useEffect(() => {
@@ -53,8 +74,6 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
       }, 2000);
     }
   }, [pitchData, challengeTargetNote, challengeSuccess]);
-
-  const selectedTargetString = GUITAR_STRINGS[selectedStringIndex];
 
   // Play target reference tone
   const handlePlayReferencePitch = (freq: number) => {
@@ -117,6 +136,12 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
         </div>
       </div>
 
+      {micError && (
+        <p role="alert" className="text-xs sm:text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-xl px-4 py-2.5">
+          {micError}
+        </p>
+      )}
+
       {/* Integrated Metronome Overlay */}
       {showMetronome && (
         <div className="transition-all animate-in fade-in-50 duration-200">
@@ -144,7 +169,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 20 100 A 80 80 0 0 1 180 100"
                   fill="none"
-                  stroke="#292524"
+                  className="stroke-ink-800"
                   strokeWidth="14"
                   strokeLinecap="round"
                 />
@@ -152,7 +177,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 20 100 A 80 80 0 0 1 80 27"
                   fill="none"
-                  stroke="#f97316"
+                  className="stroke-gold-500"
                   strokeWidth="8"
                   strokeDasharray="4 3"
                 />
@@ -160,7 +185,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 85 24 A 80 80 0 0 1 115 24"
                   fill="none"
-                  stroke="#f97316"
+                  className="stroke-gold-500"
                   strokeWidth="12"
                   strokeLinecap="round"
                 />
@@ -168,15 +193,15 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                 <path
                   d="M 120 27 A 80 80 0 0 1 180 100"
                   fill="none"
-                  stroke="#f97316"
+                  className="stroke-gold-500"
                   strokeWidth="8"
                   strokeDasharray="4 3"
                 />
 
                 {/* Meter labels */}
-                <text x="20" y="112" fill="#78716c" fontSize="10" textAnchor="middle">-50¢</text>
-                <text x="100" y="18" fill="#f97316" fontSize="11" fontWeight="bold" textAnchor="middle">IN TUNE</text>
-                <text x="180" y="112" fill="#78716c" fontSize="10" textAnchor="middle">+50¢</text>
+                <text x="20" y="112" className="fill-ink-500" fontSize="10" textAnchor="middle">-50¢</text>
+                <text x="100" y="18" className="fill-gold-500" fontSize="11" fontWeight="bold" textAnchor="middle">IN TUNE</text>
+                <text x="180" y="112" className="fill-ink-500" fontSize="10" textAnchor="middle">+50¢</text>
 
                 {/* Animated Needle */}
                 <g
@@ -191,17 +216,17 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
                     y1="100"
                     x2="100"
                     y2="22"
-                    stroke={
+                    className={
                       !pitchData
-                        ? '#78716c'
+                        ? 'stroke-ink-500'
                         : pitchData.inTune
-                        ? '#f97316'
-                        : '#f59e0b'
+                        ? 'stroke-gold-500'
+                        : 'stroke-brand-500'
                     }
                     strokeWidth="3.5"
                     strokeLinecap="round"
                   />
-                  <circle cx="100" cy="100" r="7" fill="#44403c" stroke="#d97706" strokeWidth="2" />
+                  <circle cx="100" cy="100" r="7" className="fill-ink-700 stroke-brand-600" strokeWidth="2" />
                 </g>
               </svg>
             </div>
@@ -346,10 +371,8 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
               ) : (
                 <button
                   onClick={() => {
-                    // Play the target note for user
-                    const noteIdx = NOTE_NAMES.indexOf(challengeTargetNote);
-                    const freq = 110 * Math.pow(2, noteIdx / 12);
-                    guitarAudio.pluck(freq, 2.5);
+                    // Play the target note for user (octave 3 sits in the guitar's range for every candidate)
+                    guitarAudio.pluck(noteFrequency(challengeTargetNote, 3), 2.5);
                   }}
                   className="px-2.5 py-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-300 text-xs font-semibold flex items-center gap-1 border border-ink-700"
                 >

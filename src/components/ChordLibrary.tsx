@@ -5,11 +5,7 @@ import {
   Play,
   RotateCcw,
   Sparkles,
-  Info,
-  Check,
-  ChevronRight,
   Music,
-  Sliders,
   Filter,
   Heart,
 } from 'lucide-react';
@@ -17,15 +13,21 @@ import {
   CHORD_DATABASE,
   ChordVoicing,
   NOTE_NAMES,
-  NoteName,
   GUITAR_STRINGS,
-  POPULAR_ROOTS,
   STORAGE_KEYS,
 } from '../constants';
-import { getFretNote, getSwaraForNote, shiftSemitones } from '../utils/guitarTheory';
+import { getFretNote, getSwaraForNote } from '../utils/guitarTheory';
+import { readJSON, writeJSON } from '../utils/progressStore';
+import { useTimeouts } from './labs/useTimeouts';
 import { guitarAudio } from '../utils/audioSynth';
 import { searchChords } from '../utils/chordSearch';
 import { useStringVibration } from '../utils/useStringVibration';
+
+// Chord types behind the "7th / Jazz" and "Extended" category chips
+const SEVENTH_TYPES = new Set(['7th', '7', 'm7', 'Maj7', '9', 'm7b5', 'Dim7']);
+const EXTENDED_TYPES = new Set(['Add9', 'Dim', 'Dim7', 'Aug', '6', 'm6', '7sus4']);
+
+const STRUM_SPEED_MS = 35; // ms between strings
 
 interface ChordLibraryProps {
   notesNotation?: 'western' | 'indian';
@@ -36,25 +38,18 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   const [selectedRoot, setSelectedRoot] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedChordId, setSelectedChordId] = useState<string>('c-major-open');
-  const [strumSpeed, setStrumSpeed] = useState<number>(35); // ms between strings
+  const { after, clear: clearTimers } = useTimeouts();
   const { vibrating, pulse: pulseString } = useStringVibration();
   const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITE_CHORDS) || '[]');
-      return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
-    } catch {
-      return [];
-    }
+    const saved = readJSON<unknown>(STORAGE_KEYS.FAVORITE_CHORDS, []);
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
   });
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
   const favoriteCount = useMemo(() => CHORD_DATABASE.filter(c => favoriteSet.has(c.id)).length, [favoriteSet]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.FAVORITE_CHORDS, JSON.stringify(favorites));
-    } catch {
-      // storage unavailable (private mode): favorites just last for this visit
-    }
+    // storage unavailable (private mode): favorites just last for this visit
+    writeJSON(STORAGE_KEYS.FAVORITE_CHORDS, favorites);
   }, [favorites]);
 
   const toggleFavorite = (id: string) =>
@@ -73,9 +68,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         if (selectedCategory === 'barre' && !chord.category.startsWith('barre')) return false;
         if (selectedCategory === 'Major' && chord.type !== 'Major') return false;
         if (selectedCategory === 'Minor' && chord.type !== 'Minor') return false;
-        if (selectedCategory === '7th' && !chord.type.includes('7')) return false;
+        if (selectedCategory === '7th' && !SEVENTH_TYPES.has(chord.type)) return false;
         if (selectedCategory === 'Suspended' && !chord.type.toLowerCase().includes('sus')) return false;
-        if (selectedCategory === 'Extended' && !chord.type.match(/(add|9|11|13|dim|aug)/i)) return false;
+        if (selectedCategory === 'Extended' && !EXTENDED_TYPES.has(chord.type)) return false;
       }
 
       return true;
@@ -83,20 +78,26 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     return searchChords(byFilters, searchQuery);
   }, [searchQuery, selectedRoot, selectedCategory, favoriteSet]);
 
-  const selectedChord: ChordVoicing = useMemo(() => {
-    return CHORD_DATABASE.find(c => c.id === selectedChordId) || filteredChords[0] || CHORD_DATABASE[0];
-  }, [selectedChordId, filteredChords]);
+  // The chord shown on the right: the selected one if the filters still show it, else the first match
+  // (null when nothing matches, so a hidden chord never lingers in the panel).
+  const selectedChord: ChordVoicing | null = useMemo(
+    () => filteredChords.find(c => c.id === selectedChordId) ?? filteredChords[0] ?? null,
+    [selectedChordId, filteredChords]
+  );
+
+  // A pending arpeggio belongs to the chord it started on
+  useEffect(() => clearTimers, [selectedChord?.id, clearTimers]);
 
   // Compute neck fret range needed to display chord clearly
   const minFret = useMemo(() => {
-    const validFrets = selectedChord.frets.filter(f => f > 0);
+    const validFrets = (selectedChord?.frets ?? []).filter(f => f > 0);
     if (validFrets.length === 0) return 0;
     const lowest = Math.min(...validFrets);
     return Math.max(0, lowest > 4 ? lowest - 1 : 0);
   }, [selectedChord]);
 
   const maxFret = useMemo(() => {
-    const validFrets = selectedChord.frets.filter(f => f > 0);
+    const validFrets = (selectedChord?.frets ?? []).filter(f => f > 0);
     const highest = validFrets.length ? Math.max(...validFrets) : 3;
     return Math.max(minFret + 4, highest + 1);
   }, [selectedChord, minFret]);
@@ -110,8 +111,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   const neckFrets = useMemo(() => fretsToDisplay.filter(f => f > 0), [fretsToDisplay]);
 
   // Audio Playback
-  const playSingleString = (stringIndex: number) => {
-    const fret = selectedChord.frets[stringIndex];
+  const playSingleString = (chord: ChordVoicing, stringIndex: number) => {
+    const fret = chord.frets[stringIndex];
     if (fret === -1) return;
     const stringNumber = 6 - stringIndex; // 0=String 6, 5=String 1
     const { frequency } = getFretNote(stringNumber, fret);
@@ -119,9 +120,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     guitarAudio.pluck(frequency, 2.2, 0.85);
   };
 
-  const strumChord = (direction: 'down' | 'up' = 'down') => {
+  const strumChord = (chord: ChordVoicing, direction: 'down' | 'up' = 'down') => {
     const freqs: number[] = [];
-    selectedChord.frets.forEach((fret, idx) => {
+    chord.frets.forEach((fret, idx) => {
       const stringNumber = 6 - idx;
       if (fret >= 0) {
         freqs.push(getFretNote(stringNumber, fret).frequency);
@@ -130,27 +131,28 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
       }
     });
 
-    guitarAudio.strum(freqs, direction, strumSpeed);
+    guitarAudio.strum(freqs, direction, STRUM_SPEED_MS);
 
     // Animate the strings in the same order and timing as the audio
-    const played = selectedChord.frets
+    const played = chord.frets
       .map((fret, idx) => ({ fret, stringNumber: 6 - idx }))
       .filter(s => s.fret >= 0);
     (direction === 'down' ? played : [...played].reverse()).forEach((s, step) => {
-      pulseString(s.stringNumber, step * strumSpeed);
+      pulseString(s.stringNumber, step * STRUM_SPEED_MS);
     });
   };
 
-  const arpeggiateChord = () => {
+  const arpeggiateChord = (chord: ChordVoicing) => {
+    clearTimers(); // a repeated click restarts the sequence instead of stacking another one
     const validIndices: number[] = [];
-    selectedChord.frets.forEach((f, idx) => {
+    chord.frets.forEach((f, idx) => {
       if (f >= 0) validIndices.push(idx);
     });
 
     validIndices.forEach((idx, step) => {
-      setTimeout(() => {
+      after(() => {
         const stringNumber = 6 - idx;
-        const fret = selectedChord.frets[idx];
+        const fret = chord.frets[idx];
         const { frequency } = getFretNote(stringNumber, fret);
         pulseString(stringNumber);
         guitarAudio.pluck(frequency, 1.8, 0.85);
@@ -176,6 +178,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
 
   // Which finger goes where, for the guide (fretted strings only; a barre finger lists its fret once)
   const fingerPlan = useMemo(() => {
+    if (!selectedChord) return [];
     return [1, 2, 3, 4].map(f => {
       const spots: string[] = [];
       selectedChord.fingers.forEach((fg, idx) => {
@@ -229,12 +232,14 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              aria-label="Search chords"
               placeholder="Search chord (e.g. C, Am, G7, Dsus4)..."
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ink-950 border border-ink-800 text-ink-100 text-xs focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50 transition-all placeholder:text-ink-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-300 text-xs"
               >
                 ✕
@@ -253,6 +258,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
+              aria-pressed={selectedCategory === cat.id}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                 selectedCategory === cat.id
                   ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-1 ring-brand-400/30'
@@ -301,7 +307,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
       {/* Main Grid: Chord List & Virtual Neck Display */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Filtered Chord Voicings (4 cols) */}
-        <div className="lg:col-span-4 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-4 shadow-xl flex flex-col h-[640px]">
+        <div className="lg:col-span-4 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-4 shadow-xl flex flex-col max-h-[60vh] lg:max-h-none lg:h-[640px]">
           <div className="flex items-center justify-between pb-3 border-b border-ink-800">
             <span className="text-xs font-bold uppercase tracking-wider text-ink-400">
               Matching Voicings ({filteredChords.length})
@@ -334,14 +340,19 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                 return (
                   <div
                     key={chord.id}
-                    onClick={() => setSelectedChordId(chord.id)}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+                    className={`rounded-xl border transition-all flex items-center justify-between group focus-within:ring-2 focus-within:ring-brand-400/60 ${
                       isSelected
                         ? 'bg-brand-600/15 border-brand-500 shadow-md ring-1 ring-brand-500/30'
                         : 'bg-ink-950/60 border-ink-800 hover:bg-ink-950 hover:border-ink-700'
                     }`}
                   >
-                    <div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedChordId(chord.id)}
+                      aria-current={isSelected ? 'true' : undefined}
+                      aria-label={`Select ${chord.name}`}
+                      className="flex-1 min-w-0 p-3 text-left cursor-pointer rounded-xl focus:outline-none"
+                    >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-extrabold text-ink-100 group-hover:text-brand-300">
                           {chord.name}
@@ -359,14 +370,12 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         <span>•</span>
                         <span>Triad: [{chord.triadNotes.join(', ')}]</span>
                       </div>
-                    </div>
+                    </button>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 pr-3">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(chord.id);
-                        }}
+                        type="button"
+                        onClick={() => toggleFavorite(chord.id)}
                         aria-pressed={favoriteSet.has(chord.id)}
                         aria-label={`${favoriteSet.has(chord.id) ? 'Remove' : 'Add'} ${chord.name} ${favoriteSet.has(chord.id) ? 'from' : 'to'} favorites`}
                         title={favoriteSet.has(chord.id) ? 'Remove from favorites' : 'Add to favorites'}
@@ -379,11 +388,12 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         <Heart className={`w-3.5 h-3.5 ${favoriteSet.has(chord.id) ? 'fill-current' : ''}`} />
                       </button>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        type="button"
+                        onClick={() => {
                           setSelectedChordId(chord.id);
-                          strumChord('down');
+                          strumChord(chord, 'down');
                         }}
+                        aria-label={`Preview ${chord.name}`}
                         className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-ink-400 hover:text-brand-400 hover:border-brand-500/40 transition-colors"
                         title="Quick Preview"
                       >
@@ -398,6 +408,15 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         </div>
 
         {/* Right Column: Virtual Guitar Neck & Finger Visualizer (8 cols) */}
+        {!selectedChord ? (
+          <div className="lg:col-span-8 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center gap-2 text-center min-h-[240px]">
+            <Music className="w-8 h-8 text-ink-600" />
+            <h2 className="text-lg font-black text-ink-200">No chord to show</h2>
+            <p className="text-xs text-ink-400 max-w-xs">
+              Nothing matches your current search and filters. Clear them to pick a chord.
+            </p>
+          </div>
+        ) : (
         <div className="lg:col-span-8 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-6 shadow-2xl flex flex-col justify-between space-y-6">
           {/* Chord Title & Quick Strum Audio Controls */}
           <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-ink-800/80">
@@ -436,7 +455,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
             {/* Audio Plucking Controls */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => strumChord('down')}
+                onClick={() => strumChord(selectedChord, 'down')}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-bold shadow-md active:scale-95 transition-all"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
@@ -444,14 +463,14 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               </button>
 
               <button
-                onClick={() => strumChord('up')}
+                onClick={() => strumChord(selectedChord, 'up')}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 hover:border-brand-500/40 text-ink-200 text-xs font-bold active:scale-95 transition-all"
               >
                 <span>Strum Up</span>
               </button>
 
               <button
-                onClick={arpeggiateChord}
+                onClick={() => arpeggiateChord(selectedChord)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 hover:border-brand-500/40 text-brand-300 text-xs font-bold active:scale-95 transition-all"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -522,7 +541,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                       {/* Nut cell: string name + open / muted state */}
                       <button
                         type="button"
-                        onClick={() => playSingleString(sIdx)}
+                        onClick={() => playSingleString(selectedChord, sIdx)}
                         aria-label={`${strDef.name} string, ${isMuted ? 'muted' : isOpen ? 'open' : `fret ${targetFret}`}`}
                         className={`relative z-10 flex items-center justify-center gap-1 border-r-[6px] border-ink-200/90 bg-ink-950/70 text-xs font-mono font-black ${
                           isMuted ? 'text-red-400' : isOpen ? 'text-gold-300' : 'text-ink-500'
@@ -540,7 +559,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                         return (
                           <div
                             key={fretNum}
-                            onClick={() => playSingleString(sIdx)}
+                            onClick={() => playSingleString(selectedChord, sIdx)}
                             className="relative flex items-center justify-center cursor-pointer group/string border-r-2 border-ink-500/60"
                           >
                             {sIdx === 2 && [3, 5, 7, 9, 12, 15].includes(fretNum) && (
@@ -648,6 +667,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

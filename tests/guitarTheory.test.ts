@@ -8,6 +8,12 @@ import {
   getFretNote,
   calculateBarreChord,
   shiftSemitones,
+  normalizeNote,
+  tryNormalizeNote,
+  noteToFreq,
+  midiToFreq,
+  A4_HZ,
+  spellMajorScale,
 } from '../src/utils/guitarTheory';
 
 test('1. Ear Tuning: 5th fret rule holds for standard strings and 4th fret holds for G string', () => {
@@ -348,4 +354,47 @@ test('ascendingFrequencies always rises, even when the note list wraps past B', 
   assert.equal(f[7], 220);
   assert.equal(ascendingFrequencies(scale.notes, 146.8).length, 7);
   assert.deepEqual(ascendingFrequencies([], 100), []);
+});
+
+test('normalizeNote handles case, flats and unicode accidentals', () => {
+  assert.equal(normalizeNote('bb'), 'A#');
+  assert.equal(normalizeNote('Bb'), 'A#');
+  assert.equal(normalizeNote('eb'), 'D#');
+  assert.equal(normalizeNote('db'), 'C#');
+  assert.equal(normalizeNote('B♭'), 'A#');
+  assert.equal(normalizeNote('f♯'), 'F#');
+  assert.equal(normalizeNote('b'), 'B');
+  assert.equal(normalizeNote('c#'), 'C#');
+  assert.equal(normalizeNote('G'), 'G');
+  assert.equal(normalizeNote('Cb'), 'B');
+  assert.equal(normalizeNote('E#'), 'F');
+  assert.equal(normalizeNote(' A4 '), 'A');
+});
+
+test('tryNormalizeNote returns null for junk instead of silently becoming C', () => {
+  assert.equal(tryNormalizeNote('H'), null);
+  assert.equal(tryNormalizeNote(''), null);
+  assert.equal(tryNormalizeNote('Cm'), null);
+  assert.equal(tryNormalizeNote('##'), null);
+  assert.equal(tryNormalizeNote('bbb'), null);
+  assert.equal(tryNormalizeNote('Bb'), 'A#');
+});
+
+test('frequency helpers: A4 = 440, middle C, MIDI', () => {
+  assert.equal(A4_HZ, 440);
+  assert.equal(midiToFreq(69), 440);
+  assert.equal(midiToFreq(81), 880);
+  assert.ok(Math.abs(noteToFreq('C', 4) - 261.6256) < 0.001);
+  assert.equal(noteToFreq('A', 4), 440);
+  assert.ok(Math.abs(noteToFreq('E', 2) - 82.4069) < 0.001);
+  assert.ok(Math.abs(noteToFreq('C', 3) - 130.8128) < 0.001);
+});
+
+test('spellMajorScale uses key-signature spellings', () => {
+  assert.deepEqual(spellMajorScale('F'), ['F', 'G', 'A', 'Bb', 'C', 'D', 'E']);
+  assert.deepEqual(spellMajorScale('Bb'), ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A']);
+  assert.deepEqual(spellMajorScale('A#'), ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##']);
+  assert.deepEqual(spellMajorScale('F#'), ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#']);
+  assert.deepEqual(spellMajorScale('Db'), ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C']);
+  assert.deepEqual(spellMajorScale('C'), ['C', 'D', 'E', 'F', 'G', 'A', 'B']);
 });

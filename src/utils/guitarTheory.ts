@@ -40,14 +40,42 @@ export {
   type IndianRaaga,
  };
 
+/**
+ * Parses a user-typed note ("bb", "Eb", "B♭", "f#", "C4") into a canonical sharp-spelled NoteName.
+ * Case-insensitive for the letter, accepts ♭/♯, ignores octave digits. Returns null if unrecognised.
+ */
+export function tryNormalizeNote(note: string): NoteName | null {
+  if (typeof note !== 'string') return null;
+  const clean = note.trim().replace(/♭/g, 'b').replace(/♯/g, '#').replace(/[0-9]/g, '');
+  const m = /^([A-Ga-g])([#b]?)$/.exec(clean);
+  if (!m) return null;
+  const spelled = m[1].toUpperCase() + m[2];
+  if ((NOTE_NAMES as readonly string[]).includes(spelled)) return spelled as NoteName;
+  return ENHARMONIC_MAP[spelled] ?? null;
+}
+
+/**
+ * Lenient variant for internal callers: unrecognised input falls back to 'C'.
+ * Use tryNormalizeNote for anything a user typed so bad input can be reported instead of masked.
+ */
 export function normalizeNote(note: string): NoteName {
-  const clean = note.trim();
-  if (ENHARMONIC_MAP[clean]) return ENHARMONIC_MAP[clean];
-  const idx = NOTE_NAMES.indexOf(clean as NoteName);
-  if (idx !== -1) return clean as NoteName;
-  const stripped = clean.replace(/[0-9]/g, '');
-  if (ENHARMONIC_MAP[stripped]) return ENHARMONIC_MAP[stripped];
-  return (NOTE_NAMES.find(n => n.toLowerCase() === stripped.toLowerCase()) || 'C') as NoteName;
+  return tryNormalizeNote(note) ?? 'C';
+}
+
+// Pitch helpers (equal temperament, A4 = 440 Hz, scientific octave numbers: C4 = middle C)
+export const A4_HZ = 440;
+
+export function midiToFreq(midi: number): number {
+  return A4_HZ * Math.pow(2, (midi - 69) / 12);
+}
+
+export function noteToFreq(note: string, octave: number): number {
+  return midiToFreq((octave + 1) * 12 + getNoteIndex(note));
+}
+
+/** Frequency `semitones` above (or below) `hz`. */
+export function transposeHz(hz: number, semitones: number): number {
+  return hz * Math.pow(2, semitones / 12);
 }
 
 export function getNoteIndex(note: string): number {
@@ -59,6 +87,31 @@ export function shiftSemitones(note: string, semitones: number): NoteName {
   const idx = getNoteIndex(note);
   const nextIdx = (idx + semitones + 1200) % 12;
   return NOTE_NAMES[nextIdx];
+}
+
+const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
+const MAJOR_DEGREE_PC = [0, 2, 4, 5, 7, 9, 11];
+
+/**
+ * Correctly spelled major scale for a tonic as written (one letter per degree), e.g.
+ * 'F' -> F G A Bb C D E, 'F#' -> F# G# A# B C# D# E#, 'Db' -> Db Eb F Gb Ab Bb C.
+ * Unlike deriveMajorScale (which always uses sharp names) this is what a key signature shows.
+ */
+export function spellMajorScale(tonic: string): string[] {
+  const clean = tonic.trim().replace(/♭/g, 'b').replace(/♯/g, '#');
+  const m = /^([A-Ga-g])([#b]?)$/.exec(clean);
+  const norm = tryNormalizeNote(clean);
+  if (!m || !norm) return deriveMajorScale(tonic).notes;
+  const letterIdx = LETTERS.indexOf(m[1].toUpperCase());
+  const tonicPc = NOTE_NAMES.indexOf(norm);
+  return MAJOR_DEGREE_PC.map((interval, d) => {
+    const li = (letterIdx + d) % 7;
+    const target = (tonicPc + interval) % 12;
+    const diff = ((target - LETTER_PC[li] + 18) % 12) - 6; // -6..5, normally -1..1
+    const acc = diff === 0 ? '' : diff > 0 ? '#'.repeat(diff) : 'b'.repeat(-diff);
+    return LETTERS[li] + acc;
+  });
 }
 
 export function getSemitoneDistance(fromNote: string, toNote: string): number {
@@ -239,7 +292,7 @@ export function getFretNote(stringNumber: number, fret: number): {
   const currentNote = NOTE_NAMES[totalSemitones % 12];
   const currentOctave = Math.floor(totalSemitones / 12);
   // Frequency = f0 * 2^(semitones / 12)
-  const frequency = strDef.openFrequencyHz * Math.pow(2, fret / 12);
+  const frequency = transposeHz(strDef.openFrequencyHz, fret);
 
   return {
     note: currentNote,
@@ -495,7 +548,7 @@ export function ascendingFrequencies(notes: string[], startHz: number, closeOcta
   const out = [startHz];
   for (let i = 1; i < notes.length; i++) {
     const step = (getNoteIndex(notes[i]) - getNoteIndex(notes[i - 1]) + 12) % 12;
-    out.push(out[i - 1] * Math.pow(2, (step === 0 ? 12 : step) / 12));
+    out.push(transposeHz(out[i - 1], step === 0 ? 12 : step));
   }
   if (closeOctave) out.push(startHz * 2);
   return out;

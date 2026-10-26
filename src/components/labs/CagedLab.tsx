@@ -5,12 +5,13 @@ import { getFretNote } from '../../utils/guitarTheory';
 import { guitarAudio } from '../../utils/audioSynth';
 import { CAGED_MAX_FRET, cagedPositions, majorTriadNotes, type CagedId } from '../../utils/labs';
 
-const SHAPE_COLORS: Record<CagedId, { fill: string; text: string; chip: string }> = {
-  C: { fill: '#34d399', text: '#0c0a09', chip: 'bg-emerald-400 text-ink-950' },
-  A: { fill: '#fbbf24', text: '#0c0a09', chip: 'bg-brand-400 text-ink-950' },
-  G: { fill: '#8b5cf6', text: '#ffffff', chip: 'bg-violet-500 text-white' },
-  E: { fill: '#f87171', text: '#0c0a09', chip: 'bg-red-400 text-ink-950' },
-  D: { fill: '#d6d3d1', text: '#0c0a09', chip: 'bg-ink-200 text-ink-950' },
+// SVG paint is done with Tailwind fill-/stroke- classes so every colour comes from the palette tokens
+const SHAPE_COLORS: Record<CagedId, { fill: string; stroke: string; text: string; chip: string }> = {
+  C: { fill: 'fill-emerald-400', stroke: 'stroke-emerald-400', text: 'fill-ink-950', chip: 'bg-emerald-400 text-ink-950' },
+  A: { fill: 'fill-brand-400', stroke: 'stroke-brand-400', text: 'fill-ink-950', chip: 'bg-brand-400 text-ink-950' },
+  G: { fill: 'fill-violet-500', stroke: 'stroke-violet-500', text: 'fill-white', chip: 'bg-violet-500 text-white' },
+  E: { fill: 'fill-red-400', stroke: 'stroke-red-400', text: 'fill-ink-950', chip: 'bg-red-400 text-ink-950' },
+  D: { fill: 'fill-ink-300', stroke: 'stroke-ink-300', text: 'fill-ink-950', chip: 'bg-ink-200 text-ink-950' },
 };
 
 const STRING_LABELS = ['E', 'A', 'D', 'G', 'B', 'e'];
@@ -118,7 +119,7 @@ export const CagedLab: React.FC = () => {
           >
             {/* fret numbers */}
             {Array.from({ length: CAGED_MAX_FRET }, (_, i) => i + 1).map(f => (
-              <text key={f} x={xForFret(f)} y={12} textAnchor="middle" fontSize="9" fill="#78716c" fontFamily="monospace">
+              <text key={f} x={xForFret(f)} y={12} textAnchor="middle" fontSize="9" className="fill-ink-500" fontFamily="monospace">
                 {f}
               </text>
             ))}
@@ -130,13 +131,13 @@ export const CagedLab: React.FC = () => {
                 x2={NUT_W + f * FRET_W}
                 y1={PAD_Y - 6}
                 y2={PAD_Y + STR_GAP * 5 + 6}
-                stroke={f === 0 ? '#d6d3d1' : '#44403c'}
+                className={f === 0 ? 'stroke-ink-300' : 'stroke-ink-700'}
                 strokeWidth={f === 0 ? 5 : 1.5}
               />
             ))}
             {/* position markers */}
             {MARKERS.map(f => (
-              <circle key={f} cx={xForFret(f)} cy={PAD_Y + STR_GAP * 2.5} r={4} fill="#292524" />
+              <circle key={f} cx={xForFret(f)} cy={PAD_Y + STR_GAP * 2.5} r={4} className="fill-ink-800" />
             ))}
             {/* strings */}
             {STRING_LABELS.map((label, i) => (
@@ -146,10 +147,10 @@ export const CagedLab: React.FC = () => {
                   x2={WIDTH - 12}
                   y1={yForString(i)}
                   y2={yForString(i)}
-                  stroke="#78716c"
+                  className="stroke-ink-500"
                   strokeWidth={0.8 + (5 - i) * 0.35}
                 />
-                <text x={NUT_W - 14} y={yForString(i) + 3} textAnchor="middle" fontSize="9" fill="#a8a29e" fontFamily="monospace">
+                <text x={NUT_W - 14} y={yForString(i) + 3} textAnchor="middle" fontSize="9" className="fill-ink-400" fontFamily="monospace">
                   {label}
                 </text>
               </g>
@@ -170,12 +171,11 @@ export const CagedLab: React.FC = () => {
                           cx={cx}
                           cy={yForString(sIdx)}
                           r={fret === 0 ? 6 : 10}
-                          fill={fret === 0 ? 'none' : c.fill}
-                          stroke={fret === 0 ? c.fill : isRoot ? '#ffffff' : 'none'}
-                          strokeWidth={fret === 0 ? 2 : 2}
+                          className={fret === 0 ? `fill-none ${c.stroke}` : `${c.fill} ${isRoot ? 'stroke-white' : 'stroke-none'}`}
+                          strokeWidth={2}
                         />
                         {fret > 0 && (
-                          <text x={cx} y={yForString(sIdx) + 3.5} textAnchor="middle" fontSize="9" fontWeight="800" fill={c.text}>
+                          <text x={cx} y={yForString(sIdx) + 3.5} textAnchor="middle" fontSize="9" fontWeight="800" className={c.text}>
                             {note}
                           </text>
                         )}
@@ -184,12 +184,12 @@ export const CagedLab: React.FC = () => {
                   })}
                   {/* shape tag above the lowest fret of the shape */}
                   <text
-                    x={xForFret((p.minFret + p.maxFret) / 2 + 0.5) - FRET_W / 2 + FRET_W / 2}
+                    x={xForFret((p.minFret + p.maxFret) / 2 + 0.5)}
                     y={HEIGHT - 4}
                     textAnchor="middle"
                     fontSize="10"
                     fontWeight="800"
-                    fill={c.fill}
+                    className={c.fill}
                   >
                     {p.shapeId}
                   </text>

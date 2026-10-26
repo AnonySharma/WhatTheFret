@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Volume2, Info, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { GUITAR_STRINGS, getFretNote } from '../../utils/guitarTheory';
+import { Volume2 } from 'lucide-react';
 import { guitarAudio } from '../../utils/audioSynth';
 import { BeatNoteDemo } from './BeatNoteDemo';
+import { useTimeouts } from '../labs/useTimeouts';
 
 export const ModuleEarTuning: React.FC = () => {
   const [activePairIndex, setActivePairIndex] = useState<number>(0);
   const [isPlayingUnison, setIsPlayingUnison] = useState<boolean>(false);
+  const { after } = useTimeouts();
 
   // The 5 pairs for tuning down the neck:
   // 1. Low E 5th fret -> Open A
@@ -57,7 +58,7 @@ export const ModuleEarTuning: React.FC = () => {
       note: 'B3',
       freq: 246.9,
       isException: true,
-      description: 'THE ONE EXCEPTION: The jump between G and B is tuned a Major Third (4 frets) closer together so human fingers can reach barre chords comfortably. Press the 4th fret of G!',
+      description: 'THE ONE EXCEPTION: G to B is a Major Third (4 frets) apart instead of a Perfect 4th (5 frets). That one-semitone squeeze is built into standard tuning and keeps common chord shapes within easy reach. Press the 4th fret of G!',
     },
     {
       sourceString: 2,
@@ -85,7 +86,7 @@ export const ModuleEarTuning: React.FC = () => {
   const playBothUnison = () => {
     setIsPlayingUnison(true);
     guitarAudio.pluck(currentPair.freq, 3.5, 0.8);
-    setTimeout(() => {
+    after(() => {
       guitarAudio.pluck(currentPair.freq, 3.5, 0.8);
       setIsPlayingUnison(false);
     }, 180);
@@ -124,6 +125,7 @@ export const ModuleEarTuning: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => setActivePairIndex(idx)}
+                aria-pressed={activePairIndex === idx}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   activePairIndex === idx
                     ? p.isException
@@ -142,24 +144,24 @@ export const ModuleEarTuning: React.FC = () => {
         <div className="bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950 border border-ink-800 rounded-xl p-6 relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-8 relative py-4">
             {/* Target Open String (Upper Line) */}
-            <div className="relative flex items-center justify-between">
-              <div className="w-20 font-bold text-sm text-ink-300 flex items-center gap-1.5">
-                <span className="w-6 h-6 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="sm:w-28 shrink-0 font-bold text-sm text-ink-300 flex items-center gap-1.5">
+                <span className="min-w-6 h-6 px-1 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
                   {currentPair.targetName}
                 </span>
                 <span className="text-xs text-ink-400">Open</span>
               </div>
 
               {/* String Wire */}
-              <div className="flex-1 h-1.5 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 rounded-full mx-4 relative shadow-sm">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono font-bold text-gold-400 tracking-wider">
+              <div className="flex-1 h-1.5 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 rounded-full sm:mx-4 mt-6 sm:mt-0 relative shadow-sm">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-mono font-bold text-gold-400 tracking-wider whitespace-nowrap">
                   MATCHES OPEN STRING PITCH ({currentPair.note})
                 </div>
               </div>
 
               <button
                 onClick={playTarget}
-                className="px-3 py-1.5 rounded-lg bg-gold-600/30 hover:bg-gold-600/50 border border-gold-500/50 text-gold-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-gold-600/30 hover:bg-gold-600/50 border border-gold-500/50 text-gold-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shrink-0"
               >
                 <Volume2 className="w-3.5 h-3.5" />
                 <span>Pluck Open {currentPair.targetName}</span>
@@ -172,7 +174,7 @@ export const ModuleEarTuning: React.FC = () => {
                 <path
                   d="M 320 45 C 320 15, 260 5, 180 5"
                   fill="none"
-                  stroke="#f97316"
+                  className="stroke-gold-500"
                   strokeWidth="2.5"
                   strokeDasharray="5 5"
                 />
@@ -180,16 +182,16 @@ export const ModuleEarTuning: React.FC = () => {
             </div>
 
             {/* Source String With Fretted Note (Lower Line) */}
-            <div className="relative flex items-center justify-between">
-              <div className="w-20 font-bold text-sm text-ink-300 flex items-center gap-1.5">
-                <span className="w-6 h-6 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="sm:w-28 shrink-0 font-bold text-sm text-ink-300 flex items-center gap-1.5">
+                <span className="min-w-6 h-6 px-1 rounded-md bg-ink-800 flex items-center justify-center text-xs text-brand-400 font-mono">
                   {currentPair.sourceName}
                 </span>
                 <span className="text-xs text-ink-400">String</span>
               </div>
 
               {/* String Wire */}
-              <div className="flex-1 h-2 bg-gradient-to-r from-brand-600 via-ink-500 to-brand-700 rounded-full mx-4 relative shadow-sm">
+              <div className="flex-1 h-2 bg-gradient-to-r from-brand-600 via-ink-500 to-brand-700 rounded-full sm:mx-4 mt-6 mb-2 sm:my-0 relative shadow-sm">
                 {/* Nut */}
                 <div className="absolute left-0 -top-4 -bottom-4 w-2 bg-ink-200 rounded-sm shadow-md" />
 
@@ -203,7 +205,7 @@ export const ModuleEarTuning: React.FC = () => {
                   </span>
                   <button
                     onClick={playSource}
-                    className="w-8 h-8 rounded-full bg-brand-500 hover:bg-brand-400 text-ink-950 font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-brand-500/20 active:scale-95 transition-all"
+                    className="min-w-8 h-8 px-1.5 whitespace-nowrap rounded-full bg-brand-500 hover:bg-brand-400 text-ink-950 font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-brand-500/20 active:scale-95 transition-all"
                   >
                     {currentPair.targetName}
                   </button>
@@ -212,7 +214,7 @@ export const ModuleEarTuning: React.FC = () => {
 
               <button
                 onClick={playSource}
-                className="px-3 py-1.5 rounded-lg bg-brand-600/30 hover:bg-brand-600/50 border border-brand-500/50 text-brand-300 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-brand-600/30 hover:bg-brand-600/50 border border-brand-500/50 text-brand-300 text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shrink-0"
               >
                 <Volume2 className="w-3.5 h-3.5" />
                 <span>Pluck {currentPair.fret}th Fret</span>

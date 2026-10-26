@@ -1,40 +1,44 @@
 import React, { useState } from 'react';
-import { Volume2, Play, Sliders, ArrowRight, Sparkles } from 'lucide-react';
-import { calculateBarreChord, NoteName, NOTE_NAMES, getFretNote } from '../../utils/guitarTheory';
+import { Play, Sliders } from 'lucide-react';
+import { calculateBarreChord, type NoteName, NOTE_NAMES, getFretNote } from '../../utils/guitarTheory';
 import { guitarAudio } from '../../utils/audioSynth';
+import { useTimeouts } from '../labs/useTimeouts';
+
+type BarreShape = 'E-Major' | 'E-Minor' | 'A-Major' | 'A-Minor';
+
+/** Barre roots are normally written Bb / Eb / Ab rather than A# / D# / G#. */
+const ROOT_LABEL: Partial<Record<NoteName, string>> = { 'A#': 'Bb', 'D#': 'Eb', 'G#': 'Ab' };
+const rootLabel = (n: NoteName) => ROOT_LABEL[n] ?? n;
 
 export const ModuleBarreChords: React.FC = () => {
   const [fretPosition, setFretPosition] = useState<number>(1); // Fret 1 = F Major
   const [shapeFamily, setShapeFamily] = useState<'E-Shape' | 'A-Shape'>('E-Shape');
   const [flavor, setFlavor] = useState<'Major' | 'Minor'>('Major');
 
+  const { after, clear } = useTimeouts();
+
   // For E-shape: fret 0 is E, 1 is F, 2 is F#, 3 is G, etc.
   // For A-shape: fret 0 is A, 1 is Bb, 2 is B, 3 is C, etc.
-  const rootNote: NoteName =
-    shapeFamily === 'E-Shape'
-      ? NOTE_NAMES[(NOTE_NAMES.indexOf('E') + fretPosition) % 12]
-      : NOTE_NAMES[(NOTE_NAMES.indexOf('A') + fretPosition) % 12];
+  const rootAt = (family: 'E-Shape' | 'A-Shape', fret: number): NoteName =>
+    NOTE_NAMES[(NOTE_NAMES.indexOf(family === 'E-Shape' ? 'E' : 'A') + fret) % 12];
 
-  const fullShapeKey =
-    shapeFamily === 'E-Shape'
-      ? flavor === 'Major' ? 'E-Major' : 'E-Minor'
-      : flavor === 'Major' ? 'A-Major' : 'A-Minor';
+  const shapeKey: BarreShape = `${shapeFamily === 'E-Shape' ? 'E' : 'A'}-${flavor}`;
+  const rootNote = rootAt(shapeFamily, fretPosition);
+  const chordVoicing = calculateBarreChord(rootNote, shapeKey);
 
-  const chordVoicing = calculateBarreChord(rootNote, fullShapeKey as any);
-
-  const playBarreSound = () => {
-    const freqs: number[] = [];
-    const stringNums = [6, 5, 4, 3, 2, 1];
-    stringNums.forEach((sNum, idx) => {
-      const f = chordVoicing.frets[idx];
-      if (f >= 0) {
-        freqs.push(getFretNote(sNum, f).frequency);
-      } else {
-        freqs.push(-1);
-      }
-    });
-
+  const strumVoicing = (frets: number[]) => {
+    const freqs = [6, 5, 4, 3, 2, 1].map((sNum, idx) => (frets[idx] >= 0 ? getFretNote(sNum, frets[idx]).frequency : -1));
     guitarAudio.strum(freqs, 'down', 30);
+  };
+
+  const playBarreSound = () => strumVoicing(chordVoicing.frets);
+
+  // Move the nut, then strum the chord at the NEW fret (the render's closure still holds the old one)
+  const moveNut = (fret: number) => {
+    setFretPosition(fret);
+    const frets = calculateBarreChord(rootAt(shapeFamily, fret), shapeKey).frets;
+    clear();
+    after(() => strumVoicing(frets), 40);
   };
 
   const fretPresets = [
@@ -63,11 +67,12 @@ export const ModuleBarreChords: React.FC = () => {
       <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
         {/* Controls: Shape Family and Flavor */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Shape toggle */}
             <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
               <button
                 onClick={() => setShapeFamily('E-Shape')}
+                aria-pressed={shapeFamily === 'E-Shape'}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   shapeFamily === 'E-Shape' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
@@ -76,6 +81,7 @@ export const ModuleBarreChords: React.FC = () => {
               </button>
               <button
                 onClick={() => setShapeFamily('A-Shape')}
+                aria-pressed={shapeFamily === 'A-Shape'}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   shapeFamily === 'A-Shape' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
@@ -88,6 +94,7 @@ export const ModuleBarreChords: React.FC = () => {
             <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
               <button
                 onClick={() => setFlavor('Major')}
+                aria-pressed={flavor === 'Major'}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   flavor === 'Major' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
@@ -96,6 +103,7 @@ export const ModuleBarreChords: React.FC = () => {
               </button>
               <button
                 onClick={() => setFlavor('Minor')}
+                aria-pressed={flavor === 'Minor'}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                   flavor === 'Minor' ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-400'
                 }`}
@@ -110,19 +118,19 @@ export const ModuleBarreChords: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>Hear {rootNote} {flavor} Barre</span>
+            <span>Hear {rootLabel(rootNote)} {flavor} Barre</span>
           </button>
         </div>
 
         {/* Interactive Movable Nut Slider */}
         <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
               <Sliders className="w-4 h-4 text-brand-400" />
               <span>Slide The Nut Along The Neck:</span>
             </span>
             <span className="text-sm font-extrabold text-brand-300">
-              Fret {fretPosition} ➔ {rootNote} {flavor}
+              Fret {fretPosition} ➔ {rootLabel(rootNote)} {flavor}
             </span>
           </div>
 
@@ -131,11 +139,8 @@ export const ModuleBarreChords: React.FC = () => {
             min="0"
             max="10"
             value={fretPosition}
-            onChange={e => {
-              const val = parseInt(e.target.value);
-              setFretPosition(val);
-              setTimeout(playBarreSound, 40);
-            }}
+            onChange={e => moveNut(parseInt(e.target.value))}
+            aria-label="Barre fret position"
             className="w-full accent-brand-500 h-2 bg-ink-800 rounded-lg cursor-pointer"
           />
 
@@ -144,10 +149,8 @@ export const ModuleBarreChords: React.FC = () => {
             {fretPresets.map(preset => (
               <button
                 key={preset.fret}
-                onClick={() => {
-                  setFretPosition(preset.fret);
-                  setTimeout(playBarreSound, 40);
-                }}
+                onClick={() => moveNut(preset.fret)}
+                aria-pressed={fretPosition === preset.fret}
                 className={`px-2.5 py-1 rounded-lg border font-semibold whitespace-nowrap transition-all ${
                   fretPosition === preset.fret
                     ? 'bg-brand-500/20 border-brand-500 text-brand-300'
@@ -165,7 +168,7 @@ export const ModuleBarreChords: React.FC = () => {
           <div className="min-w-[540px] max-w-xl mx-auto space-y-3">
             <div className="flex items-center justify-between text-xs text-ink-400 mb-2">
               <span className="font-bold text-brand-300">
-                Chord: {rootNote} {flavor} ({shapeFamily})
+                Chord: {rootLabel(rootNote)} {flavor} ({shapeFamily})
               </span>
               <span className="font-mono text-ink-500">
                 Frets: [{chordVoicing.frets.map(f => (f === -1 ? 'X' : f)).join(' ')}]
@@ -221,6 +224,13 @@ export const ModuleBarreChords: React.FC = () => {
               {chordVoicing.description}
             </p>
           </div>
+        </div>
+
+        <div className="bg-ink-950/70 border border-ink-800 rounded-xl p-4 text-xs space-y-1.5">
+          <div className="text-brand-300 font-bold">🎸 Capo Connection</div>
+          <p className="text-ink-300 leading-relaxed">
+            A capo is a movable nut — the lazy barre. Same shapes, higher key. See Theory Labs → Capo.
+          </p>
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ type Level = 'easy' | 'medium' | 'all';
 const LEVELS: Record<Level, { label: string; semitones: number[] }> = {
   easy: { label: 'Easy: m3 M3 P4 P5 P8', semitones: [3, 4, 5, 7, 12] },
   medium: { label: 'Medium: add 2nds, 6ths', semitones: [1, 2, 3, 4, 5, 7, 8, 9, 12] },
-  all: { label: 'All 12 intervals + tritone', semitones: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+  all: { label: 'All: m2 to P8, incl. tritone', semitones: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
 };
 
 export const EarTrainerLab: React.FC<{ notation?: 'western' | 'indian' }> = ({ notation = 'western' }) => {
@@ -34,7 +34,7 @@ export const EarTrainerLab: React.FC<{ notation?: 'western' | 'indian' }> = ({ n
           Hear the emotional distance between two notes before you touch the neck. Name the interval, or find a
           mystery note on your own guitar (the tuner listens through your microphone).
         </p>
-        <div className="inline-flex p-1 rounded-xl bg-ink-950 border border-ink-800" role="tablist">
+        <div className="inline-flex p-1 rounded-xl bg-ink-950 border border-ink-800" role="group" aria-label="Trainer mode">
           {(
             [
               ['interval', 'Interval ear training'],
@@ -43,8 +43,7 @@ export const EarTrainerLab: React.FC<{ notation?: 'western' | 'indian' }> = ({ n
           ).map(([id, label]) => (
             <button
               key={id}
-              role="tab"
-              aria-selected={mode === id}
+              aria-pressed={mode === id}
               onClick={() => setMode(id)}
               className={`h-9 px-3 rounded-lg text-xs font-bold ${
                 mode === id ? 'bg-brand-600 text-white' : 'text-ink-300 hover:text-white'
@@ -77,7 +76,7 @@ const IntervalTrainer: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
   const [question, setQuestion] = useState<IntervalQuestion | null>(null);
   const [answer, setAnswer] = useState<number | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0, streak: 0 });
-  const { after } = useTimeouts();
+  const { after, clear } = useTimeouts();
 
   const allowed = LEVELS[level].semitones;
 
@@ -90,11 +89,13 @@ const IntervalTrainer: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
   );
 
   const next = useCallback(() => {
+    // drop the previous interval's pending second note / reveal replay so it can't talk over this one
+    clear();
     const q = makeIntervalQuestion(allowed, direction);
     setQuestion(q);
     setAnswer(null);
     play(q);
-  }, [allowed, direction, play]);
+  }, [allowed, direction, play, clear]);
 
   const choose = (semitones: number) => {
     if (!question || answer !== null) return;
@@ -113,6 +114,7 @@ const IntervalTrainer: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
             <button
               key={l}
               onClick={() => {
+                clear();
                 setLevel(l);
                 setQuestion(null);
                 setAnswer(null);
@@ -215,13 +217,12 @@ const BlindFretTrainer: React.FC = () => {
   const [guess, setGuess] = useState<number | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0, streak: 0 });
   const [micOn, setMicOn] = useState(false);
+  const [micPending, setMicPending] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
   const [heard, setHeard] = useState<string | null>(null);
   const qRef = useRef<BlindFretQuestion | null>(null);
   const doneRef = useRef(false);
   const stableRef = useRef<{ note: string; count: number }>({ note: '', count: 0 });
-  const { after } = useTimeouts();
-
   qRef.current = q;
   doneRef.current = guess !== null;
 
@@ -252,7 +253,12 @@ const BlindFretTrainer: React.FC = () => {
   }, []);
 
   const startMic = async () => {
+    if (micPending) return;
+    // never keep two listeners alive: the ref can only remember (and later stop) one
+    if (listenerRef.current) pitchDetector.stopListening(listenerRef.current);
+    listenerRef.current = null;
     setMicError(null);
+    setMicPending(true);
     const listener = (res: PitchDetectionResult | null) => {
       const cur = qRef.current;
       if (!res || !cur || doneRef.current || res.clarity < 0.85 || res.rmsVolume < 0.01) return;
@@ -270,9 +276,11 @@ const BlindFretTrainer: React.FC = () => {
     };
     listenerRef.current = listener;
     const ok = await pitchDetector.startListening(listener);
+    setMicPending(false);
     if (ok && listenerRef.current === listener) setMicOn(true);
     else if (!ok) {
-      listenerRef.current = null;
+      if (listenerRef.current === listener) listenerRef.current = null;
+      setMicOn(false);
       setMicError('Could not access the microphone. Check browser permission, or use the fret buttons instead.');
     }
   };
@@ -344,15 +352,16 @@ const BlindFretTrainer: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={micOn ? stopMic : startMic}
-              className={`h-10 px-4 rounded-xl border text-xs font-bold flex items-center gap-2 ${
+              disabled={micPending}
+              className={`h-10 px-4 rounded-xl border text-xs font-bold flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait ${
                 micOn ? 'bg-gold-500 text-ink-950 border-gold-300' : 'bg-ink-950 border-ink-800 text-ink-200'
               }`}
             >
               {micOn ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              {micOn ? 'Stop listening' : 'Play it on my guitar'}
+              {micPending ? 'Waiting for microphone…' : micOn ? 'Stop listening' : 'Play it on my guitar'}
             </button>
             {micOn && <span className="text-xs text-ink-400 font-mono">Hearing: {heard ?? '…'}</span>}
-            {micError && <span className="text-xs text-red-300">{micError}</span>}
+            {micError && <span role="alert" className="text-xs text-red-300">{micError}</span>}
           </div>
 
           {guess !== null && (

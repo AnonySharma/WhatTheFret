@@ -1,18 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Volume2,
   Play,
-  Pause,
-  Sparkles,
-  HelpCircle,
   Layers,
   Music,
-  Check,
-  Sun,
-  Moon,
   Clock,
   Heart,
-  Sliders,
   ChevronRight,
   Headphones,
 } from 'lucide-react';
@@ -23,10 +16,44 @@ import {
   IndianRaaga,
   NoteName,
   NOTE_NAMES,
-  GUITAR_STRINGS,
 } from '../constants';
-import { getFretNote, getSemitoneDistance, shiftSemitones } from '../utils/guitarTheory';
+import { noteToFreq, transposeHz } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
+import { useTimeouts } from './labs/useTimeouts';
+
+/**
+ * Reads a swara label as it appears in raaga data: "Ga", "re", "Sa'" (upper octave) or a
+ * vadi/samvadi string like "Ga (Shuddha Gandhar)". Returns semitones above Sa (octave-aware).
+ */
+function swaraSemitones(label: string): number | null {
+  const m = /^([A-Za-z]+)('*)/.exec(label.trim());
+  if (!m) return null;
+  const swara = INDIAN_SWARAS.find(s => s.shortName === m[1]);
+  return swara ? swara.semitoneOffset + 12 * m[2].length : null;
+}
+
+/**
+ * Absolute semitones (above the middle-octave Sa) for a rising or falling line, so a scale really
+ * rises/falls: a leading Dha/Ni (e.g. Yaman's "Ni Re Ga...") sits in the lower octave, and each
+ * later note goes to the nearest octave above (or below) the previous one.
+ */
+function lineSemitones(labels: string[], direction: 'up' | 'down'): number[] {
+  const out: number[] = [];
+  labels.forEach((label, i) => {
+    let abs = swaraSemitones(label);
+    if (abs === null) return;
+    const hasOctaveMark = label.includes("'");
+    if (i === 0) {
+      if (direction === 'up' && !hasOctaveMark && abs >= 7) abs -= 12;
+    } else if (!hasOctaveMark) {
+      const prev = out[out.length - 1];
+      if (direction === 'up') while (abs <= prev) abs += 12;
+      else while (abs >= prev) abs -= 12;
+    }
+    out.push(abs);
+  });
+  return out;
+}
 
 interface IndianSwarasExplorerProps {
   rootSa?: NoteName;
@@ -42,41 +69,41 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
   const [activeSwaraOffset, setActiveSwaraOffset] = useState<number | null>(null);
   const [isDronePlaying, setIsDronePlaying] = useState<boolean>(false);
   const [isPlayingScale, setIsPlayingScale] = useState<boolean>(false);
-  const droneIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { after, clear: clearPassage } = useTimeouts();
+  const { after: afterDrone, clear: clearDroneTimers } = useTimeouts();
 
   const selectedRaaga: IndianRaaga =
     INDIAN_RAAGAS.find(r => r.id === selectedRaagaId) || INDIAN_RAAGAS[0];
 
-  const getFreqForOffset = (semitoneOffset: number, octaveBase: number = 130.81) => {
-    const rootIdx = NOTE_NAMES.indexOf(rootSa);
-    const totalSemitones = rootIdx + semitoneOffset;
-    return octaveBase * Math.pow(2, totalSemitones / 12);
-  };
+  // One Sa for everything, derived from the selected tonic: the tanpura sits in the C3-B3 range and
+  // the soundboard/passages play the same Sa an octave above, so they are always in tune with it.
+  const droneSaHz = noteToFreq(rootSa, 3);
+  const playSaHz = droneSaHz * 2;
 
-  const playSwara = (semitoneOffset: number, duration: number = 2.0) => {
-    setActiveSwaraOffset(semitoneOffset);
-    const freq = getFreqForOffset(semitoneOffset, 196.0); // G3/C4 range for bright clarity
-    guitarAudio.pluck(freq, duration, 0.9);
-    setTimeout(() => setActiveSwaraOffset(null), 400);
+  const playSwara = (semitones: number, duration: number = 2.0) => {
+    setActiveSwaraOffset(((semitones % 12) + 12) % 12);
+    guitarAudio.pluck(transposeHz(playSaHz, semitones), duration, 0.9);
+    after(() => setActiveSwaraOffset(null), 400);
   };
 
   const playSwaraByName = (swaraName: string, duration: number = 1.8) => {
-    const swara = INDIAN_SWARAS.find(s => s.shortName === swaraName);
-    if (swara) {
-      playSwara(swara.semitoneOffset, duration);
-    }
+    const semitones = swaraSemitones(swaraName);
+    if (semitones !== null) playSwara(semitones, duration);
   };
 
-  // Play ascending Arohana or descending Avarohana
-  const playRaagaPassage = (swaraList: string[]) => {
+  // Play ascending Arohana or descending Avarohana (or a thaat's scale, closed with the upper Sa)
+  const playRaagaPassage = (swaraList: string[], direction: 'up' | 'down' = 'up', closeWithSa = false) => {
     if (isPlayingScale) return;
+    clearPassage();
     setIsPlayingScale(true);
 
-    swaraList.forEach((swaraName, idx) => {
-      setTimeout(() => {
-        playSwaraByName(swaraName, 1.6);
-        if (idx === swaraList.length - 1) {
-          setTimeout(() => setIsPlayingScale(false), 500);
+    const labels = closeWithSa ? [...swaraList, "Sa'"] : swaraList;
+    const notes = lineSemitones(labels, direction);
+    notes.forEach((semitones, idx) => {
+      after(() => {
+        playSwara(semitones, 1.6);
+        if (idx === notes.length - 1) {
+          after(() => setIsPlayingScale(false), 500);
         }
       }, idx * 420);
     });
@@ -84,31 +111,22 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
 
   // Acoustic Tanpura Drone (Sa + Pa pulsing gently in background)
   useEffect(() => {
-    if (isDronePlaying) {
-      const playDronePulse = () => {
-        const saFreq = getFreqForOffset(0, 130.81); // Root Sa low drone
-        const paFreq = getFreqForOffset(7, 130.81); // Pa Perfect 5th
-        guitarAudio.pluck(saFreq, 3.8, 0.4);
-        setTimeout(() => {
-          guitarAudio.pluck(paFreq, 3.5, 0.35);
-        }, 1200);
-      };
+    if (!isDronePlaying) return;
 
-      playDronePulse();
-      droneIntervalRef.current = setInterval(playDronePulse, 2800);
-    } else {
-      if (droneIntervalRef.current) {
-        clearInterval(droneIntervalRef.current);
-        droneIntervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (droneIntervalRef.current) {
-        clearInterval(droneIntervalRef.current);
-      }
+    const playDronePulse = () => {
+      guitarAudio.pluck(droneSaHz, 3.8, 0.4); // Sa
+      afterDrone(() => {
+        guitarAudio.pluck(transposeHz(droneSaHz, 7), 3.5, 0.35); // Pa, a perfect 5th above
+      }, 1200);
     };
-  }, [isDronePlaying, rootSa]);
+
+    playDronePulse();
+    const interval = window.setInterval(playDronePulse, 2800);
+    return () => {
+      window.clearInterval(interval);
+      clearDroneTimers();
+    };
+  }, [isDronePlaying, droneSaHz, afterDrone, clearDroneTimers]);
 
   return (
     <div className="space-y-6">
@@ -136,6 +154,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
             {/* Tanpura Drone Toggle */}
             <button
               onClick={() => setIsDronePlaying(prev => !prev)}
+              aria-pressed={isDronePlaying}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shadow-md active:scale-95 ${
                 isDronePlaying
                   ? 'bg-brand-600 text-white border-brand-400 ring-2 ring-brand-400/30 animate-pulse'
@@ -152,6 +171,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
         <div className="flex items-center gap-2 pt-4 border-t border-ink-800/80 mt-4 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('raagas')}
+            aria-pressed={activeTab === 'raagas'}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               activeTab === 'raagas'
                 ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-1 ring-brand-400/30'
@@ -162,6 +182,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('swaras')}
+            aria-pressed={activeTab === 'swaras'}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               activeTab === 'swaras'
                 ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-1 ring-brand-400/30'
@@ -172,6 +193,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('thaats')}
+            aria-pressed={activeTab === 'thaats'}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               activeTab === 'thaats'
                 ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-1 ring-brand-400/30'
@@ -188,7 +210,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Raaga Selector Sidebar (4 cols) */}
-            <div className="lg:col-span-4 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-4 shadow-xl flex flex-col h-[680px]">
+            <div className="lg:col-span-4 bg-ink-900/90 border border-ink-800/90 rounded-2xl p-4 shadow-xl flex flex-col max-h-[60vh] lg:max-h-none lg:h-[680px]">
               <div className="flex items-center justify-between pb-3 border-b border-ink-800">
                 <span className="text-xs font-bold uppercase tracking-wider text-ink-400">
                   Select Raaga ({INDIAN_RAAGAS.length})
@@ -202,10 +224,12 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                 {INDIAN_RAAGAS.map(raaga => {
                   const isSelected = raaga.id === selectedRaaga.id;
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={raaga.id}
                       onClick={() => setSelectedRaagaId(raaga.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+                      aria-pressed={isSelected}
+                      className={`w-full text-left p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 ${
                         isSelected
                           ? 'bg-brand-600/15 border-brand-500 shadow-md ring-1 ring-brand-500/30'
                           : 'bg-ink-950/60 border-ink-800 hover:bg-ink-950 hover:border-ink-700'
@@ -225,7 +249,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                       </div>
 
                       <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'text-brand-400 translate-x-1' : 'text-ink-600'}`} />
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -274,6 +298,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                       onClick={() => playSwaraByName(selectedRaaga.vadi, 2.5)}
                       className="p-2 rounded-lg bg-ink-900 text-ink-400 hover:text-brand-300 border border-ink-800"
                       title="Pluck Vadi Note"
+                      aria-label="Play Vadi note"
                     >
                       <Volume2 className="w-4 h-4" />
                     </button>
@@ -288,6 +313,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                       onClick={() => playSwaraByName(selectedRaaga.samvadi, 2.5)}
                       className="p-2 rounded-lg bg-ink-900 text-ink-400 hover:text-violet-300 border border-ink-800"
                       title="Pluck Samvadi Note"
+                      aria-label="Play Samvadi note"
                     >
                       <Volume2 className="w-4 h-4" />
                     </button>
@@ -305,7 +331,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                     </span>
                     <button
                       disabled={isPlayingScale}
-                      onClick={() => playRaagaPassage(selectedRaaga.arohana)}
+                      onClick={() => playRaagaPassage(selectedRaaga.arohana, 'up')}
                       className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gold-950/60 border border-gold-500/40 text-gold-300 hover:bg-gold-900/60 text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
                     >
                       <Play className="w-3 h-3 fill-current" />
@@ -347,7 +373,7 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                     </span>
                     <button
                       disabled={isPlayingScale}
-                      onClick={() => playRaagaPassage(selectedRaaga.avarohana)}
+                      onClick={() => playRaagaPassage(selectedRaaga.avarohana, 'down')}
                       className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 hover:bg-red-900/60 text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
                     >
                       <Play className="w-3 h-3 fill-current" />
@@ -394,17 +420,18 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
 
                 <div className="grid grid-cols-7 sm:grid-cols-12 gap-1.5 pt-2">
                   {Array.from(new Set([...selectedRaaga.arohana, ...selectedRaaga.avarohana])).map((swaraName: string, i: number) => {
-                    const swara = INDIAN_SWARAS.find(s => s.shortName === swaraName);
-                    const fret = swara ? swara.semitoneOffset : i;
+                    const fret = swaraSemitones(swaraName) ?? i;
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={i}
                         onClick={() => playSwaraByName(swaraName, 2.0)}
-                        className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-center cursor-pointer hover:border-brand-500/40 transition-colors"
+                        aria-label={`Play ${swaraName}, fret ${fret}`}
+                        className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-center cursor-pointer hover:border-brand-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
                       >
                         <span className="text-xs font-black text-brand-300 block">{swaraName}</span>
                         <span className="text-[10px] text-ink-400 font-mono">Fret {fret}</span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -476,6 +503,8 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                     <button
                       key={r}
                       onClick={() => onSetRootSa(r)}
+                      aria-label={`Set Sa to ${r}`}
+                      aria-pressed={rootSa === r}
                       className={`w-7 h-7 rounded-lg font-bold border transition-all ${
                         rootSa === r
                           ? 'bg-brand-600 text-white border-brand-500 shadow-sm'
@@ -601,8 +630,9 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
                 </div>
 
                 <button
-                  onClick={() => playRaagaPassage(thaat.swaras)}
-                  className="w-full py-2 rounded-xl bg-ink-900 hover:bg-ink-800 text-ink-200 text-xs font-bold border border-ink-800 flex items-center justify-center gap-2 active:scale-98 transition-all"
+                  onClick={() => playRaagaPassage(thaat.swaras, 'up', true)}
+                  disabled={isPlayingScale}
+                  className="w-full py-2 rounded-xl bg-ink-900 hover:bg-ink-800 text-ink-200 text-xs font-bold border border-ink-800 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Play className="w-3 h-3 fill-current text-brand-400" />
                   <span>Play {thaat.name} Scale</span>

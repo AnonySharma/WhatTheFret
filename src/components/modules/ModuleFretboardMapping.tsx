@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, Play, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Volume2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { guitarAudio } from '../../utils/audioSynth';
 import { getFretNote } from '../../utils/guitarTheory';
 
@@ -74,7 +74,7 @@ export const ModuleFretboardMapping: React.FC = () => {
               </span>
               <span className="text-ink-600">—</span>
               <span className="text-ink-600">—</span>
-              <span className="px-2 py-1 rounded bg-ink-800 text-ink-400">G (3rd)</span>
+              <span className="px-2 py-1 rounded bg-ink-800 text-ink-400">G (Fret 3)</span>
               <span className="text-gold-400 font-bold w-16 text-right">3rd (E)</span>
             </div>
 
@@ -137,7 +137,7 @@ export const ModuleFretboardMapping: React.FC = () => {
               </span>
               <span className="text-ink-600">—</span>
               <span className="text-ink-600">—</span>
-              <span className="px-2 py-1 rounded bg-ink-800 text-ink-400">G (3rd)</span>
+              <span className="px-2 py-1 rounded bg-ink-800 text-ink-400">G (Fret 3)</span>
               <span className="text-red-400 font-bold w-16 text-right">Muted (X)</span>
             </div>
           </div>
@@ -162,6 +162,7 @@ export const ModuleFretboardMapping: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <button
               onClick={() => playChordWithBassMode('muted')}
+              aria-pressed={bassMode === 'muted'}
               className={`p-3.5 rounded-xl border text-left transition-all ${
                 bassMode === 'muted'
                   ? 'bg-gold-950/60 border-gold-500 text-gold-200 ring-2 ring-gold-500/40 shadow-lg'
@@ -183,6 +184,7 @@ export const ModuleFretboardMapping: React.FC = () => {
 
             <button
               onClick={() => playChordWithBassMode('openE')}
+              aria-pressed={bassMode === 'openE'}
               className={`p-3.5 rounded-xl border text-left transition-all ${
                 bassMode === 'openE'
                   ? 'bg-brand-950/60 border-brand-500 text-brand-200 ring-2 ring-brand-500/40 shadow-lg'
@@ -204,6 +206,7 @@ export const ModuleFretboardMapping: React.FC = () => {
 
             <button
               onClick={() => playChordWithBassMode('gBass')}
+              aria-pressed={bassMode === 'gBass'}
               className={`p-3.5 rounded-xl border text-left transition-all ${
                 bassMode === 'gBass'
                   ? 'bg-violet-950/60 border-violet-500 text-violet-200 ring-2 ring-violet-500/40 shadow-lg'

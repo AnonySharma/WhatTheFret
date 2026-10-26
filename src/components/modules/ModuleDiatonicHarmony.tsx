@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Play, Volume2, ArrowRight, Sparkles, Music } from 'lucide-react';
-import { deriveDiatonicHarmony, NoteName, NOTE_NAMES, DiatonicChord } from '../../utils/guitarTheory';
+import { Play, Volume2, Music } from 'lucide-react';
+import { ascendingFrequencies, deriveDiatonicHarmony, noteToFreq, NOTE_NAMES, type DiatonicChord, type NoteName } from '../../utils/guitarTheory';
+import { keyUsesFlats, spellNote } from '../../utils/labs';
 import { guitarAudio } from '../../utils/audioSynth';
+import { useTimeouts } from '../labs/useTimeouts';
 
 export const ModuleDiatonicHarmony: React.FC = () => {
   const [selectedKey, setSelectedKey] = useState<NoteName>('C');
@@ -11,28 +13,29 @@ export const ModuleDiatonicHarmony: React.FC = () => {
   const diatonicChords = deriveDiatonicHarmony(selectedKey);
   const activeChord = diatonicChords[activeDegreeIndex];
 
-  const getFreqForNote = (note: NoteName) => {
-    const idx = NOTE_NAMES.indexOf(note);
-    return 130.81 * Math.pow(2, idx / 12);
-  };
+  const { after, clear } = useTimeouts();
+
+  // Spell notes the way the key is written: F major has Bb, not A#
+  const flats = keyUsesFlats(selectedKey);
+  const spell = (note: NoteName) => spellNote(NOTE_NAMES.indexOf(note), flats);
+  const qualitySuffix = (c: DiatonicChord) => (c.chordType === 'Minor' ? 'm' : c.chordType === 'Diminished' ? '°' : '');
 
   const playDiatonicChord = (chord: DiatonicChord) => {
-    const [r, t, f] = chord.notes;
-    const freqs = [getFreqForNote(r), getFreqForNote(t), getFreqForNote(f)];
-    guitarAudio.strum(freqs, 'down', 32);
+    guitarAudio.strum(ascendingFrequencies(chord.notes, noteToFreq(chord.rootNote, 3)), 'down', 32);
   };
 
   const playProgression = (indices: number[]) => {
     if (isPlayingProgression) return;
+    clear();
     setIsPlayingProgression(true);
 
     indices.forEach((degIdx, step) => {
-      setTimeout(() => {
+      after(() => {
         setActiveDegreeIndex(degIdx);
         playDiatonicChord(diatonicChords[degIdx]);
 
         if (step === indices.length - 1) {
-          setTimeout(() => setIsPlayingProgression(false), 900);
+          after(() => setIsPlayingProgression(false), 900);
         }
       }, step * 850);
     });
@@ -66,12 +69,13 @@ export const ModuleDiatonicHarmony: React.FC = () => {
       <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
         {/* Key Selector */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-ink-400">Key of:</span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {popularKeys.map(key => (
                 <button
                   key={key}
+                  aria-pressed={selectedKey === key}
                   onClick={() => {
                     setSelectedKey(key);
                     setActiveDegreeIndex(0);
@@ -98,7 +102,6 @@ export const ModuleDiatonicHarmony: React.FC = () => {
           {diatonicChords.map((chord, idx) => {
             const isSelected = activeDegreeIndex === idx;
             const isMajor = chord.chordType === 'Major';
-            const isDim = chord.chordType === 'Diminished';
 
             return (
               <button
@@ -116,12 +119,8 @@ export const ModuleDiatonicHarmony: React.FC = () => {
                 <div className="flex items-center justify-between w-full">
                   <span className="text-xs font-mono font-bold text-ink-400">{chord.degreeNumeral}</span>
                   <span
-                    className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                      isMajor
-                        ? 'bg-gold-500/20 text-gold-400'
-                        : isDim
-                        ? 'bg-violet-500/20 text-violet-400'
-                        : 'bg-violet-500/20 text-violet-400'
+                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                      isMajor ? 'bg-gold-500/20 text-gold-400' : 'bg-violet-500/20 text-violet-400'
                     }`}
                   >
                     {chord.chordType.slice(0, 3)}
@@ -129,10 +128,8 @@ export const ModuleDiatonicHarmony: React.FC = () => {
                 </div>
 
                 <div className="my-2 text-center">
-                  <span className="text-xl font-black text-white">{chord.rootNote}</span>
-                  <span className="text-xs font-bold text-ink-400 ml-1">
-                    {chord.chordType === 'Major' ? '' : chord.chordType === 'Minor' ? 'm' : '°'}
-                  </span>
+                  <span className="text-xl font-black text-white">{spell(chord.rootNote)}</span>
+                  <span className="text-xs font-bold text-ink-400 ml-1">{qualitySuffix(chord)}</span>
                 </div>
 
                 <span className="text-[10px] font-mono text-ink-400">{chord.formula}</span>
@@ -148,10 +145,10 @@ export const ModuleDiatonicHarmony: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-extrabold text-brand-300">
-                    Degree {activeChord.degreeNumeral}: {activeChord.rootNote} {activeChord.chordType}
+                    Degree {activeChord.degreeNumeral}: {spell(activeChord.rootNote)} {activeChord.chordType}
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded bg-ink-800 text-ink-300 font-mono">
-                    [{activeChord.notes.join(' - ')}]
+                    [{activeChord.notes.map(spell).join(' - ')}]
                   </span>
                 </div>
                 <p className="text-xs text-ink-400 mt-1">{activeChord.function}</p>
@@ -162,7 +159,7 @@ export const ModuleDiatonicHarmony: React.FC = () => {
                 className="px-3 py-1.5 rounded-lg bg-brand-600/30 hover:bg-brand-600/50 border border-brand-500/40 text-brand-300 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
               >
                 <Volume2 className="w-3.5 h-3.5" />
-                <span>Hear {activeChord.rootNote}{activeChord.chordType === 'Minor' ? 'm' : ''} Triad</span>
+                <span>Hear {spell(activeChord.rootNote)}{qualitySuffix(activeChord)} Triad</span>
               </button>
             </div>
 
@@ -170,11 +167,11 @@ export const ModuleDiatonicHarmony: React.FC = () => {
             <div className="bg-ink-900/80 border border-ink-800/80 rounded-lg p-3 text-xs flex flex-wrap items-center gap-3 text-ink-300">
               <span className="font-semibold text-ink-400">Physical Fret Math:</span>
               <span className="px-2 py-0.5 rounded bg-ink-800 text-gold-400 font-mono font-bold">
-                {activeChord.notes[0]} ➔ {activeChord.notes[1]} (+{activeChord.firstJump} frets)
+                {spell(activeChord.notes[0])} ➔ {spell(activeChord.notes[1])} (+{activeChord.firstJump} frets)
               </span>
               <span>+</span>
               <span className="px-2 py-0.5 rounded bg-ink-800 text-violet-400 font-mono font-bold">
-                {activeChord.notes[1]} ➔ {activeChord.notes[2]} (+{activeChord.secondJump} frets)
+                {spell(activeChord.notes[1])} ➔ {spell(activeChord.notes[2])} (+{activeChord.secondJump} frets)
               </span>
               <span>➔</span>
               <span className="font-bold text-brand-300">
@@ -210,8 +207,8 @@ export const ModuleDiatonicHarmony: React.FC = () => {
                     {prog.indices.map((degIdx, i) => {
                       const c = diatonicChords[degIdx];
                       return (
-                        <span key={i} className="px-1.5 py-0.2 rounded bg-ink-800 text-ink-300">
-                          {c.rootNote}{c.chordType === 'Minor' ? 'm' : ''}
+                        <span key={i} className="px-1.5 py-0.5 rounded bg-ink-800 text-ink-300">
+                          {spell(c.rootNote)}{qualitySuffix(c)}
                         </span>
                       );
                     })}

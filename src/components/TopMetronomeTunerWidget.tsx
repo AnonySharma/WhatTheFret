@@ -1,29 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
   Play,
   Pause,
   Activity,
   Mic,
-  MicOff,
-  Volume2,
-  VolumeX,
-  Sliders,
   ChevronDown,
   Pin,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
   ExternalLink,
 } from 'lucide-react';
 import { metronome, getTempoMarking, TapTempoCalculator } from '../utils/metronome';
 import {
   METRONOME_CONFIG,
   METRONOME_TIME_SIGNATURES,
-  type TimeSignatureDef,
   GUITAR_STRINGS,
 } from '../constants';
-import { pitchDetector, PitchDetectionResult } from '../utils/pitchDetector';
+import { pitchDetector, PitchDetectionResult, micErrorMessage } from '../utils/pitchDetector';
 import { guitarAudio } from '../utils/audioSynth';
+import { useTimeouts } from './labs/useTimeouts';
+
+const subscribeMetronome = (listener: () => void) => metronome.subscribe(listener);
 
 interface TopMetronomeTunerWidgetProps {
   isMicActive: boolean;
@@ -37,32 +34,35 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
   onToggleMic,
   onOpenFull,
 }) => {
-  const [isRunning, setIsRunning] = useState<boolean>(metronome.getIsRunning());
-  const [bpm, setBpm] = useState<number>(metronome.getBpm());
-  const [timeSignature, setTimeSignature] = useState<TimeSignatureDef>(metronome.getTimeSignature());
+  // bpm / time signature / running state live in the shared metronome, so this pill and the overlay never drift apart
+  const isRunning = useSyncExternalStore(subscribeMetronome, () => metronome.getIsRunning());
+  const bpm = useSyncExternalStore(subscribeMetronome, () => metronome.getBpm());
+  const timeSignature = useSyncExternalStore(subscribeMetronome, () => metronome.getTimeSignature());
   const [activeBeat, setActiveBeat] = useState<number>(-1);
-  const [volume, setVolume] = useState<number>(metronome.getVolume());
-  const [isMuted, setIsMuted] = useState<boolean>(metronome.getIsMuted());
+  const { after } = useTimeouts();
 
   // Tooltip / Popover state
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isPinned, setIsPinned] = useState<boolean>(false);
   const [pitchData, setPitchData] = useState<PitchDetectionResult | null>(null);
   const [tapFeedback, setTapFeedback] = useState<string>('Tap');
+  const [micError, setMicError] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const tapCalcRef = useRef<TapTempoCalculator>(new TapTempoCalculator());
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimeoutRef = useRef<number | null>(null);
+  const onToggleMicRef = useRef(onToggleMic);
+  onToggleMicRef.current = onToggleMic;
 
   // Sync metronome events
   useEffect(() => {
-    const unsubBeat = metronome.onBeat((beatIndex, _total, isDownbeat) => {
+    const unsubBeat = metronome.onBeat(beatIndex => {
       setActiveBeat(beatIndex);
-      setTimeout(() => setActiveBeat(-1), 110);
+      after(() => setActiveBeat(-1), 110);
     });
 
     const unsubState = metronome.onStateChange(running => {
-      setIsRunning(running);
       if (!running) setActiveBeat(-1);
     });
 
@@ -70,7 +70,15 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
       unsubBeat();
       unsubState();
     };
-  }, []);
+  }, [after]);
+
+  // A pending hover-close timer must not outlive the widget
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    },
+    []
+  );
 
   // Listen to pitch detector if mic is active
   useEffect(() => {
@@ -78,10 +86,33 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
       setPitchData(null);
       return;
     }
+    setMicError(null);
+    let cancelled = false;
     const listener = (data: PitchDetectionResult | null) => setPitchData(data);
-    pitchDetector.startListening(listener);
-    return () => pitchDetector.stopListening(listener);
+    pitchDetector.startListening(listener).then(ok => {
+      if (ok || cancelled) return;
+      // Permission denied / no microphone: say so and switch the shared mic state back off
+      setMicError(micErrorMessage(pitchDetector.getLastError()));
+      if (pitchDetector.claimFailure()) onToggleMicRef.current();
+    });
+    return () => {
+      cancelled = true;
+      pitchDetector.stopListening(listener);
+    };
   }, [isMicActive]);
+
+  // Escape closes the popover and hands focus back to the trigger
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setIsPinned(false);
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen]);
 
   // Click outside to close if not pinned
   useEffect(() => {
@@ -114,7 +145,6 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
 
   const handleBpmChange = (newBpm: number) => {
     const clamped = Math.max(METRONOME_CONFIG.MIN_BPM, Math.min(METRONOME_CONFIG.MAX_BPM, newBpm));
-    setBpm(clamped);
     metronome.setBpm(clamped);
   };
 
@@ -139,10 +169,13 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
     >
       {/* Top Bar Trigger Button - Compact, polished HUD Pill */}
       <button
+        ref={triggerRef}
         onClick={() => {
           setIsPinned(prev => !prev);
           setIsOpen(true);
         }}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
         className={`flex items-center gap-2 px-2.5 sm:px-3 h-9 rounded-xl border text-xs font-bold transition-all shadow-sm ${
           isRunning || isMicActive
             ? 'bg-brand-950/60 border-brand-500/50 text-brand-300 ring-1 ring-brand-500/20'
@@ -190,6 +223,8 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
       {/* Floating Hover Tooltip / Popover Panel ("Tooltip Thingy") */}
       {isOpen && (
         <div
+          role="dialog"
+          aria-label="Metronome and tuner"
           className="fixed sm:absolute inset-x-3 sm:inset-x-auto top-[6.5rem] sm:top-full sm:right-0 sm:mt-2 max-h-[calc(100dvh-8rem)] overflow-y-auto sm:w-96 rounded-2xl bg-ink-950/95 backdrop-blur-2xl border border-ink-800 shadow-2xl p-4 text-ink-100 z-50 animate-in fade-in-50 zoom-in-95 duration-150 space-y-4"
           style={{ boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(245,158,11, 0.15)' }}
         >
@@ -223,6 +258,8 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                   isPinned ? 'bg-brand-500/20 text-brand-300' : 'text-ink-500 hover:text-ink-300'
                 }`}
                 title={isPinned ? 'Unpin popover' : 'Pin popover open'}
+                aria-label={isPinned ? 'Unpin popover' : 'Pin popover open'}
+                aria-pressed={isPinned}
               >
                 <Pin className="w-3.5 h-3.5" />
               </button>
@@ -232,6 +269,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                   setIsOpen(false);
                 }}
                 className="p-1 rounded-lg text-ink-500 hover:text-ink-300 text-xs"
+                aria-label="Close"
               >
                 ✕
               </button>
@@ -244,6 +282,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
             <div className="bg-ink-900/80 p-3 rounded-xl border border-ink-800 flex items-center justify-between gap-3">
               <button
                 onClick={() => metronome.toggle()}
+                aria-label={isRunning ? 'Stop metronome' : 'Start metronome'}
                 className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold shadow-md transition-all active:scale-95 shrink-0 ${
                   isRunning
                     ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/30'
@@ -302,10 +341,7 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                 {METRONOME_TIME_SIGNATURES.slice(0, 4).map(ts => (
                   <button
                     key={ts.label}
-                    onClick={() => {
-                      setTimeSignature(ts);
-                      metronome.setTimeSignature(ts);
-                    }}
+                    onClick={() => metronome.setTimeSignature(ts)}
                     className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all border ${
                       timeSignature.label === ts.label
                         ? 'bg-brand-600/30 border-brand-500 text-brand-300'
@@ -355,6 +391,12 @@ export const TopMetronomeTunerWidget: React.FC<TopMetronomeTunerWidgetProps> = (
                 {isMicActive ? 'Turn Off Mic' : 'Activate Mic'}
               </button>
             </div>
+
+            {micError && (
+              <p role="alert" className="text-[11px] text-red-300 text-center py-1">
+                {micError}
+              </p>
+            )}
 
             {/* Pitch Gauge Readout */}
             {isMicActive ? (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Play, Volume2, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
-import { ascendingFrequencies, deriveMajorScale, NoteName } from '../../utils/guitarTheory';
+import { Play, Volume2, Sparkles } from 'lucide-react';
+import { ascendingFrequencies, deriveMajorScale, noteToFreq, transposeHz, NOTE_NAMES, type NoteName } from '../../utils/guitarTheory';
+import { keyUsesFlats, spellNote } from '../../utils/labs';
 import { useTimeouts } from '../labs/useTimeouts';
 import { guitarAudio } from '../../utils/audioSynth';
 
@@ -13,13 +14,17 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
 
   const { after } = useTimeouts();
 
+  // F major is F G A Bb C D E, not ...A#...: spell the scale the way the key is written
+  const flats = keyUsesFlats(selectedRoot);
+  const sp = (note: NoteName) => spellNote(NOTE_NAMES.indexOf(note), flats);
+
   const handlePlayScale = () => {
     if (isPlayingScale) return;
     setIsPlayingScale(true);
 
     // the scale rises from the root and finishes on the octave, so it resolves
     const notes = [...scaleData.notes, scaleData.root];
-    const freqs = ascendingFrequencies(scaleData.notes, 146.8, true);
+    const freqs = ascendingFrequencies(scaleData.notes, noteToFreq(scaleData.root, 3), true);
     freqs.forEach((freq, idx) => {
       after(() => {
         setActiveStepIndex(Math.min(idx, notes.length - 1));
@@ -36,6 +41,8 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
   };
 
   const handlePlayRelativeMinor = () => {
+    if (isPlayingScale) return;
+    setIsPlayingScale(true);
     // Relative minor scale: the same seven notes, starting on the relative minor root
     const startIdx = scaleData.notes.indexOf(scaleData.relativeMinor);
     const reordered: NoteName[] = [];
@@ -43,8 +50,13 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
       reordered.push(scaleData.notes[(startIdx + i) % 7]);
     }
 
-    ascendingFrequencies(reordered, 110.0, true).forEach((freq, idx) => {
-      after(() => guitarAudio.pluck(freq, 1.0, 0.85), idx * 350);
+    // starts three semitones under the major root, like the formula says
+    const freqs = ascendingFrequencies(reordered, transposeHz(noteToFreq(scaleData.root, 3), -3), true);
+    freqs.forEach((freq, idx) => {
+      after(() => {
+        guitarAudio.pluck(freq, 1.0, 0.85);
+        if (idx === freqs.length - 1) after(() => setIsPlayingScale(false), 600);
+      }, idx * 350);
     });
   };
 
@@ -77,6 +89,7 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
                 <button
                   key={root}
                   onClick={() => setSelectedRoot(root)}
+                  aria-pressed={selectedRoot === root}
                   className={`w-9 h-9 rounded-xl font-extrabold text-sm transition-all border ${
                     selectedRoot === root
                       ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-2 ring-brand-500/30'
@@ -117,14 +130,13 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
                       <path
                         d={`M ${startX} 75 Q ${midX} ${75 - arcHeight} ${endX} 75`}
                         fill="none"
-                        stroke={isHalf ? '#ef4444' : '#f59e0b'}
                         strokeWidth={activeStepIndex === idx ? '3.5' : '2'}
-                        className="transition-all"
+                        className={`transition-all ${isHalf ? 'stroke-red-500' : 'stroke-brand-500'}`}
                       />
                       <text
                         x={midX}
                         y={70 - arcHeight}
-                        fill={isHalf ? '#ef4444' : '#fbbf24'}
+                        className={isHalf ? 'fill-red-500' : 'fill-brand-400'}
                         fontSize="12"
                         fontWeight="bold"
                         textAnchor="middle"
@@ -155,14 +167,16 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
                             : 'bg-ink-800 text-ink-200 border border-ink-700'
                         }`}
                       >
-                        {note}
+                        {sp(note)}
                       </div>
                       <span className="text-[10px] font-mono font-bold text-ink-500 mt-1">
                         {idx === 0 ? 'Root' : idx === 7 ? '8ve' : `Deg ${idx + 1}`}
                       </span>
-                      <span className="text-[10px] font-bold text-brand-400/90 font-mono">
-                        {['Sa', 'Re', 'Ga', 'ma', 'Pa', 'Dha', 'Ni', "Sa'"][idx]}
-                      </span>
+                      {indian && (
+                        <span className="text-[10px] font-bold text-brand-400/90 font-mono">
+                          {['Sa', 'Re', 'Ga', 'ma', 'Pa', 'Dha', 'Ni', "Sa'"][idx]}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -207,10 +221,11 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
 
             <button
               onClick={handlePlayRelativeMinor}
-              className="px-3.5 py-1.5 rounded-xl bg-gold-700/60 hover:bg-gold-600 border border-gold-500/60 text-gold-100 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+              disabled={isPlayingScale}
+              className="px-3.5 py-1.5 rounded-xl bg-gold-700/60 hover:bg-gold-600 border border-gold-500/60 text-gold-100 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0 disabled:opacity-60"
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span>Hear {scaleData.relativeMinor} Minor Twin</span>
+              <span>Hear {sp(scaleData.relativeMinor)} Minor Twin</span>
             </button>
           </div>
 
@@ -218,11 +233,11 @@ export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = fals
             <span className="font-bold text-brand-400">{selectedRoot} Major</span>
             <span>minus 3 frets ➔</span>
             <span className="font-extrabold text-gold-400 text-sm px-2 py-0.5 rounded bg-gold-500/10 border border-gold-500/20">
-              {scaleData.relativeMinor} Minor
+              {sp(scaleData.relativeMinor)} Minor
             </span>
             <span className="text-ink-500">| Identical Notes:</span>
             <span className="font-mono text-ink-300">
-              ({scaleData.notes.join(' - ')})
+              ({scaleData.notes.map(sp).join(' - ')})
             </span>
           </div>
         </div>

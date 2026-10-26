@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Volume2, Play, RefreshCw, Sparkles, Heart } from 'lucide-react';
-import { deriveTriad, NoteName, NOTE_NAMES, shiftSemitones } from '../../utils/guitarTheory';
+import { Play } from 'lucide-react';
+import { ascendingFrequencies, deriveTriad, noteToFreq, NOTE_NAMES, type NoteName } from '../../utils/guitarTheory';
+import { spellNote, triadUsesFlats } from '../../utils/labs';
 import { guitarAudio } from '../../utils/audioSynth';
+import { useTimeouts } from '../labs/useTimeouts';
 
 export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
   const [selectedRoot, setSelectedRoot] = useState<NoteName>('C');
@@ -9,39 +11,41 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
   const [activeHighlight, setActiveHighlight] = useState<'root' | 'third' | 'fifth' | 'all' | null>(null);
 
   const triad = deriveTriad(selectedRoot, triadType);
+  const { after, clear } = useTimeouts();
 
-  const getFreqForNote = (note: NoteName, octave: number = 3) => {
-    const idx = NOTE_NAMES.indexOf(note);
-    // Base A2 = 110Hz -> A3 = 220Hz
-    return 130.81 * Math.pow(2, idx / 12) * Math.pow(2, octave - 3);
-  };
+  // F minor is F-Ab-C, not F-G#-C: spell the notes the way the chord is conventionally written
+  const flats = triadUsesFlats(selectedRoot, triadType);
+  const sp = (note: NoteName) => spellNote(NOTE_NAMES.indexOf(note), flats);
+  const isDim = triadType === 'Diminished';
+
+  // root, 3rd and 5th as one rising line from the root (so a high-root triad doesn't put its 3rd below the root)
+  const [fRoot, fThird, fFifth] = ascendingFrequencies([triad.root, triad.thirdNote, triad.fifthNote], noteToFreq(triad.root, 3));
 
   const playStepByStep = () => {
-    const fRoot = getFreqForNote(triad.root, 3);
-    const fThird = getFreqForNote(triad.thirdNote, 3);
-    const fFifth = getFreqForNote(triad.fifthNote, 3);
+    // a repeat click restarts the build instead of overlapping with the previous one
+    clear();
 
     // 1. Pluck Root
     setActiveHighlight('root');
     guitarAudio.pluck(fRoot, 1.2, 0.9);
 
     // 2. Pluck 3rd
-    setTimeout(() => {
+    after(() => {
       setActiveHighlight('third');
       guitarAudio.pluck(fThird, 1.2, 0.9);
     }, 700);
 
     // 3. Pluck 5th
-    setTimeout(() => {
+    after(() => {
       setActiveHighlight('fifth');
       guitarAudio.pluck(fFifth, 1.2, 0.9);
     }, 1400);
 
     // 4. Strum All Together
-    setTimeout(() => {
+    after(() => {
       setActiveHighlight('all');
       guitarAudio.strum([fRoot, fThird, fFifth], 'down', 35);
-      setTimeout(() => setActiveHighlight(null), 1200);
+      after(() => setActiveHighlight(null), 1200);
     }, 2100);
   };
 
@@ -72,6 +76,7 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
                 <button
                   key={root}
                   onClick={() => setSelectedRoot(root)}
+                  aria-pressed={selectedRoot === root}
                   className={`w-9 h-9 rounded-xl font-extrabold text-sm transition-all border ${
                     selectedRoot === root
                       ? 'bg-brand-600 text-white border-brand-500 shadow-md ring-2 ring-brand-500/30'
@@ -88,6 +93,7 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
           <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
             <button
               onClick={() => setTriadType('Major')}
+              aria-pressed={triadType === 'Major'}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 triadType === 'Major'
                   ? 'bg-brand-600 text-white shadow-sm'
@@ -98,6 +104,7 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
             </button>
             <button
               onClick={() => setTriadType('Minor')}
+              aria-pressed={triadType === 'Minor'}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 triadType === 'Minor'
                   ? 'bg-brand-600 text-white shadow-sm'
@@ -108,6 +115,7 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
             </button>
             <button
               onClick={() => setTriadType('Diminished')}
+              aria-pressed={triadType === 'Diminished'}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                 triadType === 'Diminished'
                   ? 'bg-brand-600 text-white shadow-sm'
@@ -129,38 +137,36 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
                 <path
                   d="M 60 95 Q 165 10 270 95"
                   fill="none"
-                  stroke="#f97316"
                   strokeWidth="3.5"
-                  className={activeHighlight === 'third' || activeHighlight === 'all' ? 'stroke-gold-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : ''}
+                  className={activeHighlight === 'third' || activeHighlight === 'all' ? 'stroke-gold-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : 'stroke-gold-500'}
                 />
                 <text
                   x="165"
                   y="45"
-                  fill="#f97316"
+                  className="fill-gold-500"
                   fontSize="12"
                   fontWeight="bold"
                   textAnchor="middle"
                 >
-                  +{triad.firstJump} Semitones ({triadType === 'Major' ? 'Major 3rd' : 'Minor 3rd'})
+                  +{triad.firstJump} Semitones ({triad.firstIntervalName.split(' (')[0]})
                 </text>
 
                 {/* Arc 2: Third to Fifth */}
                 <path
                   d="M 270 95 Q 355 25 440 95"
                   fill="none"
-                  stroke="#8b5cf6"
                   strokeWidth="3.5"
-                  className={activeHighlight === 'fifth' || activeHighlight === 'all' ? 'stroke-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]' : ''}
+                  className={activeHighlight === 'fifth' || activeHighlight === 'all' ? 'stroke-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]' : 'stroke-violet-500'}
                 />
                 <text
                   x="355"
                   y="50"
-                  fill="#a78bfa"
+                  className="fill-violet-400"
                   fontSize="12"
                   fontWeight="bold"
                   textAnchor="middle"
                 >
-                  +{triad.secondJump} Semitones ({triadType === 'Major' ? 'Minor 3rd' : 'Major 3rd'})
+                  +{triad.secondJump} Semitones ({triad.secondIntervalName.split(' (')[0]})
                 </text>
               </svg>
             </div>
@@ -170,14 +176,14 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
               {/* Root */}
               <div className="flex flex-col items-center">
                 <button
-                  onClick={() => guitarAudio.pluck(getFreqForNote(triad.root, 3))}
+                  onClick={() => guitarAudio.pluck(fRoot)}
                   className={`w-14 h-14 rounded-full flex flex-col items-center justify-center font-black text-lg shadow-xl transition-all ${
                     activeHighlight === 'root' || activeHighlight === 'all'
                       ? 'bg-brand-400 text-ink-950 scale-110 ring-4 ring-brand-300'
                       : 'bg-ink-950 text-white border-2 border-brand-500 hover:scale-105'
                   }`}
                 >
-                  <span>{triad.root}</span>
+                  <span>{sp(triad.root)}</span>
                   <span className="text-[9px] font-mono opacity-80">Root</span>
                 </button>
                 <span className="text-xs font-bold text-ink-300 mt-2">ROOT (1)</span>
@@ -188,14 +194,14 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
               {/* 3rd */}
               <div className="flex flex-col items-center">
                 <button
-                  onClick={() => guitarAudio.pluck(getFreqForNote(triad.thirdNote, 3))}
+                  onClick={() => guitarAudio.pluck(fThird)}
                   className={`w-14 h-14 rounded-full flex flex-col items-center justify-center font-black text-lg shadow-xl transition-all ${
                     activeHighlight === 'third' || activeHighlight === 'all'
                       ? 'bg-gold-400 text-ink-950 scale-110 ring-4 ring-gold-300'
                       : 'bg-ink-950 text-white border-2 border-gold-500 hover:scale-105'
                   }`}
                 >
-                  <span>{triad.thirdNote}</span>
+                  <span>{sp(triad.thirdNote)}</span>
                   <span className="text-[9px] font-mono opacity-80">3rd</span>
                 </button>
                 <span className="text-xs font-bold text-ink-300 mt-2">3rd</span>
@@ -208,19 +214,23 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
               {/* 5th */}
               <div className="flex flex-col items-center">
                 <button
-                  onClick={() => guitarAudio.pluck(getFreqForNote(triad.fifthNote, 3))}
+                  onClick={() => guitarAudio.pluck(fFifth)}
                   className={`w-14 h-14 rounded-full flex flex-col items-center justify-center font-black text-lg shadow-xl transition-all ${
                     activeHighlight === 'fifth' || activeHighlight === 'all'
                       ? 'bg-violet-400 text-ink-950 scale-110 ring-4 ring-violet-300'
                       : 'bg-ink-950 text-white border-2 border-violet-500 hover:scale-105'
                   }`}
                 >
-                  <span>{triad.fifthNote}</span>
+                  <span>{sp(triad.fifthNote)}</span>
                   <span className="text-[9px] font-mono opacity-80">5th</span>
                 </button>
                 <span className="text-xs font-bold text-ink-300 mt-2">5th</span>
-                <span className="text-[11px] font-mono font-bold text-violet-400">{indian ? 'Pa (प)' : 'Perfect 5th'}</span>
-                <span className="text-[10px] text-ink-500">{indian ? 'Achala (Walls)' : 'Never changes'}</span>
+                <span className="text-[11px] font-mono font-bold text-violet-400">
+                  {isDim ? (indian ? 'Tivra Ma (मॅ)' : 'Diminished 5th') : indian ? 'Pa (प)' : 'Perfect 5th'}
+                </span>
+                <span className="text-[10px] text-ink-500">
+                  {isDim ? 'Squeezed to +6' : indian ? 'Achala (Walls)' : 'Stays +7 in major and minor'}
+                </span>
               </div>
             </div>
           </div>
@@ -243,7 +253,7 @@ export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-ink-100 text-sm">
-                {selectedRoot} {triadType} Triad: [{triad.notes.join(' - ')}]
+                {sp(selectedRoot)} {triadType} Triad: [{triad.notes.map(sp).join(' - ')}]
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-ink-800 text-ink-300">
                 Formula: +{triad.firstJump}, +{triad.secondJump}

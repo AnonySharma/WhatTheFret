@@ -1,28 +1,17 @@
 import React, { useState } from 'react';
-import {
-  CheckCircle2,
-  ArrowRight,
-  Play,
-  Volume2,
-  Sparkles,
-  Award,
-  RefreshCw,
-  Sliders,
-  HelpCircle,
-  RotateCcw,
-  Music,
-} from 'lucide-react';
+import { CheckCircle2, ArrowRight, Play, Volume2 } from 'lucide-react';
 import {
   deriveTriad,
-  NoteName,
   NOTE_NAMES,
   calculateBarreChord,
   getFretNote,
-  getSwaraForNote,
-  shiftSemitones,
   getSemitoneDistance,
+  transposeHz,
+  type NoteName,
 } from '../../utils/guitarTheory';
+import { spellNote, triadUsesFlats } from '../../utils/labs';
 import { guitarAudio } from '../../utils/audioSynth';
+import { useTimeouts } from '../labs/useTimeouts';
 import confetti from 'canvas-confetti';
 
 export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
@@ -30,7 +19,6 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
   const [targetChordRoot, setTargetChordRoot] = useState<NoteName>('G');
   const [targetFlavor, setTargetFlavor] = useState<'Major' | 'Minor'>('Minor');
   const [wizardStep, setWizardStep] = useState<number>(1);
-  const [hoveredWalkFret, setHoveredWalkFret] = useState<number | null>(null);
   const [isBarreEngaged, setIsBarreEngaged] = useState<boolean>(true);
 
   // Quiz state
@@ -38,12 +26,26 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
   const [quizQuestionIndex, setQuizQuestionIndex] = useState<number>(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
+  const { after, clear } = useTimeouts();
 
   const triad = deriveTriad(targetChordRoot, targetFlavor);
   const barreVoicing = calculateBarreChord(targetChordRoot, targetFlavor === 'Minor' ? 'E-Minor' : 'E-Major');
 
   // Low E anchor fret calculation (distance from E to target root)
   const anchorFret = getSemitoneDistance('E', targetChordRoot);
+
+  // G minor is G-Bb-D, not G-A#-D: spell the notes the way the chord is conventionally written
+  const flats = triadUsesFlats(targetChordRoot, targetFlavor);
+  const sp = (note: NoteName) => spellNote(NOTE_NAMES.indexOf(note), flats);
+  const rootFreq = getFretNote(6, anchorFret).frequency;
+
+  // "Open E ➔ Fret 1 (F) ➔ Fret 2 (F#) ➔ ... ➔ Fret N (X)", computed from the real strip rather than hard-coded
+  const walkText = (() => {
+    if (anchorFret === 0) return 'Open E is already the root: no walking needed';
+    const at = (f: number) => `Fret ${f} (${getFretNote(6, f).note})`;
+    const mid = anchorFret > 3 ? [at(1), at(2), '…'] : Array.from({ length: anchorFret - 1 }, (_, i) => at(i + 1));
+    return ['Open E', ...mid, at(anchorFret)].join(' ➔ ');
+  })();
 
   const playDerivedChord = () => {
     const freqs: number[] = [];
@@ -130,13 +132,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
   const handleNextQuestion = () => {
     setSelectedOption(null);
     setIsAnswered(false);
+    // starting a second pass: reset the score so it can never read past the total ("6/4")
+    if (quizQuestionIndex === quizQuestions.length - 1) setQuizScore(0);
     setQuizQuestionIndex(prev => (prev + 1) % quizQuestions.length);
   };
 
   const stepsMeta = [
     { step: 1, title: 'Identify Request', subtitle: `Root ${targetChordRoot}` },
     { step: 2, title: 'Triad Code Math', subtitle: targetFlavor === 'Minor' ? '+3, +4' : '+4, +3' },
-    { step: 3, title: 'Triad Notes', subtitle: `[${triad.notes.join(', ')}]` },
+    { step: 3, title: 'Triad Notes', subtitle: `[${triad.notes.map(sp).join(', ')}]` },
     { step: 4, title: 'Find Anchor Fret', subtitle: `Fret ${anchorFret} on Low E` },
     { step: 5, title: 'Graft Barre Shape', subtitle: `Movable ${targetFlavor === 'Minor' ? 'Em' : 'E'} Shape` },
   ];
@@ -167,6 +171,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           <div className="flex items-center gap-1.5 bg-ink-950/80 p-1 rounded-xl border border-ink-800 self-start sm:self-center shrink-0">
             <button
               onClick={() => setActiveTab('wizard')}
+              aria-pressed={activeTab === 'wizard'}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'wizard'
                   ? 'bg-brand-600 text-white shadow-sm'
@@ -177,6 +182,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
             </button>
             <button
               onClick={() => setActiveTab('quiz')}
+              aria-pressed={activeTab === 'quiz'}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'quiz'
                   ? 'bg-brand-600 text-white shadow-sm'
@@ -193,14 +199,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
             <div className="flex flex-wrap items-center gap-4">
               {/* Root Note Picker with Pearloid Inlay Styling */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-brand-400">
                   Root:
                 </span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {(['G', 'F', 'A', 'B', 'C', 'D', 'E', 'F#'] as NoteName[]).map(r => (
                     <button
                       key={r}
+                      aria-pressed={targetChordRoot === r}
                       onClick={() => {
                         setTargetChordRoot(r);
                         guitarAudio.pluck(getFretNote(6, getSemitoneDistance('E', r)).frequency, 1.5, 0.8);
@@ -221,6 +228,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
               <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
                 <button
                   onClick={() => setTargetFlavor('Minor')}
+                  aria-pressed={targetFlavor === 'Minor'}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                     targetFlavor === 'Minor'
                       ? 'bg-brand-600 text-white shadow-sm'
@@ -231,6 +239,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                 </button>
                 <button
                   onClick={() => setTargetFlavor('Major')}
+                  aria-pressed={targetFlavor === 'Major'}
                   className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
                     targetFlavor === 'Major'
                       ? 'bg-brand-600 text-white shadow-sm'
@@ -267,6 +276,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                 <button
                   key={meta.step}
                   onClick={() => setWizardStep(meta.step)}
+                  aria-current={isCurrent ? 'step' : undefined}
                   className={`p-3 rounded-xl border text-left transition-all ${
                     isCurrent
                       ? 'bg-brand-600/20 border-brand-500 ring-2 ring-brand-500/40 shadow-lg'
@@ -297,7 +307,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           {/* STEP 1 VISUAL: Identify the Request */}
           {wizardStep === 1 && (
             <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="text-xs font-mono font-bold text-brand-400 uppercase">Step 1 of 5</span>
                   <h3 className="text-lg font-extrabold text-ink-100">
@@ -326,7 +336,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                     <span className="text-xs text-ink-400 block mt-0.5">Acts as the tonic center{indian ? ' / Sa' : ''}</span>
                   </div>
                   <button
-                    onClick={() => guitarAudio.pluck(getFretNote(6, anchorFret).frequency, 2.0, 0.9)}
+                    onClick={() => guitarAudio.pluck(rootFreq, 2.0, 0.9)}
                     className="p-3 rounded-xl bg-ink-900 border border-ink-800 text-ink-300 hover:text-brand-300"
                     title="Pluck Root Note"
                   >
@@ -351,7 +361,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           {/* STEP 2 VISUAL: Apply the Internal Math (+4/+3 or +3/+4) */}
           {wizardStep === 2 && (
             <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="text-xs font-mono font-bold text-brand-400 uppercase">Step 2 of 5</span>
                   <h3 className="text-lg font-extrabold text-ink-100">
@@ -373,7 +383,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
 
               {/* Visual Interval Arc Jump Diagram */}
               <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-bold uppercase text-ink-400">
                     Triad Jump Formula for {targetFlavor}:
                   </span>
@@ -402,17 +412,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-ink-900/60 border border-ink-800/80 text-xs text-ink-400 flex items-center justify-between">
+                <div className="p-3 rounded-lg bg-ink-900/60 border border-ink-800/80 text-xs text-ink-400 flex flex-wrap items-center justify-between gap-2">
                   <span>Total Distance to boundary 5th: <strong>+7 frets (Perfect 5th)</strong></span>
                   <button
                     onClick={() => {
                       // Pluck root, 3rd, 5th in sequence
-                      const baseFreq = getFretNote(6, anchorFret).frequency;
-                      const thirdFreq = baseFreq * Math.pow(2, triad.firstJump / 12);
-                      const fifthFreq = baseFreq * Math.pow(2, 7 / 12);
-                      guitarAudio.pluck(baseFreq, 1.5, 0.85);
-                      setTimeout(() => guitarAudio.pluck(thirdFreq, 1.5, 0.85), 250);
-                      setTimeout(() => guitarAudio.pluck(fifthFreq, 1.5, 0.85), 500);
+                      clear();
+                      guitarAudio.pluck(rootFreq, 1.5, 0.85);
+                      after(() => guitarAudio.pluck(transposeHz(rootFreq, triad.firstJump), 1.5, 0.85), 250);
+                      after(() => guitarAudio.pluck(transposeHz(rootFreq, 7), 1.5, 0.85), 500);
                     }}
                     className="flex items-center gap-1.5 text-brand-400 hover:text-brand-300 font-bold"
                   >
@@ -427,7 +435,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           {/* STEP 3 VISUAL: Calculate the Notes */}
           {wizardStep === 3 && (
             <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="text-xs font-mono font-bold text-brand-400 uppercase">Step 3 of 5</span>
                   <h3 className="text-lg font-extrabold text-ink-100">
@@ -456,15 +464,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-ink-900 text-ink-400 font-mono">0 st</span>
                   </div>
                   <div className="text-center py-2">
-                    <span className="text-3xl font-black text-brand-400">{triad.root}</span>
+                    <span className="text-3xl font-black text-brand-400">{sp(triad.root)}</span>
                     <span className="text-xs text-ink-400 block mt-1">Grounding Foundation</span>
                   </div>
                   <button
-                    onClick={() => guitarAudio.pluck(getFretNote(6, anchorFret).frequency, 2.0, 0.9)}
+                    onClick={() => guitarAudio.pluck(rootFreq, 2.0, 0.9)}
                     className="w-full py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-ink-200 text-xs font-bold border border-ink-800 flex items-center justify-center gap-1.5"
                   >
                     <Volume2 className="w-3.5 h-3.5 text-brand-400" />
-                    <span>Pluck {triad.root}</span>
+                    <span>Pluck {sp(triad.root)}</span>
                   </button>
                 </div>
 
@@ -479,18 +487,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                     </span>
                   </div>
                   <div className="text-center py-2">
-                    <span className="text-3xl font-black text-gold-400">{triad.thirdNote}</span>
+                    <span className="text-3xl font-black text-gold-400">{sp(triad.thirdNote)}</span>
                     <span className="text-xs text-ink-400 block mt-1">Dictates {targetFlavor} Mood</span>
                   </div>
                   <button
-                    onClick={() => {
-                      const rootFreq = getFretNote(6, anchorFret).frequency;
-                      guitarAudio.pluck(rootFreq * Math.pow(2, triad.firstJump / 12), 2.0, 0.9);
-                    }}
+                    onClick={() => guitarAudio.pluck(transposeHz(rootFreq, triad.firstJump), 2.0, 0.9)}
                     className="w-full py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-ink-200 text-xs font-bold border border-ink-800 flex items-center justify-center gap-1.5"
                   >
                     <Volume2 className="w-3.5 h-3.5 text-gold-400" />
-                    <span>Pluck {triad.thirdNote}</span>
+                    <span>Pluck {sp(triad.thirdNote)}</span>
                   </button>
                 </div>
 
@@ -501,18 +506,15 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-ink-900 text-ink-400 font-mono">+7 st</span>
                   </div>
                   <div className="text-center py-2">
-                    <span className="text-3xl font-black text-violet-400">{triad.fifthNote}</span>
+                    <span className="text-3xl font-black text-violet-400">{sp(triad.fifthNote)}</span>
                     <span className="text-xs text-ink-400 block mt-1">Solid Boundary Wall</span>
                   </div>
                   <button
-                    onClick={() => {
-                      const rootFreq = getFretNote(6, anchorFret).frequency;
-                      guitarAudio.pluck(rootFreq * Math.pow(2, 7 / 12), 2.0, 0.9);
-                    }}
+                    onClick={() => guitarAudio.pluck(transposeHz(rootFreq, 7), 2.0, 0.9)}
                     className="w-full py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-ink-200 text-xs font-bold border border-ink-800 flex items-center justify-center gap-1.5"
                   >
                     <Volume2 className="w-3.5 h-3.5 text-violet-400" />
-                    <span>Pluck {triad.fifthNote}</span>
+                    <span>Pluck {sp(triad.fifthNote)}</span>
                   </button>
                 </div>
               </div>
@@ -522,7 +524,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           {/* STEP 4 VISUAL: Find Anchor on Low E string */}
           {wizardStep === 4 && (
             <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="text-xs font-mono font-bold text-brand-400 uppercase">Step 4 of 5</span>
                   <h3 className="text-lg font-extrabold text-ink-100">
@@ -544,7 +546,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
 
               {/* Virtual Low E String Fret Walker */}
               <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-bold uppercase text-ink-400">
                     Low E String (String 6) Fret Strip:
                   </span>
@@ -563,8 +565,6 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                       <button
                         key={f}
                         onClick={() => playLowEFret(f)}
-                        onMouseEnter={() => setHoveredWalkFret(f)}
-                        onMouseLeave={() => setHoveredWalkFret(null)}
                         className={`p-2.5 rounded-xl border flex flex-col items-center justify-between transition-all active:scale-95 ${
                           isAnchor
                             ? 'bg-brand-600 text-white border-brand-400 shadow-lg ring-2 ring-brand-400/50 scale-105 z-10'
@@ -577,7 +577,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                           {f === 0 ? 'Open' : `F${f}`}
                         </span>
                         <span className="text-base font-black my-1">
-                          {noteData.note}
+                          {sp(noteData.note)}
                         </span>
                         {isAnchor && (
                           <span className="text-[8px] font-extrabold uppercase px-1 rounded bg-brand-950 text-brand-200">
@@ -589,8 +589,8 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                   })}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-ink-400 pt-2 border-t border-ink-800/80">
-                  <span>Walking: <strong>Open E ➔ Fret 1 (F) ➔ Fret 2 (F#) ➔ Fret {anchorFret} ({targetChordRoot})</strong></span>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-400 pt-2 border-t border-ink-800/80">
+                  <span>Walking: <strong>{walkText}</strong></span>
                   <span className="text-brand-400 font-mono">Distance = {anchorFret} semitones</span>
                 </div>
               </div>
@@ -600,16 +600,17 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
           {/* STEP 5 VISUAL: Graft Barre Shape onto Anchor */}
           {wizardStep === 5 && (
             <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="text-xs font-mono font-bold text-brand-400 uppercase">Step 5 of 5</span>
                   <h3 className="text-lg font-extrabold text-ink-100">
                     Step 5: Graft Open Shape Onto Anchor Fret
                   </h3>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setIsBarreEngaged(prev => !prev)}
+                    aria-pressed={isBarreEngaged}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                       isBarreEngaged
                         ? 'bg-violet-950/80 border-violet-500/50 text-violet-300'
@@ -634,7 +635,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
 
               {/* Visual Neck Fret Diagram for the Barre Chord */}
               <div className="bg-ink-950 border border-ink-800 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-bold uppercase text-ink-400">
                     Complete Derived Voicing: {barreVoicing.name}
                   </span>
@@ -653,9 +654,11 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                     const isRoot = noteData.note === targetChordRoot;
 
                     return (
-                      <div
+                      <button
                         key={sIdx}
+                        type="button"
                         onClick={() => playSingleString(stringNumber, fret)}
+                        aria-label={`Play string ${stringNumber}, fret ${fret}, ${sp(noteData.note)}`}
                         className={`p-3 rounded-xl border cursor-pointer transition-all hover:scale-102 ${
                           isRoot
                             ? 'bg-brand-600/20 border-brand-500 shadow-md'
@@ -668,7 +671,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                           Str {stringNumber}
                         </span>
                         <span className="text-xl font-black text-ink-100 block my-1">
-                          {noteData.note}
+                          {sp(noteData.note)}
                         </span>
                         <span className="text-[10px] font-mono text-brand-400 block">
                           Fret {fret}
@@ -676,7 +679,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                         <span className="text-[9px] text-ink-400 mt-1 block">
                           {finger === 1 ? 'Barre 1' : `Finger ${finger}`}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -692,7 +695,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
               </span>
               <div className="text-sm text-ink-200">
                 Target: <strong className="text-white">{targetChordRoot} {targetFlavor}</strong> ➔
-                Triad: <strong className="text-brand-300">[{triad.notes.join(', ')}]</strong> ➔
+                Triad: <strong className="text-brand-300">[{triad.notes.map(sp).join(', ')}]</strong> ➔
                 Low E Anchor: <strong className="text-gold-300">Fret {anchorFret}</strong> ➔
                 Shape: <strong className="text-violet-300">{targetFlavor === 'Minor' ? 'Em' : 'E'} Barre</strong>
               </div>
@@ -712,7 +715,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
       ) : (
         /* QUIZ TAB */
         <div className="bg-ink-900 border border-ink-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-ink-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-ink-800">
             <div>
               <span className="text-xs font-mono text-brand-400 font-bold uppercase">
                 Mastery Question {quizQuestionIndex + 1} of {quizQuestions.length}
@@ -765,7 +768,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
                 onClick={handleNextQuestion}
                 className="mt-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all"
               >
-                Next Question
+                {quizQuestionIndex === quizQuestions.length - 1 ? 'Restart quiz' : 'Next Question'}
               </button>
             </div>
           )}

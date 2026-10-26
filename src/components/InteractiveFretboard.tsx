@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Play, Volume2, Sparkles, RefreshCw, Globe, Zap, Compass } from 'lucide-react';
-import { GUITAR_STRINGS, getFretNote, CHORD_DATABASE, ChordVoicing, NoteName, calculateBarreChord, getSwaraForNote } from '../utils/guitarTheory';
+import { Play, Volume2, RefreshCw, Zap, Compass } from 'lucide-react';
+import { GUITAR_STRINGS, getFretNote, CHORD_DATABASE, ChordVoicing, NoteName, getSwaraForNote } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
 import { FretboardQuiz } from './FretboardQuiz';
 import { useStringVibration } from '../utils/useStringVibration';
 
+type Frets = (number | -1)[];
+
+const sameFrets = (a: Frets, b: Frets) => a.length === b.length && a.every((f, i) => f === b[i]);
+
 interface InteractiveFretboardProps {
-  customFrets?: (number | -1)[];
-  onFretChange?: (frets: (number | -1)[]) => void;
   activeChordName?: string;
   highlightTriadNotes?: NoteName[];
   displayMode?: 'notes' | 'intervals' | 'sargam';
@@ -17,8 +19,6 @@ interface InteractiveFretboardProps {
 }
 
 export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
-  customFrets,
-  onFretChange,
   activeChordName,
   highlightTriadNotes,
   displayMode: initialDisplayMode = 'notes',
@@ -26,35 +26,22 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
   notesNotation = 'western',
   rootSa = 'C',
 }) => {
-  const [selectedChordId, setSelectedChordId] = useState<string>('c-major-open');
-  const [fretsState, setFretsState] = useState<(number | -1)[]>(
-    customFrets || [-1, 3, 2, 0, 1, 0] // Default C Major
-  );
+  const [fretsState, setFretsState] = useState<Frets>([-1, 3, 2, 0, 1, 0]); // Default C Major
   const [displayMode, setDisplayMode] = useState<'notes' | 'intervals' | 'sargam'>(
     notesNotation === 'indian' ? 'sargam' : initialDisplayMode
   );
   const [viewMode, setViewMode] = useState<'explorer' | 'quiz'>('explorer');
   const { vibrating, pulse: triggerStringVibration } = useStringVibration();
-  const [barreRoot, setBarreRoot] = useState<NoteName>('F');
-  const [barreShape, setBarreShape] = useState<'E-Major' | 'E-Minor' | 'A-Major' | 'A-Minor'>('E-Major');
 
   // Sync when notation changes from parent
   React.useEffect(() => {
     setDisplayMode(mode => (notesNotation === 'indian' ? 'sargam' : mode === 'sargam' ? 'notes' : mode));
   }, [notesNotation]);
 
-  // Sync when customFrets is updated by parent
-  React.useEffect(() => {
-    if (customFrets) {
-      setFretsState(customFrets);
-    }
-  }, [customFrets]);
-
-  const activeChord: ChordVoicing | undefined =
-    CHORD_DATABASE.find(c => c.id === selectedChordId) ||
-    calculateBarreChord(barreRoot, barreShape);
-
-  const currentFrets = customFrets || fretsState;
+  // The shape on the neck, named by whatever it currently matches in the chord database.
+  // Frets edited by hand that match nothing are a "Custom shape" with no triad analysis.
+  const currentFrets = fretsState;
+  const activeChord: ChordVoicing | undefined = CHORD_DATABASE.find(c => sameFrets(c.frets, currentFrets));
 
   const handleStringFretClick = (stringNum: number, fret: number) => {
     // stringNum is 6 (Low E) to 1 (High E). Array index is 6 - stringNum
@@ -69,7 +56,6 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
     }
 
     setFretsState(newFrets);
-    if (onFretChange) onFretChange(newFrets);
 
     // Play note audio if not muted
     if (newFrets[strIdx] >= 0) {
@@ -91,14 +77,14 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
       newFrets[strIdx] = -1;
     }
     setFretsState(newFrets);
-    if (onFretChange) onFretChange(newFrets);
   };
 
-  const handleStrum = (direction: 'down' | 'up' = 'down') => {
+  // `frets` defaults to what's on screen; pass the new shape explicitly when strumming right after setting it
+  const handleStrum = (direction: 'down' | 'up' = 'down', frets: Frets = currentFrets) => {
     const freqs: number[] = [];
     GUITAR_STRINGS.forEach(str => {
       const strIdx = 6 - str.stringNumber;
-      const f = currentFrets[strIdx];
+      const f = frets[strIdx];
       if (f >= 0) {
         const note = getFretNote(str.stringNumber, f);
         freqs.push(note.frequency);
@@ -109,26 +95,16 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
     guitarAudio.strum(freqs, direction, 28);
     // Wobble the sounding strings in the same order and timing as the audio
-    const sounding = GUITAR_STRINGS.filter(str => currentFrets[6 - str.stringNumber] >= 0);
+    const sounding = GUITAR_STRINGS.filter(str => frets[6 - str.stringNumber] >= 0);
     (direction === 'down' ? sounding : [...sounding].reverse()).forEach((str, i) => {
       triggerStringVibration(str.stringNumber, i * 28);
     });
   };
 
   const loadPresetChord = (chord: ChordVoicing) => {
-    setSelectedChordId(chord.id);
     setFretsState(chord.frets);
-    if (onFretChange) onFretChange(chord.frets);
-    // Strum newly loaded chord
-    setTimeout(() => handleStrum('down'), 50);
-  };
-
-  const handleBarreChange = (newRoot: NoteName, newShape: 'E-Major' | 'E-Minor' | 'A-Major' | 'A-Minor') => {
-    setBarreRoot(newRoot);
-    setBarreShape(newShape);
-    const chord = calculateBarreChord(newRoot, newShape);
-    setFretsState(chord.frets);
-    if (onFretChange) onFretChange(chord.frets);
+    // Strum the newly loaded shape (this render's currentFrets is still the old one)
+    handleStrum('down', chord.frets);
   };
 
   // String thicknesses
@@ -207,7 +183,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-bold text-ink-100">
-                  {activeChordName || activeChord?.name || 'Interactive Fretboard'}
+                  {activeChordName || activeChord?.name || 'Custom shape'}
                 </h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-semibold border border-brand-500/30">
               Interactive 6-String
@@ -277,8 +253,9 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
           <button
             key={chord.id}
             onClick={() => loadPresetChord(chord)}
+            aria-pressed={activeChord?.id === chord.id}
             className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition-all border ${
-              selectedChordId === chord.id
+              activeChord?.id === chord.id
                 ? 'bg-brand-500/20 text-brand-300 border-brand-500/40 shadow-sm'
                 : 'bg-ink-950/60 text-ink-300 border-ink-800 hover:bg-ink-800 hover:text-white'
             }`}
@@ -293,7 +270,10 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
         {/* Subtle wood grain background styling */}
         <div className="min-w-[720px] relative">
           {/* Fret number header */}
-          <div className="grid grid-cols-[50px_repeat(12,1fr)] gap-0 text-center text-[11px] font-mono font-bold text-ink-500 pb-2">
+          <div
+            className="grid gap-0 text-center text-[11px] font-mono font-bold text-ink-500 pb-2"
+            style={{ gridTemplateColumns: `50px repeat(${showFretLimit}, 1fr)` }}
+          >
             <div className="text-brand-500/80">NUT (0)</div>
             {Array.from({ length: showFretLimit }, (_, i) => i + 1).map(fret => (
               <div key={fret} className="flex flex-col items-center">
@@ -317,7 +297,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
               return (
                 <div
                   key={str.stringNumber}
-                  className="grid grid-cols-[50px_repeat(12,1fr)] items-center h-9 relative border-b border-ink-800/40 last:border-b-0"
+                  className="grid items-center h-9 relative border-b border-ink-800/40 last:border-b-0"
+                  style={{ gridTemplateColumns: `50px repeat(${showFretLimit}, 1fr)` }}
                 >
                   {/* Nut & String Name / Mute Toggle */}
                   <div className="flex items-center justify-center pr-2 border-r-4 border-brand-100/90 bg-ink-950/60 h-full">
@@ -364,12 +345,12 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
                     let badgeText: string = noteData.note;
                     if (displayMode === 'sargam') {
-                      const tonic = activeChord?.root || rootSa || 'C';
+                      const tonic = activeChord?.root || rootSa;
                       const swara = getSwaraForNote(noteData.note, tonic);
                       badgeText = swara.shortName;
                     } else if (displayMode === 'intervals' && activeChord) {
                       const root = activeChord.root;
-                      const [r, third, fifth] = activeChord.triadNotes;
+                      const [, third, fifth] = activeChord.triadNotes;
                       if (noteData.note === root) badgeText = 'Root';
                       else if (noteData.note === third) badgeText = '3rd';
                       else if (noteData.note === fifth) badgeText = '5th';
@@ -377,14 +358,17 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
                     const hoverText =
                       displayMode === 'sargam'
-                        ? getSwaraForNote(noteData.note, activeChord?.root || rootSa || 'C').shortName
+                        ? getSwaraForNote(noteData.note, activeChord?.root || rootSa).shortName
                         : noteData.note;
 
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={fret}
                         onClick={() => handleStringFretClick(str.stringNumber, fret)}
-                        className={`h-full relative flex items-center justify-center cursor-pointer group border-r border-ink-600/50 hover:bg-brand-500/10 transition-colors ${
+                        aria-label={`${str.name} string, fret ${fret}, ${noteData.note}${isFretted ? ', pressed' : ''}`}
+                        aria-pressed={isFretted}
+                        className={`h-full relative flex items-center justify-center cursor-pointer group border-r focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 border-ink-600/50 hover:bg-brand-500/10 transition-colors ${
                           fret === 12 ? 'border-r-2 border-ink-400/80' : ''
                         }`}
                       >
@@ -421,7 +405,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
                             {hoverText}
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -462,15 +446,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
           <div className="flex items-center gap-2 self-end sm:self-center">
             <button
-              onClick={() => {
-                // Play triad notes in arpeggio
-                const triadFreqs = activeChord.triadNotes.map(n => {
-                  const f = getFretNote(5, 0); // fallback
-                  return f.frequency;
-                });
-                // Strum chord
-                handleStrum('down');
-              }}
+              onClick={() => handleStrum('down')}
               className="px-3 py-1.5 rounded-lg bg-ink-800 hover:bg-ink-700 text-ink-200 font-semibold border border-ink-700 flex items-center gap-1.5"
             >
               <RefreshCw className="w-3 h-3 text-brand-400" />

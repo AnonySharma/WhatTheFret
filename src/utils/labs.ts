@@ -32,22 +32,38 @@ export function semitonesBetween(from: NoteName, to: NoteName): number {
 // Lab 1: transposer
 // ---------------------------------------------------------------------------
 
+const ROOT_RE = /^([A-Ga-g])([#b♯♭]?)$/;
+
 function transposeRoot(root: string, semitones: number, useFlats: boolean): string | null {
-  const m = /^([A-G])([#b♯♭]?)$/.exec(root);
+  const m = ROOT_RE.exec(root);
   if (!m) return null;
   const acc = m[2] === '#' || m[2] === '♯' ? 1 : m[2] === 'b' || m[2] === '♭' ? -1 : 0;
-  return spellNote(LETTER_INDEX[m[1]] + acc + semitones, useFlats);
+  return spellNote(LETTER_INDEX[m[1].toUpperCase()] + acc + semitones, useFlats);
 }
 
-/** "Am7" +2 -> "Bm7"; "C/E" +2 -> "D/F#"; unknown tokens ("N.C.") are returned unchanged. */
-export function transposeChordSymbol(symbol: string, semitones: number, useFlats = false): string {
-  const [main, bass] = symbol.split('/');
-  const m = /^([A-G][#b♯♭]?)(.*)$/.exec(main);
-  if (!m) return symbol;
+/** What may follow a chord root: quality words, extensions, alterations and brackets ("m7b5", "sus4", "add9", "(#11)"). */
+const SUFFIX_RE = /^(?:maj|min|dim|aug|sus|add|alt|no|[mM+\-°ø△Δ#b♯♭()\d,.])*$/i;
+
+/** Chord symbol with the root (and any slash basses) moved by `semitones`, or null when it is not a chord. */
+function transposeChordStrict(symbol: string, semitones: number, useFlats: boolean): string | null {
+  const [main, ...basses] = symbol.split('/');
+  const m = /^([A-Ga-g][#b♯♭]?)(.*)$/.exec(main);
+  if (!m || !SUFFIX_RE.test(m[2])) return null;
   const root = transposeRoot(m[1], semitones, useFlats);
-  if (!root) return symbol;
-  const bassOut = bass !== undefined ? transposeRoot(bass, semitones, useFlats) ?? bass : undefined;
-  return root + m[2] + (bassOut !== undefined ? `/${bassOut}` : '');
+  if (!root) return null;
+  let out = root + m[2];
+  for (const bass of basses) {
+    const moved = transposeRoot(bass, semitones, useFlats);
+    if (moved !== null) out += `/${moved}`;
+    else if (/^\d+$/.test(bass)) out += `/${bass}`; // "C6/9" is not a slash chord
+    else return null;
+  }
+  return out;
+}
+
+/** "Am7" +2 -> "Bm7"; "C/E" +2 -> "D/F#"; "am", "bb7", "C/G/B" are read too. Unknown tokens ("N.C.") come back unchanged. */
+export function transposeChordSymbol(symbol: string, semitones: number, useFlats = false): string {
+  return transposeChordStrict(symbol, semitones, useFlats) ?? symbol;
 }
 
 export function parseProgression(text: string): string[] {
@@ -56,6 +72,42 @@ export function parseProgression(text: string): string[] {
 
 export function transposeProgression(text: string, semitones: number, useFlats = false): string[] {
   return parseProgression(text).map(s => transposeChordSymbol(s, semitones, useFlats));
+}
+
+export interface TransposedToken {
+  input: string;
+  /** Transposed symbol; equals `input` when the token is not a chord */
+  output: string;
+  /** false when the token could not be read as a chord ("no chord" markers count as readable) */
+  ok: boolean;
+}
+
+/** "N.C." / "NC" (no chord) and "%" (repeat) are valid in a chart and pass through untouched. */
+const PASSTHROUGH_RE = /^(?:n\.?c\.?|%)$/i;
+
+/** Like transposeProgression, but reports which tokens could not be read so the UI can flag them. */
+export function transposeProgressionDetailed(
+  text: string,
+  semitones: number,
+  useFlats = false
+): { tokens: TransposedToken[]; unparsed: string[] } {
+  const tokens = parseProgression(text).map((input): TransposedToken => {
+    if (PASSTHROUGH_RE.test(input)) return { input, output: input, ok: true };
+    const out = transposeChordStrict(input, semitones, useFlats);
+    return out === null ? { input, output: input, ok: false } : { input, output: out, ok: true };
+  });
+  return { tokens, unparsed: tokens.filter(t => !t.ok).map(t => t.input) };
+}
+
+/**
+ * Whether a triad's notes are conventionally written with flats: G minor is G-Bb-D, not G-A#-D.
+ * Minor follows its relative major's key signature, diminished its "vii° of" major key (C dim = C-Eb-Gb),
+ * augmented always uses the raised 5th (C aug = C-E-G#).
+ */
+export function triadUsesFlats(root: NoteName, type: SimpleChordType | 'Augmented'): boolean {
+  if (type === 'Augmented') return false;
+  const shift = type === 'Minor' ? 3 : type === 'Diminished' ? 1 : 0;
+  return keyUsesFlats(NOTE_NAMES[mod12(idx(root) + shift)]);
 }
 
 export interface CapoOption {
@@ -83,18 +135,21 @@ export interface BorrowedChord {
 /** Modal interchange: chords borrowed from the parallel natural minor of `key`. */
 export function borrowedChords(key: NoteName): BorrowedChord[] {
   const k = idx(key);
-  const defs: { numeral: string; offset: number; type: SimpleChordType; note: string }[] = [
-    { numeral: 'i', offset: 0, type: 'Minor', note: 'Tonic turned dark' },
-    { numeral: '♭III', offset: 3, type: 'Major', note: 'Relative major of the parallel minor' },
-    { numeral: 'iv', offset: 5, type: 'Minor', note: 'The classic "minor four" ache' },
-    { numeral: 'v', offset: 7, type: 'Minor', note: 'Softer, modal dominant' },
-    { numeral: '♭VI', offset: 8, type: 'Major', note: 'Wide, cinematic lift' },
-    { numeral: '♭VII', offset: 10, type: 'Major', note: 'Mixolydian / rock flavour' },
+  const keyFlats = keyUsesFlats(key);
+  // i / iv / v share their letters with the major key, so they follow the key's own spelling (F# major: F#m, Bm, C#m);
+  // only the lowered degrees (♭III, ♭VI, ♭VII) are written with flats.
+  const defs: { numeral: string; offset: number; type: SimpleChordType; note: string; flat: boolean }[] = [
+    { numeral: 'i', offset: 0, type: 'Minor', note: 'Tonic turned dark', flat: keyFlats },
+    { numeral: '♭III', offset: 3, type: 'Major', note: 'Relative major of the parallel minor', flat: true },
+    { numeral: 'iv', offset: 5, type: 'Minor', note: 'The classic "minor four" ache', flat: keyFlats },
+    { numeral: 'v', offset: 7, type: 'Minor', note: 'Softer, modal dominant', flat: keyFlats },
+    { numeral: '♭VI', offset: 8, type: 'Major', note: 'Wide, cinematic lift', flat: true },
+    { numeral: '♭VII', offset: 10, type: 'Major', note: 'Mixolydian / rock flavour', flat: true },
   ];
   return defs.map(d => ({
     numeral: d.numeral,
     root: NOTE_NAMES[mod12(k + d.offset)],
-    display: spellNote(k + d.offset, true) + (d.type === 'Minor' ? 'm' : ''),
+    display: spellNote(k + d.offset, d.flat) + (d.type === 'Minor' ? 'm' : ''),
     type: d.type,
     note: d.note,
   }));
@@ -121,10 +176,10 @@ export function pivotChords(keyA: NoteName, keyB: NoteName): PivotChord[] {
 
 /** Chord symbol -> simple triad quality the synth can voice. */
 export function symbolToChord(symbol: string): { root: NoteName; type: SimpleChordType } | null {
-  const m = /^([A-G])([#b♯♭]?)(.*?)(?:\/.*)?$/.exec(symbol);
+  const m = /^([A-Ga-g])([#b♯♭]?)(.*?)(?:\/.*)?$/.exec(symbol);
   if (!m) return null;
   const acc = m[2] === '#' || m[2] === '♯' ? 1 : m[2] === 'b' || m[2] === '♭' ? -1 : 0;
-  const root = NOTE_NAMES[mod12(LETTER_INDEX[m[1]] + acc)];
+  const root = NOTE_NAMES[mod12(LETTER_INDEX[m[1].toUpperCase()] + acc)];
   const rest = m[3];
   const lower = rest.toLowerCase();
   let type: SimpleChordType = 'Major';
@@ -148,7 +203,7 @@ export function getChordFrequencies(root: NoteName, type: SimpleChordType): numb
     return [6, 5, 4, 3, 2, 1].map((s, i) => (f[i] >= 0 ? getFretNote(s, f[i]).frequency : -1));
   }
   const tri = deriveTriad(root, type);
-  return tri.notes.map(n => 130.81 * Math.pow(2, idx(n) / 12));
+  return tri.notes.map(n => saFrequency(n as NoteName));
 }
 
 // ---------------------------------------------------------------------------

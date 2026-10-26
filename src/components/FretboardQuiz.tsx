@@ -6,14 +6,10 @@ import {
   Zap,
   Timer,
   CheckCircle2,
-  XCircle,
   Award,
   Sparkles,
-  ArrowRight,
   Flame,
-  Volume2,
   Settings,
-  ChevronRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -21,7 +17,6 @@ import {
   getFretNote,
   NoteName,
   getSwaraForNote,
-  formatNoteDisplay,
 } from '../utils/guitarTheory';
 import {
   generateQuizQuestion,
@@ -38,6 +33,8 @@ import {
   type QuizRank,
 } from '../constants';
 import { guitarAudio } from '../utils/audioSynth';
+import { readJSON, writeJSON } from '../utils/progressStore';
+import { useTimeouts } from './labs/useTimeouts';
 
 interface FretboardQuizProps {
   notesNotation?: 'western' | 'indian';
@@ -52,6 +49,22 @@ interface HighScoreRecord {
   avgReactionMs: number;
   bestStreak: number;
   date: string;
+}
+
+/** Accepts a stored record only if it has a usable score; fills in the rest so the UI never shows "undefined". */
+function parseHighScore(raw: unknown): HighScoreRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.score !== 'number' || !Number.isFinite(r.score) || r.score <= 0) return null;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  return {
+    score: r.score,
+    rankTitle: typeof r.rankTitle === 'string' ? r.rankTitle : '',
+    accuracy: num(r.accuracy),
+    avgReactionMs: num(r.avgReactionMs),
+    bestStreak: num(r.bestStreak),
+    date: typeof r.date === 'string' ? r.date : '',
+  };
 }
 
 export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
@@ -87,15 +100,13 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
   } | null>(null);
 
   // High score from localStorage
-  const [highScore, setHighScore] = useState<HighScoreRecord | null>(() => {
-    try {
-      const stored = localStorage.getItem(QUIZ_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [highScore, setHighScore] = useState<HighScoreRecord | null>(() =>
+    parseHighScore(readJSON<unknown>(QUIZ_STORAGE_KEY, null))
+  );
 
+  const { after, clear: clearTimeouts } = useTimeouts();
+  // Set once the current question is answered correctly; extra clicks during the 350 ms hand-over don't score
+  const answeredRef = useRef(false);
   const questionStartTimeRef = useRef<number>(0);
   const timerIntervalRef = useRef<number | null>(null);
   const reactionTimerRef = useRef<number | null>(null);
@@ -115,6 +126,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
   // Spawn a new question
   const spawnNextQuestion = useCallback((mode: QuizPromptMode, prevNote?: NoteName) => {
     const nextQ = generateQuizQuestion(mode, prevNote, 12);
+    answeredRef.current = false;
     setCurrentQuestion(nextQ);
     questionStartTimeRef.current = performance.now();
     setCurrentReactionMs(0);
@@ -122,6 +134,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
 
   // Start the quiz
   const handleStartQuiz = () => {
+    clearTimeouts();
     setScore(0);
     setStreak(0);
     setBestStreak(0);
@@ -139,13 +152,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
   useEffect(() => {
     if (gameState === 'playing') {
       timerIntervalRef.current = window.setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleEndQuiz();
-            return 0;
-          }
-          return prev - 1;
-        });
+        setTimeLeft(prev => Math.max(0, prev - 1));
       }, 1000);
 
       // Live reaction counter tick (updates every 50ms)
@@ -166,6 +173,8 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
   const handleEndQuiz = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     if (reactionTimerRef.current) clearInterval(reactionTimerRef.current);
+    clearTimeouts(); // drop any pending "next question" spawn
+    setLastFeedback(null);
     setGameState('ended');
 
     confetti({
@@ -175,9 +184,15 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
     });
   };
 
+  // The clock runs out: end once, outside the state updater so it isn't double-fired
+  useEffect(() => {
+    if (gameState === 'playing' && timeLeft === 0) handleEndQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, gameState]);
+
   // Handle fret click during quiz
   const handleFretClick = (stringNumber: number, fret: number) => {
-    if (gameState !== 'playing' || !currentQuestion) return;
+    if (gameState !== 'playing' || !currentQuestion || answeredRef.current) return;
 
     const reactionTime = Math.round(performance.now() - questionStartTimeRef.current);
     const clickedNoteData = getFretNote(stringNumber, fret);
@@ -188,6 +203,8 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
     );
 
     if (isCorrect) {
+      answeredRef.current = true;
+      clearTimeouts(); // a pending miss-flash timer must not wipe this hit's feedback
       // Audio feedback: play correct plucked note
       guitarAudio.pluck(clickedNoteData.frequency, 1.5, 0.85);
 
@@ -218,7 +235,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
       }
 
       // Next question immediately
-      setTimeout(() => {
+      after(() => {
         setLastFeedback(null);
         spawnNextQuestion(selectedMode, currentQuestion.targetNote);
       }, 350);
@@ -237,7 +254,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
       });
 
       // Briefly show mistake then clear
-      setTimeout(() => {
+      after(() => {
         setLastFeedback(null);
       }, 700);
     }
@@ -265,11 +282,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
           date: new Date().toLocaleDateString(),
         };
         setHighScore(record);
-        try {
-          localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(record));
-        } catch {
-          // ignore
-        }
+        writeJSON(QUIZ_STORAGE_KEY, record);
       }
     }
   }, [gameState]);
@@ -300,7 +313,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
             <div className="text-left">
               <span className="text-[10px] text-brand-400/80 uppercase font-bold block">Best Record</span>
               <span className="font-extrabold text-brand-300">
-                {highScore.score} pts • {highScore.rankTitle}
+                {highScore.score} pts{highScore.rankTitle ? ` • ${highScore.rankTitle}` : ''}
               </span>
             </div>
           </div>
@@ -548,6 +561,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
                               : 'bg-ink-800 text-ink-400 hover:text-white hover:bg-ink-700'
                           }`}
                           title={`Click to check Open ${str.name} String`}
+                          aria-label={`Open ${str.name} string`}
                         >
                           {str.name} (0)
                         </button>
@@ -584,10 +598,12 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
                           lastFeedback.type === 'miss';
 
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={fret}
                             onClick={() => handleFretClick(str.stringNumber, fret)}
-                            className={`h-full relative flex items-center justify-center cursor-pointer group border-r border-ink-600/50 hover:bg-brand-500/15 transition-all ${
+                            aria-label={`${str.name} string, fret ${fret}`}
+                            className={`h-full relative flex items-center justify-center cursor-pointer group border-r border-ink-600/50 hover:bg-brand-500/15 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 ${
                               fret === 12 ? 'border-r-2 border-ink-400/80' : ''
                             } ${isHitFeedback ? 'bg-gold-500/30' : ''} ${
                               isMissFeedback ? 'bg-red-500/30' : ''
@@ -622,7 +638,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
                                 ?
                               </div>
                             )}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>

@@ -4,6 +4,7 @@
  * does not depend on setTimeout jitter.
  */
 
+import { METRONOME_CONFIG } from '../constants';
 import { guitarAudio } from './audioSynth';
 import type { TaalDef } from './labs';
 
@@ -17,6 +18,12 @@ const TUNING_RATIO: Record<TanpuraTuning, number> = {
 
 const LOOKAHEAD_MS = 40;
 const SCHEDULE_AHEAD_S = 0.15;
+
+/** Clamp to the same range as the main metronome; also rescues NaN / 0 / negative input. */
+function clampBpm(bpm: number): number {
+  if (!Number.isFinite(bpm)) return METRONOME_CONFIG.DEFAULT_BPM;
+  return Math.min(METRONOME_CONFIG.MAX_BPM, Math.max(METRONOME_CONFIG.MIN_BPM, bpm));
+}
 
 export class TanpuraEngine {
   private timer: number | null = null;
@@ -81,6 +88,12 @@ export class TanpuraEngine {
   private schedule() {
     if (!this.master) return;
     const ctx = guitarAudio.getContext();
+    if (this.nextTime < ctx.currentTime) {
+      // the tab was throttled and we fell behind: skip the missed plucks instead of dumping them at once
+      const missed = Math.ceil((ctx.currentTime - this.nextTime) / (this.cycleSeconds / 4));
+      this.step += missed;
+      this.nextTime = ctx.currentTime + 0.05;
+    }
     while (this.nextTime < ctx.currentTime + SCHEDULE_AHEAD_S) {
       if (!guitarAudio.isAudioMuted()) this.pluck(this.nextTime, this.step % 4);
       this.step += 1;
@@ -169,7 +182,7 @@ export class RhythmEngine {
   public start(accents: BeatAccent[], bpm: number, onBeat?: (beat: number) => void) {
     if (this.timer !== null) return;
     this.accents = accents;
-    this.bpm = bpm;
+    this.bpm = clampBpm(bpm);
     this.onBeat = onBeat ?? null;
     const ctx = guitarAudio.getContext();
     this.master = ctx.createGain();
@@ -193,7 +206,7 @@ export class RhythmEngine {
   }
 
   public setBpm(bpm: number) {
-    this.bpm = Math.min(240, Math.max(30, bpm));
+    this.bpm = clampBpm(bpm);
   }
 
   public setVolume(v: number) {
@@ -209,7 +222,14 @@ export class RhythmEngine {
 
   private schedule() {
     if (!this.master) return;
+    if (this.accents.length === 0) return;
     const ctx = guitarAudio.getContext();
+    if (this.nextTime < ctx.currentTime) {
+      // throttled tab: drop the missed beats (keeping the cycle position) rather than playing them all at once
+      const period = 60 / this.bpm;
+      this.beatIndex += Math.ceil((ctx.currentTime - this.nextTime) / period);
+      this.nextTime = ctx.currentTime + 0.05;
+    }
     while (this.nextTime < ctx.currentTime + SCHEDULE_AHEAD_S) {
       const beat = this.beatIndex % this.accents.length;
       if (!guitarAudio.isAudioMuted()) this.hit(this.nextTime, this.accents[beat]);

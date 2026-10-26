@@ -24,6 +24,7 @@ const WINDOW_S = 2.4;
 export const BeatNoteDemo: React.FC<BeatNoteDemoProps> = ({ referenceFreq, referenceName }) => {
   const [offsetHz, setOffsetHz] = useState<number>(2); // signed: negative = flat
   const [playing, setPlaying] = useState<boolean>(false);
+  const [mutedHint, setMutedHint] = useState<boolean>(false);
   const tonesRef = useRef<ReturnType<typeof guitarAudio.holdTones> | null>(null);
 
   const beatHz = Math.abs(offsetHz);
@@ -35,10 +36,19 @@ export const BeatNoteDemo: React.FC<BeatNoteDemoProps> = ({ referenceFreq, refer
     tonesRef.current?.stop();
     tonesRef.current = null;
     setPlaying(false);
+    setMutedHint(false);
   }, []);
 
   const start = () => {
     tonesRef.current?.stop();
+    tonesRef.current = null;
+    // holdTones returns an inert controller while muted: don't pretend something is playing
+    if (guitarAudio.isAudioMuted()) {
+      setPlaying(false);
+      setMutedHint(true);
+      return;
+    }
+    setMutedHint(false);
     tonesRef.current = guitarAudio.holdTones([referenceFreq, detuned]);
     setPlaying(true);
   };
@@ -106,9 +116,9 @@ export const BeatNoteDemo: React.FC<BeatNoteDemoProps> = ({ referenceFreq, refer
         <div className="space-y-3">
           <div className="rounded-xl bg-ink-950 border border-ink-800 p-3">
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-28 sm:h-32" role="img" aria-label="Combined waveform of the two strings">
-              <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#44403c" strokeWidth="1" />
-              <path d={envelopePath} fill="#f59e0b" fillOpacity="0.12" stroke="#f59e0b" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="4 3" />
-              <path d={wave} fill="none" stroke="#fbbf24" strokeWidth="1.2" strokeLinejoin="round" />
+              <line x1="0" y1={H / 2} x2={W} y2={H / 2} className="stroke-ink-700" strokeWidth="1" />
+              <path d={envelopePath} className="fill-brand-500 stroke-brand-500" fillOpacity="0.12" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="4 3" />
+              <path d={wave} fill="none" className="stroke-brand-400" strokeWidth="1.2" strokeLinejoin="round" />
             </svg>
             <div className="flex items-center justify-between text-[11px] font-mono text-ink-400 mt-1">
               <span>2.4 seconds of sound</span>
@@ -137,7 +147,7 @@ export const BeatNoteDemo: React.FC<BeatNoteDemoProps> = ({ referenceFreq, refer
               step={0.5}
               value={offsetHz}
               onChange={e => setOffsetHz(parseFloat(e.target.value))}
-              className="w-full accent-[#f59e0b]"
+              className="w-full accent-brand-500"
             />
             <div className="flex justify-between text-[10px] text-ink-500 font-mono">
               <span>flat</span>
@@ -172,6 +182,11 @@ export const BeatNoteDemo: React.FC<BeatNoteDemoProps> = ({ referenceFreq, refer
             {playing ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
             {playing ? 'Stop both tones' : `Play ${referenceName} + second string`}
           </button>
+          {mutedHint && (
+            <p role="status" className="text-[11px] text-gold-300 leading-relaxed">
+              Sound is muted. Turn it back on in the top bar, then press play.
+            </p>
+          )}
           <div className="rounded-xl bg-ink-950 border border-ink-800 p-3 space-y-2" aria-live="polite">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold text-brand-300 uppercase tracking-wide">{info.label}</span>

@@ -11,6 +11,7 @@ import {
   type TempoMarking,
   TEMPO_MARKINGS,
 } from '../constants';
+import { guitarAudio } from './audioSynth';
 
 export type BeatCallback = (beatIndex: number, totalBeats: number, isDownbeat: boolean, isAccent: boolean) => void;
 
@@ -28,23 +29,23 @@ class MetronomeEngine {
   private currentBeatIndex: number = 0;
   private nextBeatTime: number = 0.0;
   private timerId: number | null = null;
+  // Pending per-beat UI flashes, so stop() can cancel them
+  private uiTimerIds: Set<number> = new Set();
+  /** A beat later than this (seconds) after a stalled tab is skipped instead of played in a burst. */
+  private readonly maxLateTime: number = 0.05;
 
   // Registered listeners for UI updates
   private beatCallbacks: Set<BeatCallback> = new Set();
   private stateChangeCallbacks: Set<(running: boolean) => void> = new Set();
+  private changeListeners: Set<() => void> = new Set();
 
   constructor() {
-    // AudioContext will be initialized on user interaction
+    // The shared AudioContext is only touched on user interaction (start)
   }
 
   private initAudio() {
-    if (!this.audioCtx) {
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioCtx = new AudioCtxClass();
-    }
-    if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
-    }
+    // One AudioContext for the whole app (shared with the synths and the pitch detector)
+    this.audioCtx = guitarAudio.getContext();
   }
 
   public getAudioContext(): AudioContext | null {
@@ -72,20 +73,51 @@ class MetronomeEngine {
   }
 
   public setVolume(val: number) {
-    this.volume = Math.max(0, Math.min(1, val));
+    const next = Math.max(0, Math.min(1, val));
+    if (next === this.volume) return;
+    this.volume = next;
+    this.emitChange();
   }
 
   public setMuted(mute: boolean) {
+    if (mute === this.muted) return;
     this.muted = mute;
+    this.emitChange();
   }
 
   public setBpm(newBpm: number) {
-    this.bpm = Math.max(METRONOME_CONFIG.MIN_BPM, Math.min(METRONOME_CONFIG.MAX_BPM, Math.round(newBpm)));
+    if (!Number.isFinite(newBpm)) return;
+    const next = Math.max(METRONOME_CONFIG.MIN_BPM, Math.min(METRONOME_CONFIG.MAX_BPM, Math.round(newBpm)));
+    if (next === this.bpm) return;
+    this.bpm = next;
+    this.emitChange();
   }
 
   public setTimeSignature(ts: TimeSignatureDef) {
     this.timeSignature = ts;
     this.currentBeatIndex = 0;
+    this.emitChange();
+  }
+
+  /**
+   * Subscribes to any change of bpm, time signature, volume, mute or running state, so every UI
+   * can read the same values (works with React's useSyncExternalStore). Returns the unsubscribe function.
+   */
+  public subscribe(listener: () => void): () => void {
+    this.changeListeners.add(listener);
+    return () => {
+      this.changeListeners.delete(listener);
+    };
+  }
+
+  private emitChange() {
+    [...this.changeListeners].forEach(cb => {
+      try {
+        cb();
+      } catch {
+        // Ignore listener error
+      }
+    });
   }
 
   public onBeat(cb: BeatCallback) {
@@ -106,6 +138,7 @@ class MetronomeEngine {
         // Ignore listener error
       }
     });
+    this.emitChange();
   }
 
   public start() {
@@ -128,6 +161,9 @@ class MetronomeEngine {
       window.clearTimeout(this.timerId);
       this.timerId = null;
     }
+    // Pending beat flashes would otherwise show stale beats after a quick stop -> start
+    this.uiTimerIds.forEach(id => window.clearTimeout(id));
+    this.uiTimerIds.clear();
     this.currentBeatIndex = 0;
     this.notifyStateChange();
   }
@@ -148,6 +184,16 @@ class MetronomeEngine {
   private scheduleLoop = () => {
     if (!this.isRunning || !this.audioCtx) return;
 
+    // A throttled / backgrounded tab can stall this loop for a long time. Skip the beats that were
+    // missed (keeping the beat index in phase) instead of scheduling them all at once.
+    const now = this.audioCtx.currentTime;
+    if (this.nextBeatTime < now - this.maxLateTime) {
+      const secondsPerBeat = this.getSecondsPerBeat();
+      const missed = Math.ceil((now - this.nextBeatTime) / secondsPerBeat);
+      this.currentBeatIndex = (this.currentBeatIndex + missed) % this.timeSignature.beats;
+      this.nextBeatTime += missed * secondsPerBeat;
+    }
+
     while (this.nextBeatTime < this.audioCtx.currentTime + this.scheduleAheadTime) {
       this.scheduleClick(this.currentBeatIndex, this.nextBeatTime);
       this.advanceBeat();
@@ -159,13 +205,15 @@ class MetronomeEngine {
   /**
    * Calculates next beat audio time based on BPM and time signature unit
    */
-  private advanceBeat() {
+  private getSecondsPerBeat(): number {
     // 60 / bpm gives seconds per quarter note
     // If unit is 8 (e.g. 6/8, 7/8), an eighth note is half a quarter note
     const secondsPerQuarter = 60.0 / this.bpm;
-    const secondsPerBeat = (4.0 / this.timeSignature.unit) * secondsPerQuarter;
+    return (4.0 / this.timeSignature.unit) * secondsPerQuarter;
+  }
 
-    this.nextBeatTime += secondsPerBeat;
+  private advanceBeat() {
+    this.nextBeatTime += this.getSecondsPerBeat();
     this.currentBeatIndex = (this.currentBeatIndex + 1) % this.timeSignature.beats;
   }
 
@@ -178,9 +226,11 @@ class MetronomeEngine {
     const isDownbeat = beatIndex === 0;
     const isAccent = this.timeSignature.accents.includes(beatIndex);
 
-    // Schedule visual callback timed to when audio will sound
-    const delayMs = Math.max(0, (time - this.audioCtx.currentTime) * 1000);
-    window.setTimeout(() => {
+    // Schedule visual callback timed to when audio will actually be heard (output latency included)
+    const latency = (this.audioCtx.outputLatency || 0) + (this.audioCtx.baseLatency || 0);
+    const delayMs = Math.max(0, (time - this.audioCtx.currentTime + latency) * 1000);
+    const uiTimerId = window.setTimeout(() => {
+      this.uiTimerIds.delete(uiTimerId);
       if (!this.isRunning) return;
       this.beatCallbacks.forEach(cb => {
         try {
@@ -190,6 +240,7 @@ class MetronomeEngine {
         }
       });
     }, delayMs);
+    this.uiTimerIds.add(uiTimerId);
 
     // If muted, we still keep visual timing running without audio
     if (this.muted) return;
@@ -273,9 +324,11 @@ export const metronome = new MetronomeEngine();
  * Calculates current Italian & descriptive tempo marking for a given BPM
  */
 export function getTempoMarking(bpm: number): TempoMarking {
-  const found = TEMPO_MARKINGS.find(m => bpm >= m.minBpm && bpm <= m.maxBpm);
-  if (found) return found;
-  if (bpm < 30) return TEMPO_MARKINGS[0];
+  // The integer ranges leave gaps (55.5 sits between Largo and Adagio), so a marking runs until the next one starts.
+  if (!(bpm >= TEMPO_MARKINGS[0].minBpm)) return TEMPO_MARKINGS[0];
+  for (let i = 0; i < TEMPO_MARKINGS.length - 1; i++) {
+    if (bpm < TEMPO_MARKINGS[i + 1].minBpm) return TEMPO_MARKINGS[i];
+  }
   return TEMPO_MARKINGS[TEMPO_MARKINGS.length - 1];
 }
 

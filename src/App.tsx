@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { Navbar, ActiveTab } from './components/Navbar';
+import { useState, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { Navbar, isActiveTab, type ActiveTab } from './components/Navbar';
 import { ChordLibrary } from './components/ChordLibrary';
 import { InteractiveFretboard } from './components/InteractiveFretboard';
 import { RealTimeTuner } from './components/RealTimeTuner';
@@ -12,7 +12,7 @@ import { GuidedJourney } from './components/GuidedJourney';
 import { PDFCompanionView } from './components/PDFCompanionView';
 import { IndianSwarasExplorer } from './components/IndianSwarasExplorer';
 import { CircleOfFifths } from './components/CircleOfFifths';
-import { LabsHub, LabId } from './components/labs/LabsHub';
+import { LabsHub, DEFAULT_LAB, isLabId, visibleLabs, type LabId } from './components/labs/LabsHub';
 
 // 7 Interactive Modules from PDF
 import { ModuleEarTuning } from './components/modules/ModuleEarTuning';
@@ -24,6 +24,7 @@ import { ModuleBarreChords } from './components/modules/ModuleBarreChords';
 import { ModuleChordDerivation } from './components/modules/ModuleChordDerivation';
 
 import { guitarAudio } from './utils/audioSynth';
+import { pitchDetector, type PitchListener } from './utils/pitchDetector';
 import {
   loadUserProgress,
   saveUserProgress,
@@ -31,47 +32,203 @@ import {
   calculateProgressStats,
   UserProgressState,
 } from './utils/progressStore';
-import { SUGGESTED_THEORY_LABS, FutureTheoryLab } from './constants';
-import {
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle2,
-  Circle,
-  Sparkles,
-  Award,
-  Layers,
-  Lightbulb,
-  X,
-  ExternalLink,
-} from 'lucide-react';
+import { SUGGESTED_THEORY_LABS, type TheoryLabInfo } from './constants';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lightbulb, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-/** Same order as SUGGESTED_THEORY_LABS in constants. */
-const LAB_ORDER: LabId[] = ['transposer', 'caged', 'drone', 'ear'];
+/** The lessons, in order. The count, stepper, titles and progress totals all derive from this one list. */
+const LESSONS: { title: string; render: (indian: boolean) => ReactNode }[] = [
+  { title: '1. Ear Tuning & 12 Tones', render: () => <ModuleEarTuning /> },
+  { title: '2. Major Scale & Minor', render: indian => <ModuleMajorScale indian={indian} /> },
+  { title: '3. +4 / +3 Triad Code', render: indian => <ModuleTriadCode indian={indian} /> },
+  { title: '4. Diatonic Harmony', render: () => <ModuleDiatonicHarmony /> },
+  { title: '5. Fretboard & Bass Gravity', render: () => <ModuleFretboardMapping /> },
+  { title: '6. Barre Chords (Shift Nut)', render: () => <ModuleBarreChords /> },
+  { title: '7. Chord Derivation Wizard', render: indian => <ModuleChordDerivation indian={indian} /> },
+];
 
-/** Deep links such as `#labs/ear` or `#chord-library` open that screen directly. */
-function initialRoute(): { tab: ActiveTab; lab: LabId } {
-  const [tab, lab] = window.location.hash.replace('#', '').split('/');
-  const tabs: ActiveTab[] = ['modules', 'chord-library', 'fretboard', 'circle-of-fifths', 'tuner', 'journey', 'swaras', 'pdf', 'labs'];
+type Route = { tab: ActiveTab; lab: LabId };
+
+/** `#labs/ear` or `#chord-library` -> route; anything unknown falls back to the lessons / first lab. */
+function parseHash(hash: string): Route {
+  const [tab, lab] = hash.replace(/^#/, '').split('/');
   return {
-    tab: tabs.includes(tab as ActiveTab) ? (tab as ActiveTab) : 'modules',
-    lab: LAB_ORDER.includes(lab as LabId) ? (lab as LabId) : 'transposer',
+    tab: isActiveTab(tab) ? tab : 'modules',
+    lab: isLabId(lab) ? lab : DEFAULT_LAB,
   };
 }
 
+const routeHash = (tab: ActiveTab, lab: LabId) => (tab === 'labs' ? `#labs/${lab}` : `#${tab}`);
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+interface LabsModalProps {
+  labs: TheoryLabInfo[];
+  onClose: () => void;
+  onOpenLab: (id: LabId) => void;
+}
+
+/** Accessible dialog: Escape / backdrop close, focus moves in and is restored, Tab is trapped, page scroll is locked. */
+function LabsModal({ labs, onClose, onOpenLab }: LabsModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const trigger = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      trigger?.focus?.();
+    };
+  }, []);
+
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onCloseRef.current();
+      return;
+    }
+    if (e.key !== 'Tab' || !dialogRef.current) return;
+    const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !dialogRef.current.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md"
+      onKeyDown={onKeyDown}
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="labs-modal-title"
+        className="bg-ink-900 border border-ink-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-ink-800">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl" aria-hidden>💡</span>
+            <div>
+              <h3 id="labs-modal-title" className="text-lg font-black text-ink-100">
+                Advanced Theory Labs
+              </h3>
+              <p className="text-xs text-ink-400">Pick a lab to open it</p>
+            </div>
+          </div>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="p-2 rounded-xl bg-ink-950 text-ink-400 hover:text-white border border-ink-800"
+          >
+            <X className="w-4 h-4" aria-hidden />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {labs.map(lab => (
+            <div
+              key={lab.id}
+              className="p-4 rounded-2xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3 hover:border-brand-500/40 transition-colors"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl" aria-hidden>{lab.icon}</span>
+                  <h4 className="font-extrabold text-ink-100 text-sm">{lab.title}</h4>
+                </div>
+                <span className="text-[11px] text-brand-400 font-semibold block mt-1">{lab.tagline}</span>
+                <p className="text-xs text-ink-400 mt-2 leading-relaxed">{lab.concept}</p>
+              </div>
+
+              <div className="pt-2 border-t border-ink-800/70 text-[11px] text-ink-300 space-y-1">
+                <div>
+                  <strong className="text-gold-400">Interactive: </strong>
+                  {lab.howItWorks}
+                </div>
+                <div>
+                  <strong className="text-brand-400">Mastery Gain: </strong>
+                  {lab.benefit}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onOpenLab(lab.id)}
+                aria-label={`Open lab: ${lab.title}`}
+                className="w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors"
+              >
+                Open this lab
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-3 border-t border-ink-800 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>(() => initialRoute().tab);
+  const [activeTab, setActiveTabState] = useState<ActiveTab>(() => parseHash(window.location.hash).tab);
+  const [activeLab, setActiveLabState] = useState<LabId>(() => parseHash(window.location.hash).lab);
   const [activeModuleIndex, setActiveModuleIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isMicActive, setIsMicActive] = useState<boolean>(false);
+  const [micError, setMicError] = useState<string | null>(null);
   const [showSuggestedLabsModal, setShowSuggestedLabsModal] = useState<boolean>(false);
-  const [activeLab, setActiveLab] = useState<LabId>(() => initialRoute().lab);
+
+  // Keep the URL hash and the screen in sync both ways (shared links, back / forward).
+  const setRoute = (tab: ActiveTab, lab: LabId = activeLab) => {
+    setActiveTabState(tab);
+    setActiveLabState(lab);
+    const hash = routeHash(tab, lab);
+    if (window.location.hash !== hash) window.location.hash = hash;
+  };
+  const setActiveTab = (tab: ActiveTab) => setRoute(tab);
+  const setActiveLab = (lab: LabId) => setRoute('labs', lab);
   const openLab = (lab: LabId) => {
-    setActiveLab(lab);
-    setActiveTab('labs');
+    setRoute('labs', lab);
     setShowSuggestedLabsModal(false);
     window.scrollTo({ top: 0 });
   };
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const route = parseHash(window.location.hash);
+      setActiveTabState(route.tab);
+      // Only `#labs/<id>` names a lab; other hashes must not reset the remembered one.
+      if (route.tab === 'labs') setActiveLabState(route.lab);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   // User progress from localStorage
   const [progress, setProgress] = useState<UserProgressState>(() => loadUserProgress());
@@ -91,9 +248,27 @@ export default function App() {
     guitarAudio.setMuted(next);
   };
 
-  const toggleMic = () => {
-    const next = !isMicActive;
-    setIsMicActive(next);
+  // The mic stays open while this listener is registered; the tuner views add their own on top of it.
+  // Using the start result (not just flipping state) means a denied or missing mic never sticks "on".
+  const micHold = useRef<PitchListener>(() => {});
+  const micPending = useRef(false);
+  const toggleMic = async () => {
+    if (micPending.current) return; // a permission prompt is still open
+    setMicError(null);
+    if (isMicActive) {
+      pitchDetector.stopListening(micHold.current);
+      setIsMicActive(false);
+      return;
+    }
+    micPending.current = true;
+    const ok = await pitchDetector.startListening(micHold.current);
+    micPending.current = false;
+    if (ok) {
+      setIsMicActive(true);
+    } else {
+      setIsMicActive(false);
+      setMicError('Microphone unavailable. Allow mic access in your browser and try again.');
+    }
   };
 
   const handleToggleNotation = (mode: 'western' | 'indian') => {
@@ -105,8 +280,13 @@ export default function App() {
 
   // Indian-only screens disappear with the toggle, so never leave the user stranded on one.
   useEffect(() => {
-    if (!indian && activeTab === 'swaras') setActiveTab('modules');
-    if (!indian && activeLab === 'drone') setActiveLab('transposer');
+    if (indian) return;
+    if (activeTab === 'swaras') setRoute('modules');
+    else if (!visibleLabs(false).some(l => l.id === activeLab)) {
+      if (activeTab === 'labs') setRoute('labs', DEFAULT_LAB);
+      else setActiveLabState(DEFAULT_LAB);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [indian, activeTab, activeLab]);
 
   const handleToggleCurrentLesson = () => {
@@ -123,21 +303,9 @@ export default function App() {
     }
   };
 
-  const moduleTitles = [
-    "1. Ear Tuning & 12 Tones",
-    "2. Major Scale & Minor",
-    "3. +4 / +3 Triad Code",
-    "4. Diatonic Harmony",
-    "5. Fretboard & Bass Gravity",
-    "6. Barre Chords (Shift Nut)",
-    "7. Chord Derivation Wizard",
-  ];
-
-  const stats = calculateProgressStats(progress.completedLessons, 7);
-  const visibleLabs: { lab: FutureTheoryLab; id: LabId }[] = LAB_ORDER.map((id, idx) => ({
-    id,
-    lab: SUGGESTED_THEORY_LABS[idx],
-  })).filter(l => indian || l.id !== 'drone');
+  const totalLessons = LESSONS.length;
+  const stats = calculateProgressStats(progress.completedLessons, totalLessons);
+  const labs = visibleLabs(indian);
   const isCurrentLessonDone = progress.completedLessons.includes(activeModuleIndex);
 
   return (
@@ -158,6 +326,9 @@ export default function App() {
         onToggleMic={toggleMic}
         progressPercentage={stats.percentage}
         completedCount={stats.count}
+        totalLessons={totalLessons}
+        micError={micError}
+        onDismissMicError={() => setMicError(null)}
         notesNotation={progress.notesNotation}
         onToggleNotation={handleToggleNotation}
       />
@@ -177,16 +348,16 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800/60 pb-3">
                   <div className="flex items-center gap-2.5">
                     <span className="px-2.5 py-1 rounded-md bg-brand-500/15 text-brand-300 font-mono text-[11px] font-bold border border-brand-500/30">
-                      LESSON 0{activeModuleIndex + 1}
+                      LESSON {String(activeModuleIndex + 1).padStart(2, '0')}
                     </span>
                     <h2 className="text-base sm:text-lg font-black text-ink-100 tracking-tight">
-                      {moduleTitles[activeModuleIndex]}
+                      {LESSONS[activeModuleIndex].title}
                     </h2>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-ink-400 font-medium hidden sm:inline">
-                      Overall Mastery: <strong className="text-brand-300 font-bold">{stats.percentage}%</strong> ({stats.count}/7 Done)
+                      Overall Mastery: <strong className="text-brand-300 font-bold">{stats.percentage}%</strong> ({stats.count}/{totalLessons} Done)
                     </span>
 
                     <button
@@ -215,7 +386,7 @@ export default function App() {
                 {/* Lower Row: Stepper Ribbon with clear numbers */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 flex-1">
-                    {moduleTitles.map((title, idx) => {
+                    {LESSONS.map(({ title }, idx) => {
                       const isDone = progress.completedLessons.includes(idx);
                       const isSelected = activeModuleIndex === idx;
 
@@ -255,14 +426,16 @@ export default function App() {
                       onClick={() => setActiveModuleIndex(prev => Math.max(0, prev - 1))}
                       className="p-2 rounded-xl bg-ink-950/80 text-ink-400 hover:text-white border border-ink-800 hover:border-ink-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Previous Lesson"
+                      aria-label="Previous lesson"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
-                      disabled={activeModuleIndex === moduleTitles.length - 1}
-                      onClick={() => setActiveModuleIndex(prev => Math.min(moduleTitles.length - 1, prev + 1))}
+                      disabled={activeModuleIndex === totalLessons - 1}
+                      onClick={() => setActiveModuleIndex(prev => Math.min(totalLessons - 1, prev + 1))}
                       className="p-2 rounded-xl bg-ink-950/80 text-ink-400 hover:text-white border border-ink-800 hover:border-ink-700 disabled:opacity-25 disabled:pointer-events-none transition-colors"
                       title="Next Lesson"
+                      aria-label="Next lesson"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -272,13 +445,7 @@ export default function App() {
             </div>
 
             {/* Active Lesson View */}
-            {activeModuleIndex === 0 && <ModuleEarTuning />}
-            {activeModuleIndex === 1 && <ModuleMajorScale indian={indian} />}
-            {activeModuleIndex === 2 && <ModuleTriadCode indian={indian} />}
-            {activeModuleIndex === 3 && <ModuleDiatonicHarmony />}
-            {activeModuleIndex === 4 && <ModuleFretboardMapping />}
-            {activeModuleIndex === 5 && <ModuleBarreChords />}
-            {activeModuleIndex === 6 && <ModuleChordDerivation indian={indian} />}
+            {LESSONS[activeModuleIndex].render(indian)}
 
             {/* Lesson Navigation Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-ink-800/80">
@@ -305,8 +472,8 @@ export default function App() {
               </div>
 
               <button
-                disabled={activeModuleIndex === moduleTitles.length - 1}
-                onClick={() => setActiveModuleIndex(prev => Math.min(moduleTitles.length - 1, prev + 1))}
+                disabled={activeModuleIndex === totalLessons - 1}
+                onClick={() => setActiveModuleIndex(prev => Math.min(totalLessons - 1, prev + 1))}
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none shadow-md"
               >
                 <span>Next Lesson</span>
@@ -392,13 +559,13 @@ export default function App() {
               <h3 className="text-sm font-extrabold text-ink-100 flex items-center gap-2">
                 <span>Advanced Theory Labs</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold">
-                  {visibleLabs.length} LABS
+                  {labs.length} LABS
                 </span>
               </h3>
               <p className="text-xs text-ink-400 mt-0.5">
                 {indian
-                  ? 'Key transposer, CAGED system, tanpura and tabla jam pad, and interval ear training.'
-                  : 'Key transposer, CAGED system and interval ear training.'}
+                  ? 'Key transposer, CAGED system, capo, tanpura and tabla jam pad, and interval ear training.'
+                  : 'Key transposer, CAGED system, capo and interval ear training.'}
               </p>
             </div>
           </div>
@@ -455,78 +622,7 @@ export default function App() {
 
       {/* Suggested Theory Labs Interactive Modal */}
       {showSuggestedLabsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md">
-          <div className="bg-ink-900 border border-ink-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-ink-800">
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl">💡</span>
-                <div>
-                  <h3 className="text-lg font-black text-ink-100">
-                    Advanced Theory Labs
-                  </h3>
-                  <p className="text-xs text-ink-400">
-                    Pick a lab to open it
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSuggestedLabsModal(false)}
-                className="p-2 rounded-xl bg-ink-950 text-ink-400 hover:text-white border border-ink-800"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {visibleLabs.map(({ lab, id }) => (
-                <div
-                  key={id}
-                  className="p-4 rounded-2xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3 hover:border-brand-500/40 transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{lab.icon}</span>
-                      <h4 className="font-extrabold text-ink-100 text-sm">{lab.title}</h4>
-                    </div>
-                    <span className="text-[11px] text-brand-400 font-semibold block mt-1">
-                      {lab.tagline}
-                    </span>
-                    <p className="text-xs text-ink-400 mt-2 leading-relaxed">
-                      {lab.concept}
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-ink-800/70 text-[11px] text-ink-300 space-y-1">
-                    <div>
-                      <strong className="text-gold-400">Interactive: </strong>
-                      {lab.howItWorks}
-                    </div>
-                    <div>
-                      <strong className="text-brand-400">Mastery Gain: </strong>
-                      {lab.benefit}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => openLab(id)}
-                    className="w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors"
-                  >
-                    Open this lab
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-3 border-t border-ink-800 flex justify-end">
-              <button
-                onClick={() => setShowSuggestedLabsModal(false)}
-                className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <LabsModal labs={labs} onClose={() => setShowSuggestedLabsModal(false)} onOpenLab={openLab} />
       )}
     </div>
   );

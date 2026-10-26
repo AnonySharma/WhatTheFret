@@ -290,10 +290,10 @@ const CURATED_CHORDS: ChordVoicing[] = [
     family: '7th / Jazz',
     frets: [-1, 3, 2, 3, 1, 0],
     fingers: [0, 3, 2, 4, 1, 0],
-    description: 'Adding the pinky on the 3rd fret of the G string adds the dominant 7th note (Bb / Komal Ni).',
+    description: 'The classic open C7: the pinky on the 3rd fret of the G string adds the dominant 7th (Bb / Komal Ni). The 5th (G) is left out, so it sounds C, E and Bb only.',
     category: 'jazz',
     triadNotes: ['C', 'E', 'G'],
-    allNotes: ['C', 'E', 'G', 'A#'],
+    allNotes: ['C', 'E', 'A#'],
     bassNote: 'C',
     difficulty: 'Intermediate',
   },
@@ -546,7 +546,7 @@ const CURATED_CHORDS: ChordVoicing[] = [
     family: 'Open',
     frets: [-1, 2, 1, 4, 0, 2],
     fingers: [0, 2, 1, 4, 0, 3],
-    description: 'A barre-free B major: the open B string rings while three fingers cover D#, B and F#. Mute the low E string.',
+    description: 'A barre-free B major: the open B string rings while four fingers cover B, D#, B and F#. Mute the low E string.',
     category: 'open',
     triadNotes: ['B', 'D#', 'F#'],
     allNotes: ['B', 'D#', 'F#'],
@@ -606,9 +606,9 @@ const CURATED_CHORDS: ChordVoicing[] = [
     root: 'G',
     type: 'Sus4',
     family: 'Suspended',
-    frets: [3, 2, 0, 0, 1, 3],
-    fingers: [3, 2, 0, 0, 1, 4],
-    description: 'Replaces the 3rd (B) with Shuddha Ma (C) on 2nd string 1st fret.',
+    frets: [3, 3, 0, 0, 1, 3],
+    fingers: [2, 3, 0, 0, 1, 4],
+    description: 'Replaces the 3rd (B) with Shuddha Ma (C): the 1st fret of the B string and the 3rd fret of the A string both give C, so no B is sounded.',
     category: 'open',
     triadNotes: ['G', 'C', 'D'],
     allNotes: ['G', 'C', 'D'],
@@ -1074,10 +1074,10 @@ export const INDIAN_THAATS: IndianThaat[] = [
   },
   {
     name: 'Marwa Thaat',
-    swaras: ['Sa', 're', 'Ga', 'Ma', 'Dha', 'Ni'],
-    westernEquivalent: 'Hexatonic (No 5th / Pancham)',
+    swaras: ['Sa', 're', 'Ga', 'Ma', 'Pa', 'Dha', 'Ni'],
+    westernEquivalent: 'Lydian b2 mode',
     mood: 'Twilight, mystic tension, unrest',
-    description: 'Omits Pa completely! Juxtaposes Komal re with Teevra Ma and Shuddha Dha.',
+    description: 'Juxtaposes Komal re with Teevra Ma and Shuddha Dha. The thaat has all 7 swaras, but Raag Marwa itself famously omits Pa.',
   },
   {
     name: 'Poorvi Thaat',
@@ -1165,7 +1165,7 @@ export const INDIAN_RAAGAS: IndianRaaga[] = [
     thaat: 'Asavari Thaat',
     timeOfDay: 'Late Midnight (12 AM – 3 AM)',
     mood: 'Vira (Grandeur), Profound Sobriety',
-    vadi: 're (Komal Rishabh)',
+    vadi: 'Re (Shuddha Rishabh)',
     samvadi: 'Pa (Pancham)',
     arohana: ['Sa', 'Re', 'ga', 'ma', 'Pa', 'dha', 'ni', "Sa'"],
     avarohana: ["Sa'", 'dha', 'ni', 'Pa', 'ma', 'ga', 'Re', 'Sa'],
@@ -1427,7 +1427,16 @@ export const STORAGE_KEYS = {
 // SECTION 12: SUGGESTED FUTURE THEORY LABS & INTERACTIVE EXPLORATIONS
 // ============================================================================
 
-export interface FutureTheoryLab {
+/** Every theory lab; the `#labs/<id>` deep link and the tab order come from SUGGESTED_THEORY_LABS below. */
+export type LabId = 'transposer' | 'caged' | 'capo' | 'drone' | 'ear';
+
+/** One live theory lab: the single source for its tab, modal card, count badge and deep link. Array order = display order. */
+export interface TheoryLabInfo {
+  id: LabId;
+  /** Short name for the lab tab. */
+  label: string;
+  /** Hidden unless Indian mode is on. */
+  indianOnly?: boolean;
   title: string;
   tagline: string;
   icon: string;
@@ -1436,8 +1445,10 @@ export interface FutureTheoryLab {
   benefit: string;
 }
 
-export const SUGGESTED_THEORY_LABS: FutureTheoryLab[] = [
+export const SUGGESTED_THEORY_LABS: TheoryLabInfo[] = [
   {
+    id: 'transposer',
+    label: 'Transposer',
     title: 'Circle of Fifths & Modal Transposer',
     tagline: 'Visual harmonic clock & key modulation engine',
     icon: '🧭',
@@ -1446,6 +1457,8 @@ export const SUGGESTED_THEORY_LABS: FutureTheoryLab[] = [
     benefit: 'Enables rapid song transposition, understanding why sharps appear, and smooth key modulations.',
   },
   {
+    id: 'caged',
+    label: 'CAGED',
     title: 'The CAGED System 3D Fretboard Topology',
     tagline: 'Connect the 5 interlocking geometric shapes across the entire neck',
     icon: '🧩',
@@ -1454,6 +1467,19 @@ export const SUGGESTED_THEORY_LABS: FutureTheoryLab[] = [
     benefit: 'Unlocks the entire fretboard so you never get trapped in open position or single barre boxes.',
   },
   {
+    id: 'capo',
+    label: 'Capo',
+    title: 'The Capo: A Movable Nut',
+    tagline: 'Change key without learning a single new chord',
+    icon: '📎',
+    concept: 'A capo clamps across the neck and shortens every string, raising each by one semitone per fret, so the same open shapes sound in a new key.',
+    howItWorks: 'Slide a capo along the neck, watch the open strings relabel, and hear it. Then find which capo fret turns a hard progression like Bb Gm Eb F into easy open chords.',
+    benefit: 'Match a singer’s range, keep the ring of open strings and swap awkward barre chords for friendly open shapes.',
+  },
+  {
+    id: 'drone',
+    label: 'Tanpura & Jam',
+    indianOnly: true,
     title: 'Real-Time Tanpura Drone & Modal Jam Pad',
     tagline: 'Acoustic sympathetic resonance & ear training drone',
     icon: '🪕',
@@ -1462,6 +1488,8 @@ export const SUGGESTED_THEORY_LABS: FutureTheoryLab[] = [
     benefit: 'Transforms rote scale memorization into deeply musical improvisation and pitch awareness.',
   },
   {
+    id: 'ear',
+    label: 'Ear Trainer',
     title: 'Interval Ear Trainer & Blind Fret Guessing',
     tagline: 'Gamified ear training with immediate guitar feedback',
     icon: '🎯',
@@ -1665,8 +1693,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '2 Sharps (F#, C#)',
     accidentalCount: 2,
     accidentalsList: ['F#', 'C#'],
-    thaat: 'Kalyan variant',
-    thaatExplanation: 'Adds C# (leading tone to D). Guitar favorite due to open D and G strings resonating.',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'Adds C# (leading tone to D). With Sa = C these notes match no thaat (C itself is missing); with D as Sa it is simply Bilawal. Guitar favorite due to open D and G strings resonating.',
     angleDeg: 60,
   },
   {
@@ -1678,8 +1706,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '3 Sharps (F#, C#, G#)',
     accidentalCount: 3,
     accidentalsList: ['F#', 'C#', 'G#'],
-    thaat: 'Marwa / Kalyan crossover',
-    thaatExplanation: 'Bright, energetic key. All open bass strings (E, A, D) harmonize with relative minor F#m.',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'Bright, energetic key. With Sa = C these notes match no thaat; with A as Sa it is simply Bilawal. All open bass strings (E, A, D) harmonize with relative minor F#m.',
     angleDeg: 90,
   },
   {
@@ -1691,8 +1719,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '4 Sharps (F#, C#, G#, D#)',
     accidentalCount: 4,
     accidentalsList: ['F#', 'C#', 'G#', 'D#'],
-    thaat: 'Purvi variant',
-    thaatExplanation: 'The native guitar key! Lowest string is E2, providing the richest acoustic fundamental frequencies.',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'The native guitar key! Lowest string is E2, providing the richest acoustic fundamental frequencies. With Sa = C these notes match no thaat; with E as Sa it is simply Bilawal.',
     angleDeg: 120,
   },
   {
@@ -1704,8 +1732,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '5 Sharps (F#, C#, G#, D#, A#)',
     accidentalCount: 5,
     accidentalsList: ['F#', 'C#', 'G#', 'D#', 'A#'],
-    thaat: 'Bhairav / Marwa resonance',
-    thaatExplanation: 'Enharmonic to Cb Major. Unlocks intricate barre positions on fret 2 and 7.',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'Enharmonic to Cb Major. Unlocks intricate barre positions on fret 2 and 7. With Sa = C these notes match no thaat; with B as Sa it is simply Bilawal.',
     angleDeg: 150,
   },
   {
@@ -1717,8 +1745,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '6 Sharps or 6 Flats',
     accidentalCount: 6,
     accidentalsList: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'],
-    thaat: 'Todi / Purvi center',
-    thaatExplanation: 'The exact opposite pole (Tritone distance - 6 semitones) from C Major!',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'The exact opposite pole (Tritone distance - 6 semitones) from C Major! With Sa = C these notes match no thaat; with F# as Sa it is simply Bilawal.',
     angleDeg: 180,
   },
   {
@@ -1730,8 +1758,8 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '5 Flats (Bb, Eb, Ab, Db, Gb)',
     accidentalCount: -5,
     accidentalsList: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'],
-    thaat: 'Bhairav Thaat',
-    thaatExplanation: 'Features Komal re (Db) and Komal dha (Ab). Deep, meditative Indian morning raagas reside here.',
+    thaat: 'No exact thaat (with Sa = C)',
+    thaatExplanation: 'With Sa = C these notes give komal Re (Db), komal Ga (Eb), komal Dha (Ab), komal Ni (Bb), shuddha ma (F) and teevra Ma (Gb) together, and no Pa, so it matches none of the ten thaats (Bhairav needs a shuddha Ga and a Pa).',
     angleDeg: 210,
   },
   {
@@ -1743,7 +1771,7 @@ export const CIRCLE_OF_FIFTHS_DATA: CircleKeySegment[] = [
     accidentals: '4 Flats (Bb, Eb, Ab, Db)',
     accidentalCount: -4,
     accidentalsList: ['Bb', 'Eb', 'Ab', 'Db'],
-    thaat: 'Bhairavi variant',
+    thaat: 'Bhairavi Thaat',
     thaatExplanation: 'Warm, soulful harmonic balance. Relative minor Fm is the classic guitar jazz ballad key.',
     angleDeg: 240,
   },

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pause, Play, Square } from 'lucide-react';
 import { INDIAN_RAAGAS, NOTE_NAMES, type NoteName } from '../../constants';
 import { guitarAudio } from '../../utils/audioSynth';
@@ -32,8 +32,9 @@ export const DroneLab: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
   const [playingLine, setPlayingLine] = useState(false);
   const { after, clear } = useTimeouts();
 
-  const tanpura = useRef(new TanpuraEngine()).current;
-  const rhythm = useRef(new RhythmEngine()).current;
+  // lazy init: construct each engine once, not on every render
+  const [tanpura] = useState(() => new TanpuraEngine());
+  const [rhythm] = useState(() => new RhythmEngine());
 
   const taal = TAALS.find(t => t.id === taalId)!;
   const accents = useMemo(() => beatAccents(taal, vibhagStarts(taal)), [taal]);
@@ -191,7 +192,7 @@ export const DroneLab: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
             <p className="text-[11px] text-ink-400 mt-1.5">Use Ma for raagas that omit Pa; Ni for those that avoid both.</p>
           </div>
 
-          <Slider label="Loop speed" value={cycle} min={3} max={12} step={0.5} unit="s / cycle" onChange={setCycle} reverse />
+          <Slider label="Loop speed" value={cycle} min={3} max={12} step={0.5} unit="s / cycle" onChange={setCycle} />
           <Slider label="Volume" value={droneVol} min={0} max={1} step={0.05} unit="" onChange={setDroneVol} percent />
 
           <button
@@ -292,6 +293,10 @@ export const DroneLab: React.FC<{ notation: 'western' | 'indian' }> = ({ notatio
               <button
                 key={o}
                 onPointerDown={() => hitPad(o)}
+                // keyboard / assistive-tech activation (a real pointer press already fired onPointerDown)
+                onClick={e => {
+                  if (e.detail === 0) hitPad(o);
+                }}
                 aria-label={`Play ${saLabel(o)}`}
                 className={`h-16 rounded-xl border-2 text-sm font-extrabold transition-all active:scale-95 ${
                   activePad === o
@@ -337,7 +342,6 @@ const Slider: React.FC<{
   unit: string;
   onChange: (n: number) => void;
   percent?: boolean;
-  reverse?: boolean;
 }> = ({ label, value, min, max, step, unit, onChange, percent }) => (
   <label className="block">
     <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-ink-400 mb-1">
@@ -351,7 +355,7 @@ const Slider: React.FC<{
       step={step}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
-      className="w-full accent-[#f59e0b]"
+      className="w-full accent-brand-500"
     />
   </label>
 );

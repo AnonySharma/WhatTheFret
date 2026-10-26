@@ -1,32 +1,34 @@
 import React, { useState } from 'react';
+import { Compass, Volume2, Play, Layers } from 'lucide-react';
+import { CIRCLE_OF_FIFTHS_DATA, type CircleKeySegment, NoteName } from '../constants';
 import {
-  Compass,
-  Volume2,
-  Sparkles,
-  Play,
-  RotateCcw,
-  Music,
-  ArrowRight,
-  Info,
-  Layers,
-  HelpCircle,
-} from 'lucide-react';
-import {
-  CIRCLE_OF_FIFTHS_DATA,
-  type CircleKeySegment,
-  NOTE_NAMES,
-  NoteName,
-} from '../constants';
-import {
-  deriveMajorScale,
   deriveDiatonicHarmony,
+  spellMajorScale,
   getFretNote,
   getSwaraForNote,
-  formatNoteDisplay,
   CHORD_DATABASE,
   calculateBarreChord,
 } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
+import { useTimeouts } from './labs/useTimeouts';
+
+/**
+ * The key table stores sharp-spelled NoteNames (so 'C#' / 'A#' for Db / Bb), while `majorDisplay`
+ * and `minorDisplay` carry the conventional spelling(s). Pick the spelling that matches the key
+ * signature: flat keys use the flat name, sharp keys the sharp one.
+ */
+function pickSpelling(display: string, accidentalCount: number): string {
+  const options = display.split(' / ');
+  const wantFlat = accidentalCount < 0;
+  return options.find(o => /^[A-G]b/.test(o) === wantFlat) ?? options[0];
+}
+
+const onActivate = (action: () => void) => (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    action();
+  }
+};
 
 interface CircleOfFifthsProps {
   notesNotation?: 'western' | 'indian';
@@ -38,12 +40,19 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
   rootSa = 'C',
 }) => {
   const [selectedSegmentIndex, setSelectedSegmentIndex] = useState<number>(0); // 0 = C Major
-  const [activeHarmonicFilter, setActiveHarmonicFilter] = useState<'all' | 'major-only' | 'minor-only'>('all');
   const [isPlayingProgression, setIsPlayingProgression] = useState<boolean>(false);
+  const { after, clear: clearTimers } = useTimeouts();
 
   const activeSegment: CircleKeySegment = CIRCLE_OF_FIFTHS_DATA[selectedSegmentIndex];
-  const diatonicChords = deriveDiatonicHarmony(activeSegment.majorKey);
-  const scaleData = deriveMajorScale(activeSegment.majorKey);
+  const majorName = pickSpelling(activeSegment.majorDisplay, activeSegment.accidentalCount);
+  const minorName = pickSpelling(activeSegment.minorDisplay, activeSegment.accidentalCount).replace(/m$/, '');
+  // Chords keep their NoteName roots for playback; the spelled names (Bb, not A#) are for display only
+  const spelledScale = spellMajorScale(majorName);
+  const diatonicChords = deriveDiatonicHarmony(activeSegment.majorKey).map((chord, i) => ({
+    ...chord,
+    displayRoot: spelledScale[i],
+    displayNotes: [spelledScale[i], spelledScale[(i + 2) % 7], spelledScale[(i + 4) % 7]],
+  }));
 
   // Neighbor indices on the clock (0 to 11)
   const tonicIdx = selectedSegmentIndex;
@@ -54,7 +63,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
   const playChordVoicing = (root: NoteName, type: 'Major' | 'Minor') => {
     // Look up in database or barre calculation
     const preset = CHORD_DATABASE.find(
-      c => c.root === root && c.type.toLowerCase().includes(type.toLowerCase())
+      c => c.root === root && c.type === type
     );
 
     const frets = preset
@@ -74,9 +83,19 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
     guitarAudio.strum(freqs, 'down', 32);
   };
 
+  const selectMajor = (i: number) => {
+    setSelectedSegmentIndex(i);
+    playChordVoicing(CIRCLE_OF_FIFTHS_DATA[i].majorKey, 'Major');
+  };
+  const selectMinor = (i: number) => {
+    setSelectedSegmentIndex(i);
+    playChordVoicing(CIRCLE_OF_FIFTHS_DATA[i].minorKey, 'Minor');
+  };
+
   // Play full diatonic progression I - IV - V - I
   const playCadence = () => {
     if (isPlayingProgression) return;
+    clearTimers();
     setIsPlayingProgression(true);
 
     const chordsToPlay: { root: NoteName; type: 'Major' | 'Minor' }[] = [
@@ -87,26 +106,12 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
     ];
 
     chordsToPlay.forEach((item, i) => {
-      setTimeout(() => {
+      after(() => {
         playChordVoicing(item.root, item.type);
         if (i === chordsToPlay.length - 1) {
           setIsPlayingProgression(false);
         }
       }, i * 750);
-    });
-  };
-
-  // Play the 7 scale notes sequentially
-  const playScaleArpeggio = () => {
-    scaleData.notes.forEach((note, i) => {
-      setTimeout(() => {
-        const noteData = getFretNote(5, 0); // reference
-        const norm = getFretNote(4, 0);
-        // Play note frequency
-        const semiFromC = NOTE_NAMES.indexOf(note);
-        const freq = 130.81 * Math.pow(2, semiFromC / 12);
-        guitarAudio.pluck(freq, 1.8, 0.85);
-      }, i * 220);
     });
   };
 
@@ -216,7 +221,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
               {/* Background Circular Plate */}
               <circle cx={center} cy={center} r={outerR + 10} fill="#0d0e11" stroke="#262626" strokeWidth="2" />
-              <circle cx={center} cy={center} r={outerR} fill="#1c1917" />
+              <circle cx={center} cy={center} r={outerR} fill="var(--color-ink-900)" />
 
               {/* 12 Outer Slices: Major Keys */}
               {CIRCLE_OF_FIFTHS_DATA.map((seg, i) => {
@@ -232,26 +237,26 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 const labelPos = polarToCartesian(center, center, (outerR + midR) / 2, i * 30);
                 const accPos = polarToCartesian(center, center, outerR - 16, i * 30);
 
-                let fillClass = '#1c1917';
-                let strokeClass = '#292524';
-                let textClass = '#d6d3d1';
+                let fillClass = 'var(--color-ink-900)';
+                let strokeClass = 'var(--color-ink-800)';
+                let textClass = 'var(--color-ink-300)';
 
                 if (isTonic) {
-                  fillClass = '#d97706'; // Amber 600
-                  strokeClass = '#fbbf24';
-                  textClass = '#ffffff';
+                  fillClass = 'var(--color-brand-600)'; // Amber 600
+                  strokeClass = 'var(--color-brand-400)';
+                  textClass = 'var(--color-white)';
                 } else if (isSubdominant) {
                   fillClass = '#0284c7'; // Sky 600
                   strokeClass = '#a78bfa';
-                  textClass = '#ffffff';
+                  textClass = 'var(--color-white)';
                 } else if (isDominant) {
-                  fillClass = '#ea580c'; // Orange 600
-                  strokeClass = '#fbbf24';
-                  textClass = '#ffffff';
+                  fillClass = 'var(--color-gold-600)'; // Orange 600
+                  strokeClass = 'var(--color-brand-400)';
+                  textClass = 'var(--color-white)';
                 }
 
                 // Notation display
-                let displayNote = seg.majorDisplay;
+                let displayNote = pickSpelling(seg.majorDisplay, seg.accidentalCount);
                 if (notationMode === 'indian') {
                   const swara = getSwaraForNote(seg.majorKey, rootSa);
                   displayNote = swara.shortName;
@@ -260,11 +265,13 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 return (
                   <g
                     key={`outer-${seg.index}`}
-                    onClick={() => {
-                      setSelectedSegmentIndex(i);
-                      playChordVoicing(seg.majorKey, 'Major');
-                    }}
-                    className="cursor-pointer group transition-all"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${pickSpelling(seg.majorDisplay, seg.accidentalCount)} major, ${seg.accidentals}`}
+                    aria-pressed={isTonic}
+                    onClick={() => selectMajor(i)}
+                    onKeyDown={onActivate(() => selectMajor(i))}
+                    className="cursor-pointer group transition-all focus:outline-none focus-visible:[&>path]:stroke-white"
                   >
                     <path
                       d={pathD}
@@ -293,7 +300,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                       x={accPos.x}
                       y={accPos.y}
                       textAnchor="middle"
-                      fill={isTonic ? '#fef3c7' : '#78716c'}
+                      fill={isTonic ? 'var(--color-brand-100)' : 'var(--color-ink-500)'}
                       fontSize="9"
                       fontWeight="bold"
                       className="pointer-events-none font-mono"
@@ -326,19 +333,19 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
 
                 if (isRelativeMinor) {
                   fillClass = '#059669'; // Emerald 600
-                  strokeClass = '#fbbf24';
-                  textClass = '#ffffff';
+                  strokeClass = 'var(--color-brand-400)';
+                  textClass = 'var(--color-white)';
                 } else if (isSupertonic) {
                   fillClass = '#0891b2'; // Cyan 600
-                  strokeClass = '#fbbf24';
-                  textClass = '#ffffff';
+                  strokeClass = 'var(--color-brand-400)';
+                  textClass = 'var(--color-white)';
                 } else if (isMediant) {
                   fillClass = '#7c3aed'; // Violet 600
                   strokeClass = '#a78bfa';
-                  textClass = '#ffffff';
+                  textClass = 'var(--color-white)';
                 }
 
-                let displayNote = seg.minorDisplay;
+                let displayNote = pickSpelling(seg.minorDisplay, seg.accidentalCount);
                 if (notationMode === 'indian') {
                   const swara = getSwaraForNote(seg.minorKey, rootSa);
                   displayNote = `${swara.shortName}m`;
@@ -347,11 +354,13 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 return (
                   <g
                     key={`inner-${seg.index}`}
-                    onClick={() => {
-                      setSelectedSegmentIndex(i);
-                      playChordVoicing(seg.minorKey, 'Minor');
-                    }}
-                    className="cursor-pointer group transition-all"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${pickSpelling(seg.minorDisplay, seg.accidentalCount)}, relative minor of ${pickSpelling(seg.majorDisplay, seg.accidentalCount)}`}
+                    aria-pressed={isRelativeMinor}
+                    onClick={() => selectMinor(i)}
+                    onKeyDown={onActivate(() => selectMinor(i))}
+                    className="cursor-pointer group transition-all focus:outline-none focus-visible:[&>path]:stroke-white"
                   >
                     <path
                       d={pathD}
@@ -382,8 +391,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 cx={center}
                 cy={center}
                 r={innerR - 4}
-                fill="#0c0a09"
-                stroke="#d97706"
+                fill="var(--color-ink-950)"
+                stroke="var(--color-brand-600)"
                 strokeWidth="2.5"
                 filter="url(#gold-glow)"
               />
@@ -392,7 +401,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center - 22}
                 textAnchor="middle"
-                fill="#f59e0b"
+                fill="var(--color-brand-500)"
                 fontSize="10"
                 fontWeight="800"
                 className="uppercase tracking-widest font-mono"
@@ -404,33 +413,33 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 x={center}
                 y={center + 8}
                 textAnchor="middle"
-                fill="#ffffff"
+                fill="var(--color-white)"
                 fontSize="28"
                 fontWeight="900"
                 className="font-sans"
               >
                 {notationMode === 'indian'
-                  ? `${getSwaraForNote(activeSegment.majorKey, rootSa).shortName} (${activeSegment.majorKey})`
-                  : activeSegment.majorKey}
+                  ? `${getSwaraForNote(activeSegment.majorKey, rootSa).shortName} (${majorName})`
+                  : majorName}
               </text>
 
               <text
                 x={center}
                 y={center + 26}
                 textAnchor="middle"
-                fill="#f97316"
+                fill="var(--color-gold-500)"
                 fontSize="12"
                 fontWeight="700"
                 className="font-sans"
               >
-                Rel: {activeSegment.minorDisplay}
+                Rel: {minorName}m
               </text>
 
               <text
                 x={center}
                 y={center + 42}
                 textAnchor="middle"
-                fill="#78716c"
+                fill="var(--color-ink-500)"
                 fontSize="9"
                 fontWeight="600"
                 className="font-mono"
@@ -449,7 +458,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5"
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span>Strum {activeSegment.majorKey} Major</span>
+              <span>Strum {majorName} Major</span>
             </button>
 
             <button
@@ -457,7 +466,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               className="px-3.5 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-gold-300 font-semibold text-xs border border-gold-500/30 transition-all active:scale-95 flex items-center gap-1.5"
             >
               <Volume2 className="w-3.5 h-3.5" />
-              <span>Strum {activeSegment.minorKey} Minor</span>
+              <span>Strum {minorName} Minor</span>
             </button>
 
             <button
@@ -481,8 +490,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                   Key Harmonic Profile
                 </span>
                 <h3 className="text-2xl font-black text-white mt-0.5">
-                  {activeSegment.majorKey} Major
-                  <span className="text-base text-ink-400 font-medium ml-2">/ {activeSegment.minorDisplay}</span>
+                  {majorName} Major
+                  <span className="text-base text-ink-400 font-medium ml-2">/ {minorName}m</span>
                 </h3>
               </div>
 
@@ -512,7 +521,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 Major Scale Degrees (7 Tones):
               </span>
               <div className="grid grid-cols-7 gap-1 text-center">
-                {scaleData.notes.map((n, idx) => {
+                {spelledScale.map((n, idx) => {
                   const swara = getSwaraForNote(n, rootSa);
                   const isRoot = idx === 0;
                   const isThird = idx === 2;
@@ -546,7 +555,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-brand-400" />
                 <h4 className="font-bold text-sm text-ink-100">
-                  Diatonic Chords in {activeSegment.majorKey} Major
+                  Diatonic Chords in {majorName} Major
                 </h4>
               </div>
               <span className="text-[10px] text-ink-400 font-mono">Click to play</span>
@@ -576,10 +585,10 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                       </span>
                       <div>
                         <div className="font-extrabold text-ink-200">
-                          {chord.rootNote} {chord.chordType}
+                          {chord.displayRoot} {chord.chordType}
                         </div>
                         <div className="text-[10px] text-ink-400">
-                          Triad: {chord.notes.join(' - ')}
+                          Triad: {chord.displayNotes.join(' - ')}
                         </div>
                       </div>
                     </div>
