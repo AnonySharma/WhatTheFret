@@ -1420,6 +1420,7 @@ export const QUIZ_QUESTIONS: QuizQuestionDef[] = [
 
 export const STORAGE_KEYS = {
   USER_PROGRESS: 'intuitive_guitar_studio_progress_v1',
+  FAVORITE_CHORDS: 'whatthefret_favorite_chords_v1',
 };
 
 // ============================================================================

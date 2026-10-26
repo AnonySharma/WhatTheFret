@@ -70,3 +70,13 @@ test('generated chords are playable and consistent', () => {
     if (fretted.length) assert.ok(Math.max(...fretted) - Math.min(...fretted) <= 4, `${c.id} spans too many frets`);
   }
 });
+
+test('generated grips sound exactly the notes they claim', () => {
+  const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const OPEN = [4, 9, 2, 7, 11, 4]; // E A D G B E, string 6 -> 1
+  for (const c of CHORD_DATABASE.filter(x => x.id.startsWith('gen-'))) {
+    const sounded = new Set(c.frets.map((f, i) => (f < 0 ? null : NOTES[(OPEN[i] + f) % 12])).filter(Boolean));
+    const claimed = new Set(c.allNotes ?? c.triadNotes);
+    assert.deepEqual([...sounded].sort(), [...claimed].sort(), `${c.id} (${c.frets.join(',')})`);
+  }
+});

@@ -3,6 +3,7 @@ import { Play, Volume2, Sparkles, RefreshCw, Globe, Zap, Compass } from 'lucide-
 import { GUITAR_STRINGS, getFretNote, CHORD_DATABASE, ChordVoicing, NoteName, calculateBarreChord, getSwaraForNote } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
 import { FretboardQuiz } from './FretboardQuiz';
+import { useStringVibration } from '../utils/useStringVibration';
 
 interface InteractiveFretboardProps {
   customFrets?: (number | -1)[];
@@ -33,7 +34,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
     notesNotation === 'indian' ? 'sargam' : initialDisplayMode
   );
   const [viewMode, setViewMode] = useState<'explorer' | 'quiz'>('explorer');
-  const [vibratingString, setVibratingString] = useState<number | null>(null);
+  const { vibrating, pulse: triggerStringVibration } = useStringVibration();
   const [barreRoot, setBarreRoot] = useState<NoteName>('F');
   const [barreShape, setBarreShape] = useState<'E-Major' | 'E-Minor' | 'A-Major' | 'A-Minor'>('E-Major');
 
@@ -93,13 +94,6 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
     if (onFretChange) onFretChange(newFrets);
   };
 
-  const triggerStringVibration = (stringNum: number) => {
-    setVibratingString(stringNum);
-    setTimeout(() => {
-      setVibratingString(null);
-    }, 400);
-  };
-
   const handleStrum = (direction: 'down' | 'up' = 'down') => {
     const freqs: number[] = [];
     GUITAR_STRINGS.forEach(str => {
@@ -114,9 +108,10 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
     });
 
     guitarAudio.strum(freqs, direction, 28);
-    // Vibrate strings in sequence
-    GUITAR_STRINGS.forEach((str, i) => {
-      setTimeout(() => triggerStringVibration(str.stringNumber), i * 28);
+    // Wobble the sounding strings in the same order and timing as the audio
+    const sounding = GUITAR_STRINGS.filter(str => currentFrets[6 - str.stringNumber] >= 0);
+    (direction === 'down' ? sounding : [...sounding].reverse()).forEach((str, i) => {
+      triggerStringVibration(str.stringNumber, i * 28);
     });
   };
 
@@ -315,7 +310,8 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             {GUITAR_STRINGS.map(str => {
               const strIdx = 6 - str.stringNumber;
               const currentFret = currentFrets[strIdx];
-              const isVibrating = vibratingString === str.stringNumber;
+              const vibeToken = vibrating[str.stringNumber];
+              const isVibrating = vibeToken !== undefined;
               const gauge = stringGauges[str.stringNumber] || 2;
 
               return (
@@ -343,8 +339,9 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
                   {/* Physical String Wire running through */}
                   <div
-                    className={`absolute left-[50px] right-0 pointer-events-none transition-all duration-150 ${
-                      isVibrating ? 'brightness-150 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]' : ''
+                    key={vibeToken ?? 0}
+                    className={`absolute left-[50px] right-0 pointer-events-none ${
+                      isVibrating ? 'animate-string brightness-150 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]' : ''
                     }`}
                     style={{
                       height: `${gauge}px`,

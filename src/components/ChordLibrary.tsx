@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Volume2,
@@ -11,6 +11,7 @@ import {
   Music,
   Sliders,
   Filter,
+  Heart,
 } from 'lucide-react';
 import {
   CHORD_DATABASE,
@@ -19,10 +20,12 @@ import {
   NoteName,
   GUITAR_STRINGS,
   POPULAR_ROOTS,
+  STORAGE_KEYS,
 } from '../constants';
 import { getFretNote, getSwaraForNote, shiftSemitones } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
 import { searchChords } from '../utils/chordSearch';
+import { useStringVibration } from '../utils/useStringVibration';
 
 interface ChordLibraryProps {
   notesNotation?: 'western' | 'indian';
@@ -34,7 +37,28 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedChordId, setSelectedChordId] = useState<string>('c-major-open');
   const [strumSpeed, setStrumSpeed] = useState<number>(35); // ms between strings
-  const [activePlayingString, setActivePlayingString] = useState<number | null>(null);
+  const { vibrating, pulse: pulseString } = useStringVibration();
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITE_CHORDS) || '[]');
+      return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
+  const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
+  const favoriteCount = useMemo(() => CHORD_DATABASE.filter(c => favoriteSet.has(c.id)).length, [favoriteSet]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.FAVORITE_CHORDS, JSON.stringify(favorites));
+    } catch {
+      // storage unavailable (private mode): favorites just last for this visit
+    }
+  }, [favorites]);
+
+  const toggleFavorite = (id: string) =>
+    setFavorites(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
   // Filter chord database (symbol-aware search: "Am", "A minor", "F#m7", "Bb" ...)
   const filteredChords = useMemo(() => {
@@ -44,6 +68,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
       }
 
       if (selectedCategory !== 'All') {
+        if (selectedCategory === 'Favorites' && !favoriteSet.has(chord.id)) return false;
         if (selectedCategory === 'open' && chord.category !== 'open') return false;
         if (selectedCategory === 'barre' && !chord.category.startsWith('barre')) return false;
         if (selectedCategory === 'Major' && chord.type !== 'Major') return false;
@@ -56,7 +81,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
       return true;
     });
     return searchChords(byFilters, searchQuery);
-  }, [searchQuery, selectedRoot, selectedCategory]);
+  }, [searchQuery, selectedRoot, selectedCategory, favoriteSet]);
 
   const selectedChord: ChordVoicing = useMemo(() => {
     return CHORD_DATABASE.find(c => c.id === selectedChordId) || filteredChords[0] || CHORD_DATABASE[0];
@@ -90,9 +115,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     if (fret === -1) return;
     const stringNumber = 6 - stringIndex; // 0=String 6, 5=String 1
     const { frequency } = getFretNote(stringNumber, fret);
-    setActivePlayingString(stringNumber);
+    pulseString(stringNumber);
     guitarAudio.pluck(frequency, 2.2, 0.85);
-    setTimeout(() => setActivePlayingString(null), 300);
   };
 
   const strumChord = (direction: 'down' | 'up' = 'down') => {
@@ -107,6 +131,14 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     });
 
     guitarAudio.strum(freqs, direction, strumSpeed);
+
+    // Animate the strings in the same order and timing as the audio
+    const played = selectedChord.frets
+      .map((fret, idx) => ({ fret, stringNumber: 6 - idx }))
+      .filter(s => s.fret >= 0);
+    (direction === 'down' ? played : [...played].reverse()).forEach((s, step) => {
+      pulseString(s.stringNumber, step * strumSpeed);
+    });
   };
 
   const arpeggiateChord = () => {
@@ -120,9 +152,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
         const stringNumber = 6 - idx;
         const fret = selectedChord.frets[idx];
         const { frequency } = getFretNote(stringNumber, fret);
-        setActivePlayingString(stringNumber);
+        pulseString(stringNumber);
         guitarAudio.pluck(frequency, 1.8, 0.85);
-        setTimeout(() => setActivePlayingString(null), 250);
       }, step * 220);
     });
   };
@@ -167,6 +198,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     { id: '7th', label: '7th / Jazz' },
     { id: 'Suspended', label: 'Suspended' },
     { id: 'Extended', label: 'Extended' },
+    { id: 'Favorites', label: `Favorites (${favoriteCount})` },
   ];
 
   return (
@@ -227,6 +259,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                   : 'bg-ink-950/70 text-ink-400 border-ink-800 hover:text-white hover:bg-ink-800'
               }`}
             >
+              {cat.id === 'Favorites' && (
+                <Heart className={`inline w-3 h-3 mr-1 -mt-0.5 ${favoriteCount > 0 ? 'fill-current' : ''}`} />
+              )}
               {cat.label}
             </button>
           ))}
@@ -279,7 +314,9 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
           <div className="flex-1 overflow-y-auto space-y-2 pt-3 pr-1">
             {filteredChords.length === 0 ? (
               <div className="text-center py-12 text-ink-500 text-xs">
-                No chords match your current filters.
+                {selectedCategory === 'Favorites' && favoriteCount === 0 && !searchQuery && selectedRoot === 'All'
+                  ? 'No favorites yet. Tap the heart on any chord to save it here.'
+                  : 'No chords match your current filters.'}
                 <button
                   onClick={() => {
                     setSearchQuery('');
@@ -324,17 +361,35 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedChordId(chord.id);
-                        strumChord('down');
-                      }}
-                      className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-ink-400 hover:text-brand-400 hover:border-brand-500/40 transition-colors"
-                      title="Quick Preview"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(chord.id);
+                        }}
+                        aria-pressed={favoriteSet.has(chord.id)}
+                        aria-label={`${favoriteSet.has(chord.id) ? 'Remove' : 'Add'} ${chord.name} ${favoriteSet.has(chord.id) ? 'from' : 'to'} favorites`}
+                        title={favoriteSet.has(chord.id) ? 'Remove from favorites' : 'Add to favorites'}
+                        className={`p-2 rounded-lg bg-ink-900 border transition-colors ${
+                          favoriteSet.has(chord.id)
+                            ? 'border-brand-500/50 text-brand-400'
+                            : 'border-ink-800 text-ink-500 hover:text-brand-400 hover:border-brand-500/40'
+                        }`}
+                      >
+                        <Heart className={`w-3.5 h-3.5 ${favoriteSet.has(chord.id) ? 'fill-current' : ''}`} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedChordId(chord.id);
+                          strumChord('down');
+                        }}
+                        className="p-2 rounded-lg bg-ink-900 border border-ink-800 text-ink-400 hover:text-brand-400 hover:border-brand-500/40 transition-colors"
+                        title="Quick Preview"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -351,6 +406,19 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                 <h2 className="text-2xl font-black text-ink-100 tracking-tight">
                   {selectedChord.name}
                 </h2>
+                <button
+                  onClick={() => toggleFavorite(selectedChord.id)}
+                  aria-pressed={favoriteSet.has(selectedChord.id)}
+                  aria-label={favoriteSet.has(selectedChord.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  title={favoriteSet.has(selectedChord.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    favoriteSet.has(selectedChord.id)
+                      ? 'border-brand-500/50 bg-brand-500/10 text-brand-400'
+                      : 'border-ink-800 text-ink-500 hover:text-brand-400 hover:border-brand-500/40'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${favoriteSet.has(selectedChord.id) ? 'fill-current' : ''}`} />
+                </button>
                 <span className="px-2.5 py-0.5 rounded-md bg-brand-500/10 text-brand-300 text-xs font-mono font-bold border border-brand-500/30">
                   {selectedChord.type}
                 </span>
@@ -441,7 +509,8 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                   const fingerBadge = getFingerBadge(finger);
                   const isMuted = targetFret === -1;
                   const isOpen = targetFret === 0;
-                  const isPlaying = activePlayingString === stringNumber;
+                  const vibeToken = vibrating[stringNumber];
+                  const isPlaying = vibeToken !== undefined;
                   const gauge = [4, 3.5, 3, 2.5, 2, 1.5][sIdx];
 
                   return (
@@ -478,9 +547,10 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                               <div className="absolute -bottom-0 translate-y-1/2 w-3 h-3 rounded-full bg-ink-400/20 border border-ink-400/40 pointer-events-none" />
                             )}
                             <div
+                              key={vibeToken ?? 0}
                               className={`absolute left-0 right-0 transition-colors ${
                                 isPlaying
-                                  ? 'bg-brand-400 shadow-[0_0_8px_#f59e0b]'
+                                  ? 'animate-string bg-brand-400 shadow-[0_0_8px_#f59e0b]'
                                   : 'bg-ink-400/70 group-hover/string:bg-ink-200'
                               }`}
                               style={{ height: `${gauge}px` }}

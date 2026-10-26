@@ -81,3 +81,26 @@ a,
 [role="button"] {
   touch-action: manipulation;
 }
+
+/* A plucked string wobbling and settling. Uses `scale` (not `transform`) so it can sit on elements
+   that already position themselves with a transform. */
+@keyframes string-vibrate {
+  0% { scale: 1 1; }
+  10% { scale: 1 2.6; }
+  20% { scale: 1 0.5; }
+  30% { scale: 1 2.2; }
+  45% { scale: 1 0.7; }
+  60% { scale: 1 1.6; }
+  80% { scale: 1 1.2; }
+  100% { scale: 1 1; }
+}
+
+.animate-string {
+  animation: string-vibrate 0.55s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-string {
+    animation: none;
+  }
+}
