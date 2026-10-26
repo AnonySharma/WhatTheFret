@@ -6,6 +6,8 @@
  * theoretical mappings are organized and exported from this single file.
  */
 
+import { generateMovableChords } from './utils/chordShapes';
+
 // ============================================================================
 // SECTION 1: NOTE NAMES & CHROMATIC SCALE
 // ============================================================================
@@ -153,7 +155,7 @@ export interface ChordVoicing {
   lowEMutedReason?: string;
 }
 
-export const CHORD_DATABASE: ChordVoicing[] = [
+const CURATED_CHORDS: ChordVoicing[] = [
   // --- OPEN CHORDS ---
   {
     id: 'c-major-open',
@@ -840,6 +842,9 @@ export const CHORD_DATABASE: ChordVoicing[] = [
     difficulty: 'Beginner',
   },
 ];
+
+/** Hand-written voicings first, then the movable E/A-shape grips for every root (B major, Bb, F#7 ...). */
+export const CHORD_DATABASE: ChordVoicing[] = [...CURATED_CHORDS, ...generateMovableChords(CURATED_CHORDS)];
 
 // ============================================================================
 // SECTION 5: INDIAN CLASSICAL SWARAS (SARGAM)

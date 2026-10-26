@@ -24,7 +24,7 @@ const LEVELS: Record<Level, { label: string; semitones: number[] }> = {
   all: { label: 'All 12 intervals + tritone', semitones: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
 };
 
-export const EarTrainerLab: React.FC = () => {
+export const EarTrainerLab: React.FC<{ notation?: 'western' | 'indian' }> = ({ notation = 'western' }) => {
   const [mode, setMode] = useState<Mode>('interval');
   return (
     <div className="space-y-4">
@@ -55,7 +55,7 @@ export const EarTrainerLab: React.FC = () => {
           ))}
         </div>
       </div>
-      {mode === 'interval' ? <IntervalTrainer /> : <BlindFretTrainer />}
+      {mode === 'interval' ? <IntervalTrainer notation={notation} /> : <BlindFretTrainer />}
     </div>
   );
 };
@@ -71,7 +71,7 @@ const Score: React.FC<{ correct: number; total: number; streak: number }> = ({ c
   </div>
 );
 
-const IntervalTrainer: React.FC = () => {
+const IntervalTrainer: React.FC<{ notation: 'western' | 'indian' }> = ({ notation }) => {
   const [level, setLevel] = useState<Level>('easy');
   const [direction, setDirection] = useState<'up' | 'down' | 'mixed'>('up');
   const [question, setQuestion] = useState<IntervalQuestion | null>(null);
@@ -180,7 +180,7 @@ const IntervalTrainer: React.FC = () => {
                 <span className="font-mono text-[11px] text-ink-400">{i.short}</span>
               </div>
               <div className="text-[11px] text-ink-400 mt-0.5">
-                {i.semitones} fret{i.semitones === 1 ? '' : 's'} · {i.swara}
+                {i.semitones} fret{i.semitones === 1 ? '' : 's'}{notation === 'indian' ? ` · ${i.swara}` : ''}
               </div>
             </button>
           );

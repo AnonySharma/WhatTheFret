@@ -4,7 +4,7 @@ import { ascendingFrequencies, deriveMajorScale, NoteName } from '../../utils/gu
 import { useTimeouts } from '../labs/useTimeouts';
 import { guitarAudio } from '../../utils/audioSynth';
 
-export const ModuleMajorScale: React.FC = () => {
+export const ModuleMajorScale: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
   const [selectedRoot, setSelectedRoot] = useState<NoteName>('C');
   const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
   const [isPlayingScale, setIsPlayingScale] = useState<boolean>(false);
@@ -175,15 +175,17 @@ export const ModuleMajorScale: React.FC = () => {
         <div className="bg-ink-950/60 border border-ink-800 rounded-xl p-4 text-xs text-ink-300 space-y-2">
           <div className="flex items-center gap-2 text-brand-400 font-bold">
             <Sparkles className="w-4 h-4" />
-            <span>Why C Major has Zero Sharps or Flats (And Bilawal Thaat):</span>
+            <span>Why C Major has Zero Sharps or Flats{indian ? ' (And Bilawal Thaat)' : ''}:</span>
           </div>
           <p className="text-ink-400 leading-relaxed">
             In the natural musical alphabet, the half steps occur naturally between <strong className="text-ink-200">E and F</strong> (+1) and between <strong className="text-ink-200">B and C</strong> (+1).
             Because the Major Scale DNA formula requires +1 jumps at steps 3→4 and 7→8, starting on C aligns naturally with E→F and B→C with 0 accidentals!
           </p>
+          {indian && (
           <p className="text-brand-300/90 leading-relaxed pt-1 border-t border-ink-800/80 font-medium">
             🪕 <strong className="underline">Indian Classical Connection:</strong> This exact scale is known as <strong className="text-brand-200">Bilawal Thaat</strong> in Indian classical music (<span className="font-mono font-bold">Sa - Re - Ga - ma - Pa - Dha - Ni</span>). Notice how <strong className="text-ink-100">Ga ➔ ma</strong> (+1) and <strong className="text-ink-100">Ni ➔ Sa</strong> (+1) are the exact physical half-step jumps!
           </p>
+          )}
         </div>
 
         {/* Relative Minor Card (The Formula from Page 2) */}

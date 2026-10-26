@@ -31,23 +31,15 @@ import { guitarAudio } from '../utils/audioSynth';
 interface CircleOfFifthsProps {
   notesNotation?: 'western' | 'indian';
   rootSa?: NoteName;
-  onToggleNotation?: (mode: 'western' | 'indian') => void;
 }
 
 export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
-  notesNotation: initialNotation = 'western',
+  notesNotation: notationMode = 'western',
   rootSa = 'C',
-  onToggleNotation,
 }) => {
   const [selectedSegmentIndex, setSelectedSegmentIndex] = useState<number>(0); // 0 = C Major
-  const [notationMode, setNotationMode] = useState<'western' | 'indian'>(initialNotation);
   const [activeHarmonicFilter, setActiveHarmonicFilter] = useState<'all' | 'major-only' | 'minor-only'>('all');
   const [isPlayingProgression, setIsPlayingProgression] = useState<boolean>(false);
-
-  // Sync prop changes
-  React.useEffect(() => {
-    setNotationMode(initialNotation);
-  }, [initialNotation]);
 
   const activeSegment: CircleKeySegment = CIRCLE_OF_FIFTHS_DATA[selectedSegmentIndex];
   const diatonicChords = deriveDiatonicHarmony(activeSegment.majorKey);
@@ -177,40 +169,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
             </span>
           </div>
           <p className="text-xs sm:text-sm text-ink-400 mt-1">
-            Click any segment to hear its acoustic voicing, visualize relative minor chords, and see corresponding Indian Thaats and scale degrees.
+            Click any segment to hear its acoustic voicing, visualize relative minor chords, and see the scale degrees{notationMode === 'indian' ? ' and corresponding Indian Thaats' : ''}.
           </p>
-        </div>
-
-        {/* Notation Toggle */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center bg-ink-950 p-1 rounded-xl border border-ink-800 text-xs">
-            <button
-              onClick={() => {
-                setNotationMode('western');
-                if (onToggleNotation) onToggleNotation('western');
-              }}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                notationMode === 'western'
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-ink-400 hover:text-ink-200'
-              }`}
-            >
-              Western Notes (C, G, D)
-            </button>
-            <button
-              onClick={() => {
-                setNotationMode('indian');
-                if (onToggleNotation) onToggleNotation('indian');
-              }}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                notationMode === 'indian'
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-ink-400 hover:text-ink-200'
-              }`}
-            >
-              Indian Sargam (Sa, Pa, Re)
-            </button>
-          </div>
         </div>
       </div>
 
@@ -531,7 +491,8 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
               </span>
             </div>
 
-            {/* Indian Thaat & Sargam System Alignment */}
+            {/* Indian Thaat & Sargam System Alignment (Indian mode only) */}
+            {notationMode === 'indian' && (
             <div className="bg-ink-950/80 border border-ink-800 rounded-xl p-3.5 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-ink-400 font-bold flex items-center gap-1.5">
@@ -543,6 +504,7 @@ export const CircleOfFifths: React.FC<CircleOfFifthsProps> = ({
                 {activeSegment.thaatExplanation}
               </p>
             </div>
+            )}
 
             {/* Scale Notes Strip */}
             <div className="space-y-1.5">

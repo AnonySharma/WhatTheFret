@@ -101,6 +101,14 @@ export default function App() {
     setProgress(updated);
   };
 
+  const indian = progress.notesNotation === 'indian';
+
+  // Indian-only screens disappear with the toggle, so never leave the user stranded on one.
+  useEffect(() => {
+    if (!indian && activeTab === 'swaras') setActiveTab('modules');
+    if (!indian && activeLab === 'drone') setActiveLab('transposer');
+  }, [indian, activeTab, activeLab]);
+
   const handleToggleCurrentLesson = () => {
     const updated = toggleLessonCompletion(activeModuleIndex);
     setProgress(updated);
@@ -126,6 +134,10 @@ export default function App() {
   ];
 
   const stats = calculateProgressStats(progress.completedLessons, 7);
+  const visibleLabs: { lab: FutureTheoryLab; id: LabId }[] = LAB_ORDER.map((id, idx) => ({
+    id,
+    lab: SUGGESTED_THEORY_LABS[idx],
+  })).filter(l => indian || l.id !== 'drone');
   const isCurrentLessonDone = progress.completedLessons.includes(activeModuleIndex);
 
   return (
@@ -261,12 +273,12 @@ export default function App() {
 
             {/* Active Lesson View */}
             {activeModuleIndex === 0 && <ModuleEarTuning />}
-            {activeModuleIndex === 1 && <ModuleMajorScale />}
-            {activeModuleIndex === 2 && <ModuleTriadCode />}
+            {activeModuleIndex === 1 && <ModuleMajorScale indian={indian} />}
+            {activeModuleIndex === 2 && <ModuleTriadCode indian={indian} />}
             {activeModuleIndex === 3 && <ModuleDiatonicHarmony />}
             {activeModuleIndex === 4 && <ModuleFretboardMapping />}
             {activeModuleIndex === 5 && <ModuleBarreChords />}
-            {activeModuleIndex === 6 && <ModuleChordDerivation />}
+            {activeModuleIndex === 6 && <ModuleChordDerivation indian={indian} />}
 
             {/* Lesson Navigation Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-ink-800/80">
@@ -321,10 +333,7 @@ export default function App() {
         {/* TAB: CIRCLE OF FIFTHS VISUALIZER */}
         {activeTab === 'circle-of-fifths' && (
           <div className="space-y-6">
-            <CircleOfFifths
-              notesNotation={progress.notesNotation}
-              onToggleNotation={handleToggleNotation}
-            />
+            <CircleOfFifths notesNotation={progress.notesNotation} />
           </div>
         )}
 
@@ -353,12 +362,9 @@ export default function App() {
         )}
 
         {/* TAB 6: INDIAN RAAGAS & SWARAS EXPLORER */}
-        {activeTab === 'swaras' && (
+        {activeTab === 'swaras' && indian && (
           <div className="space-y-6">
-            <IndianSwarasExplorer
-              notesNotation={progress.notesNotation}
-              onToggleNotation={handleToggleNotation}
-            />
+            <IndianSwarasExplorer />
           </div>
         )}
 
@@ -386,11 +392,13 @@ export default function App() {
               <h3 className="text-sm font-extrabold text-ink-100 flex items-center gap-2">
                 <span>Advanced Theory Labs</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold">
-                  4 LABS
+                  {visibleLabs.length} LABS
                 </span>
               </h3>
               <p className="text-xs text-ink-400 mt-0.5">
-                Key transposer, CAGED system, tanpura and tabla jam pad, and interval ear training.
+                {indian
+                  ? 'Key transposer, CAGED system, tanpura and tabla jam pad, and interval ear training.'
+                  : 'Key transposer, CAGED system and interval ear training.'}
               </p>
             </div>
           </div>
@@ -411,7 +419,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-ink-300">WhatTheFret</span>
             <span>•</span>
-            <span>Western Physics & Indian Sargam Mechanics</span>
+            <span>{indian ? 'Western Physics & Indian Sargam Mechanics' : 'The math of the fretboard'}</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs">
@@ -421,12 +429,14 @@ export default function App() {
             >
               Chord Library
             </button>
-            <button
-              onClick={() => setActiveTab('swaras')}
-              className="text-ink-400 hover:text-brand-400 transition-colors"
-            >
-              Indian Raagas & Swaras
-            </button>
+            {indian && (
+              <button
+                onClick={() => setActiveTab('swaras')}
+                className="text-ink-400 hover:text-brand-400 transition-colors"
+              >
+                Indian Raagas & Swaras
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('journey')}
               className="text-ink-400 hover:text-brand-400 transition-colors font-bold text-brand-400/90"
@@ -468,9 +478,9 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {SUGGESTED_THEORY_LABS.map((lab: FutureTheoryLab, idx: number) => (
+              {visibleLabs.map(({ lab, id }) => (
                 <div
-                  key={idx}
+                  key={id}
                   className="p-4 rounded-2xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3 hover:border-brand-500/40 transition-colors"
                 >
                   <div>
@@ -498,7 +508,7 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => openLab(LAB_ORDER[idx])}
+                    onClick={() => openLab(id)}
                     className="w-full h-9 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors"
                   >
                     Open this lab

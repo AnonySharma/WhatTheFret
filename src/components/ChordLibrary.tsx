@@ -127,21 +127,36 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
     });
   };
 
-  // Finger badge colors
+  // One colour per finger, shared by the dots on the neck and the guide below
   const getFingerBadge = (fingerNum?: number) => {
     switch (fingerNum) {
       case 1:
-        return { label: '1', name: 'Index', bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-400' };
+        return { label: '1', name: 'Index', bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-300' };
       case 2:
-        return { label: '2', name: 'Middle', bg: 'bg-gold-500', text: 'text-white', border: 'border-gold-400' };
+        return { label: '2', name: 'Middle', bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-300' };
       case 3:
-        return { label: '3', name: 'Ring', bg: 'bg-brand-500', text: 'text-ink-950', border: 'border-brand-400' };
+        return { label: '3', name: 'Ring', bg: 'bg-brand-400', text: 'text-ink-950', border: 'border-brand-200' };
       case 4:
-        return { label: '4', name: 'Pinky', bg: 'bg-red-500', text: 'text-white', border: 'border-red-400' };
+        return { label: '4', name: 'Pinky', bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-300' };
       default:
         return null;
     }
   };
+
+  // Which finger goes where, for the guide (fretted strings only; a barre finger lists its fret once)
+  const fingerPlan = useMemo(() => {
+    return [1, 2, 3, 4].map(f => {
+      const spots: string[] = [];
+      selectedChord.fingers.forEach((fg, idx) => {
+        if (fg !== f || selectedChord.frets[idx] <= 0) return;
+        const strDef = GUITAR_STRINGS.find(st => st.stringNumber === 6 - idx)!;
+        spots.push(`${strDef.name} string`);
+      });
+      const frets = [...new Set(selectedChord.fingers.map((fg, idx) => (fg === f ? selectedChord.frets[idx] : 0)).filter(x => x > 0))];
+      const isBarre = f === 1 && !!selectedChord.barreFret && spots.length > 1;
+      return { finger: f, frets, spots, isBarre };
+    });
+  }, [selectedChord]);
 
   const categories = [
     { id: 'All', label: 'All Chords' },
@@ -171,7 +186,7 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-ink-300 mt-1 max-w-2xl">
-              Explore 40+ precision chord voicings with <strong className="text-brand-300">exact finger positioning (1-4)</strong>, open/muted string acoustics, and Indian Sargam harmonic mapping.
+              Explore {CHORD_DATABASE.length} chord voicings, every root, with <strong className="text-brand-300">exact finger positioning (1-4)</strong>, open/muted string acoustics{notesNotation === 'indian' ? ', and Indian Sargam harmonic mapping' : ''}.
             </p>
           </div>
 
@@ -472,13 +487,11 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
                             />
                             {isFrettedHere && (
                               <div
-                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex flex-col items-center justify-center shadow-lg z-30 border ${
-                                  isRoot
-                                    ? 'bg-gradient-to-br from-brand-500 to-brand-700 text-ink-950 border-brand-300 ring-2 ring-brand-400/50'
-                                    : fingerBadge
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex flex-col items-center justify-center shadow-lg z-30 border-2 ${
+                                  fingerBadge
                                     ? `${fingerBadge.bg} ${fingerBadge.text} ${fingerBadge.border}`
                                     : 'bg-ink-100 text-ink-950 border-ink-300'
-                                }`}
+                                } ${isRoot ? 'ring-2 ring-offset-2 ring-offset-[#141211] ring-white' : ''}`}
                               >
                                 <span className="text-[10px] sm:text-[11px] font-black leading-none">{noteData.note}</span>
                                 {finger > 0 && (
@@ -505,48 +518,53 @@ export const ChordLibrary: React.FC<ChordLibraryProps> = ({ notesNotation = 'wes
 
           {/* Finger Number Legend & Acoustic Reason breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Left Hand Finger Guide */}
-            <div className="bg-ink-950/70 border border-ink-800/80 rounded-xl p-3.5 space-y-2">
+            {/* Left Hand Finger Guide: only this chord's fingers, colour-matched to the dots */}
+            <div className="bg-ink-950/70 border border-ink-800/80 rounded-xl p-3.5 space-y-2.5">
               <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-                Left-Hand Finger Guide
+                Left-Hand Fingers
               </span>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="p-2 rounded-lg bg-violet-950/50 border border-violet-800/50">
-                  <span className="text-xs font-black text-violet-300 block">1</span>
-                  <span className="text-[10px] text-ink-300">Index</span>
-                </div>
-                <div className="p-2 rounded-lg bg-gold-950/50 border border-gold-800/50">
-                  <span className="text-xs font-black text-gold-300 block">2</span>
-                  <span className="text-[10px] text-ink-300">Middle</span>
-                </div>
-                <div className="p-2 rounded-lg bg-brand-950/50 border border-brand-800/50">
-                  <span className="text-xs font-black text-brand-300 block">3</span>
-                  <span className="text-[10px] text-ink-300">Ring</span>
-                </div>
-                <div className="p-2 rounded-lg bg-red-950/50 border border-red-800/50">
-                  <span className="text-xs font-black text-red-300 block">4</span>
-                  <span className="text-[10px] text-ink-300">Pinky</span>
-                </div>
-              </div>
+              <ul className="space-y-1.5">
+                {fingerPlan.map(({ finger, frets, spots, isBarre }) => {
+                  const badge = getFingerBadge(finger)!;
+                  const used = spots.length > 0;
+                  return (
+                    <li key={finger} className={`flex items-center gap-2.5 text-xs ${used ? '' : 'opacity-35'}`}>
+                      <span className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center font-black text-[11px] border-2 ${badge.bg} ${badge.text} ${badge.border}`}>
+                        {finger}
+                      </span>
+                      <span className="w-14 shrink-0 font-bold text-ink-200">{badge.name}</span>
+                      <span className="text-ink-400 truncate">
+                        {!used
+                          ? 'not needed'
+                          : isBarre
+                          ? `barre fret ${frets[0]}, all strings`
+                          : `fret ${frets.join('/')} · ${spots.join(', ')}`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="text-[10px] text-ink-500">White ring = the root note of the chord.</p>
             </div>
 
-            {/* Indian Sargam & Harmonic Breakdown */}
+            {/* Chord tones (with Sargam when Indian mode is on) */}
             <div className="bg-ink-950/70 border border-ink-800/80 rounded-xl p-3.5 space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-ink-400 flex items-center gap-1.5">
                 <Music className="w-3.5 h-3.5 text-brand-400" />
-                Indian Sargam Harmonization
+                {notesNotation === 'indian' ? 'Indian Sargam Harmonization' : 'Chord Tones'}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {selectedChord.triadNotes.map((note, idx) => {
                   const swara = getSwaraForNote(note, selectedChord.root);
+                  const indian = notesNotation === 'indian';
                   return (
                     <div
                       key={idx}
                       className="px-2.5 py-1 rounded-lg bg-ink-900 border border-ink-800 flex items-center gap-1.5 text-xs"
                     >
-                      <span className="font-extrabold text-brand-300">{swara.shortName}</span>
-                      <span className="text-ink-400">({note})</span>
+                      <span className="font-extrabold text-brand-300">{indian ? swara.shortName : note}</span>
+                      {indian && <span className="text-ink-400">({note})</span>}
                       <span className="text-[10px] text-ink-500 font-mono">[{swara.westernInterval}]</span>
                     </div>
                   );

@@ -81,6 +81,9 @@ export function parseChordSymbol(input: string): ParsedChordSymbol | null {
   return { root, types };
 }
 
+/** Highest fret used: open-position chords (0-4) sort ahead of movable shapes up the neck. */
+const position = (c: ChordVoicing) => Math.max(0, ...c.frets);
+
 const CATEGORY_RANK: Record<string, number> = { open: 0, 'barre-e': 1, 'barre-a': 1, triad: 2, jazz: 3 };
 
 /**
@@ -103,7 +106,9 @@ export function searchChords(chords: ChordVoicing[], query: string): ChordVoicin
         parsed.types.length > 0 ? 0 : c.type === 'Major' ? 0 : c.type === 'Minor' ? 1 : 2;
       return [...matches].sort(
         (a, b) =>
-          typeRank(a) - typeRank(b) || (CATEGORY_RANK[a.category] ?? 9) - (CATEGORY_RANK[b.category] ?? 9)
+          typeRank(a) - typeRank(b) ||
+          position(a) - position(b) ||
+          (CATEGORY_RANK[a.category] ?? 9) - (CATEGORY_RANK[b.category] ?? 9)
       );
     }
   }

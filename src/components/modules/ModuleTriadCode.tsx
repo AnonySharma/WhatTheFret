@@ -3,7 +3,7 @@ import { Volume2, Play, RefreshCw, Sparkles, Heart } from 'lucide-react';
 import { deriveTriad, NoteName, NOTE_NAMES, shiftSemitones } from '../../utils/guitarTheory';
 import { guitarAudio } from '../../utils/audioSynth';
 
-export const ModuleTriadCode: React.FC = () => {
+export const ModuleTriadCode: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
   const [selectedRoot, setSelectedRoot] = useState<NoteName>('C');
   const [triadType, setTriadType] = useState<'Major' | 'Minor' | 'Diminished' | 'Augmented'>('Major');
   const [activeHighlight, setActiveHighlight] = useState<'root' | 'third' | 'fifth' | 'all' | null>(null);
@@ -200,7 +200,7 @@ export const ModuleTriadCode: React.FC = () => {
                 </button>
                 <span className="text-xs font-bold text-ink-300 mt-2">3rd</span>
                 <span className="text-[11px] font-mono font-bold text-gold-400">
-                  {triadType === 'Major' ? 'Shuddha Ga (ग)' : 'Komal ga (ग॒)'}
+                  {indian ? (triadType === 'Major' ? 'Shuddha Ga (ग)' : 'Komal ga (ग॒)') : triadType === 'Major' ? 'Major 3rd' : 'Minor 3rd'}
                 </span>
                 <span className="text-[10px] text-ink-500">{triadType === 'Major' ? 'Pure' : '"Less" (-1 Fret)'}</span>
               </div>
@@ -219,14 +219,15 @@ export const ModuleTriadCode: React.FC = () => {
                   <span className="text-[9px] font-mono opacity-80">5th</span>
                 </button>
                 <span className="text-xs font-bold text-ink-300 mt-2">5th</span>
-                <span className="text-[11px] font-mono font-bold text-violet-400">Pa (प)</span>
-                <span className="text-[10px] text-ink-500">Achala (Walls)</span>
+                <span className="text-[11px] font-mono font-bold text-violet-400">{indian ? 'Pa (प)' : 'Perfect 5th'}</span>
+                <span className="text-[10px] text-ink-500">{indian ? 'Achala (Walls)' : 'Never changes'}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Indian Swara Lesson Callout */}
+        {indian && (
         <div className="bg-ink-950/70 border border-ink-800 rounded-xl p-4 text-xs space-y-1.5">
           <div className="flex items-center gap-2 text-brand-300 font-bold">
             <span>🪕 Indian Swara Insight: Why Sa & Pa Never Move</span>
@@ -235,6 +236,7 @@ export const ModuleTriadCode: React.FC = () => {
             In Indian classical music, <strong className="text-brand-300">Sa</strong> and <strong className="text-violet-300">Pa</strong> are called <strong className="text-ink-100">Achala Swaras (immovable notes)</strong>—they never have a sharp or flat variant. The entire emotional shift between Major and Minor chords rests purely on whether <strong className="text-gold-300">Ga</strong> is natural (<span className="text-ink-100">Shuddha Ga</span>, +4 frets) or "less" (<span className="text-ink-100">Komal ga</span>, +3 frets)!
           </p>
         </div>
+        )}
 
         {/* Action Button & Explainer */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-ink-950/80 border border-ink-800 rounded-xl p-4">

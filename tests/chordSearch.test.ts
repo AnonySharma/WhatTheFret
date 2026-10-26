@@ -16,10 +16,13 @@ test('"a minor", "Amin" and "A-" are equivalent to "Am"', () => {
 });
 
 test('Am7 / G7 / Dsus4 resolve to their own types', () => {
-  assert.deepEqual(ids('Am7'), ['am7-open']);
-  assert.ok(ids('G7').every(id => id.startsWith('g7')));
+  assert.equal(ids('Am7')[0], 'am7-open');
+  assert.ok(searchChords(CHORD_DATABASE, 'Am7').every(c => c.root === 'A' && c.type === 'm7'));
+  assert.ok(searchChords(CHORD_DATABASE, 'G7').every(c => c.root === 'G' && c.type.includes('7')));
   assert.ok(ids('G7').length >= 2);
-  assert.deepEqual(ids('Dsus4'), ['dsus4-open']);
+  assert.equal(ids('G7')[0], 'g7-open');
+  assert.equal(ids('Dsus4')[0], 'dsus4-open');
+  assert.ok(searchChords(CHORD_DATABASE, 'Dsus4').every(c => c.root === 'D' && c.type === 'Sus4'));
 });
 
 test('bare root lists that root only, Major before Minor', () => {
@@ -37,7 +40,8 @@ test('flats and sharps are enharmonic aware', () => {
 });
 
 test('free text still works and unknown text returns nothing', () => {
-  assert.ok(ids('power').length === 0 || ids('power').every(id => id.includes('power')));
+  const power = searchChords(CHORD_DATABASE, 'power');
+  assert.ok(power.length > 0 && power.every(c => c.type === '5'));
   assert.ok(ids('barre').length > 0);
   assert.deepEqual(ids('zzz'), []);
 });
@@ -45,4 +49,24 @@ test('free text still works and unknown text returns nothing', () => {
 test('chord ids are unique', () => {
   const all = CHORD_DATABASE.map(c => c.id);
   assert.equal(new Set(all).size, all.length);
+});
+
+test('every root has major and minor chords (B major, Bb, F# ...)', () => {
+  for (const q of ['B', 'Bb', 'C#', 'Eb', 'F#', 'Ab']) {
+    const list = searchChords(CHORD_DATABASE, q);
+    assert.ok(list.some(c => c.type === 'Major'), `${q} major`);
+    assert.ok(list.some(c => c.type === 'Minor'), `${q} minor`);
+  }
+  assert.ok(searchChords(CHORD_DATABASE, 'B7').length >= 2);
+  assert.ok(searchChords(CHORD_DATABASE, 'F#m').length >= 2);
+});
+
+test('generated chords are playable and consistent', () => {
+  for (const c of CHORD_DATABASE) {
+    assert.equal(c.frets.length, 6, c.id);
+    assert.equal(c.fingers.length, 6, c.id);
+    assert.ok(c.frets.every(f => f >= -1 && f <= 15), c.id);
+    const fretted = c.frets.filter(f => f > 0);
+    if (fretted.length) assert.ok(Math.max(...fretted) - Math.min(...fretted) <= 4, `${c.id} spans too many frets`);
+  }
 });

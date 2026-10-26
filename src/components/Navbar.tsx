@@ -30,14 +30,14 @@ interface NavbarProps {
   onToggleNotation: (mode: 'western' | 'indian') => void;
 }
 
-const TABS: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
+const TABS: { id: ActiveTab; label: string; icon: React.ElementType; indianOnly?: boolean }[] = [
   { id: 'modules', label: 'Lessons', icon: BookOpen },
   { id: 'chord-library', label: 'Chord Library', icon: Layers },
   { id: 'fretboard', label: 'Fretboard', icon: Sliders },
   { id: 'circle-of-fifths', label: 'Circle of 5ths', icon: Compass },
   { id: 'tuner', label: 'Tuner', icon: Mic },
   { id: 'labs', label: 'Theory Labs', icon: FlaskConical },
-  { id: 'swaras', label: 'Raagas & Swaras', icon: Globe },
+  { id: 'swaras', label: 'Raagas & Swaras', icon: Globe, indianOnly: true },
   { id: 'journey', label: 'Journey', icon: Sparkles },
   { id: 'pdf', label: 'PDF Notes', icon: Music },
 ];
@@ -54,6 +54,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   notesNotation,
   onToggleNotation,
 }) => {
+  const indian = notesNotation === 'indian';
+  const tabs = TABS.filter(t => indian || !t.indianOnly);
   return (
     <header className="bg-ink-950/85 backdrop-blur-xl border-b border-ink-800/80 text-ink-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -88,13 +90,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
 
             <button
-              onClick={() => onToggleNotation(notesNotation === 'western' ? 'indian' : 'western')}
-              className="flex items-center gap-1.5 px-2.5 h-9 rounded-xl bg-ink-900 border border-ink-800 hover:border-brand-500/40 text-xs font-semibold text-ink-200 transition-all"
-              title="Toggle between Western (C D E) and Indian Sargam (Sa Re Ga Ma)"
+              type="button"
+              role="switch"
+              aria-checked={indian}
+              aria-label="Indian music mode"
+              onClick={() => onToggleNotation(indian ? 'western' : 'indian')}
+              className={`flex items-center gap-2 px-2.5 h-9 rounded-xl border text-xs font-bold transition-all ${
+                indian
+                  ? 'bg-brand-950/60 border-brand-500/50 text-brand-300'
+                  : 'bg-ink-900 border-ink-800 text-ink-300 hover:border-brand-500/40'
+              }`}
+              title="Indian music mode: shows Sargam (Sa Re Ga), Raagas, the Tanpura lab and other Indian classical content"
             >
-              <span className="text-[10px] text-brand-400 font-bold uppercase hidden lg:inline">Notation:</span>
-              <span className="font-extrabold text-brand-300 text-[11px]">
-                {notesNotation === 'western' ? 'ABC' : 'Sa Re'}
+              <span className="text-[11px]">{indian ? 'Sa Re' : 'Indian'}</span>
+              <span className={`relative w-7 h-4 rounded-full transition-colors ${indian ? 'bg-brand-500' : 'bg-ink-700'}`}>
+                <span
+                  className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
+                    indian ? 'translate-x-3' : ''
+                  }`}
+                />
               </span>
             </button>
 
@@ -128,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           aria-label="Main Navigation"
           className="flex items-center gap-1 overflow-x-auto scrollbar-none pb-2 -mx-3 px-3 sm:mx-0 sm:px-0"
         >
-          {TABS.map(({ id, label, icon: Icon }) => {
+          {tabs.map(({ id, label, icon: Icon }) => {
             const active = activeTab === id;
             return (
               <button

@@ -25,7 +25,7 @@ import {
 import { guitarAudio } from '../../utils/audioSynth';
 import confetti from 'canvas-confetti';
 
-export const ModuleChordDerivation: React.FC = () => {
+export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
   const [activeTab, setActiveTab] = useState<'wizard' | 'quiz'>('wizard');
   const [targetChordRoot, setTargetChordRoot] = useState<NoteName>('G');
   const [targetFlavor, setTargetFlavor] = useState<'Major' | 'Minor'>('Minor');
@@ -323,7 +323,7 @@ export const ModuleChordDerivation: React.FC = () => {
                   <div>
                     <span className="text-[10px] uppercase font-bold text-ink-400 block">Root Foundation</span>
                     <span className="text-2xl font-black text-brand-400">{targetChordRoot}</span>
-                    <span className="text-xs text-ink-400 block mt-0.5">Acts as the tonic center / Sa</span>
+                    <span className="text-xs text-ink-400 block mt-0.5">Acts as the tonic center{indian ? ' / Sa' : ''}</span>
                   </div>
                   <button
                     onClick={() => guitarAudio.pluck(getFretNote(6, anchorFret).frequency, 2.0, 0.9)}
@@ -452,7 +452,7 @@ export const ModuleChordDerivation: React.FC = () => {
                 {/* Note 1: Root */}
                 <div className="p-4 rounded-xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-brand-400">1. Root (Sa)</span>
+                    <span className="text-xs font-mono font-bold text-brand-400">1. Root{indian ? ' (Sa)' : ''}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-ink-900 text-ink-400 font-mono">0 st</span>
                   </div>
                   <div className="text-center py-2">
@@ -472,7 +472,7 @@ export const ModuleChordDerivation: React.FC = () => {
                 <div className="p-4 rounded-xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-gold-400">
-                      2. {targetFlavor === 'Minor' ? 'Minor 3rd (komal ga)' : 'Major 3rd (Ga)'}
+                      2. {targetFlavor === 'Minor' ? 'Minor 3rd' : 'Major 3rd'}{indian ? (targetFlavor === 'Minor' ? ' (komal ga)' : ' (Ga)') : ''}
                     </span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-ink-900 text-ink-400 font-mono">
                       +{triad.firstJump} st
@@ -497,7 +497,7 @@ export const ModuleChordDerivation: React.FC = () => {
                 {/* Note 3: Fifth */}
                 <div className="p-4 rounded-xl bg-ink-950 border border-ink-800 flex flex-col justify-between space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-violet-400">3. Perfect 5th (Pa)</span>
+                    <span className="text-xs font-mono font-bold text-violet-400">3. Perfect 5th{indian ? ' (Pa)' : ''}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-ink-900 text-ink-400 font-mono">+7 st</span>
                   </div>
                   <div className="text-center py-2">

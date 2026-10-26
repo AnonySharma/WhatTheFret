@@ -7,10 +7,10 @@ import { EarTrainerLab } from './EarTrainerLab';
 
 export type LabId = 'transposer' | 'caged' | 'drone' | 'ear';
 
-export const LAB_TABS: { id: LabId; label: string; icon: React.ElementType }[] = [
+export const LAB_TABS: { id: LabId; label: string; icon: React.ElementType; indianOnly?: boolean }[] = [
   { id: 'transposer', label: 'Transposer', icon: Compass },
   { id: 'caged', label: 'CAGED', icon: Puzzle },
-  { id: 'drone', label: 'Tanpura & Jam', icon: Radio },
+  { id: 'drone', label: 'Tanpura & Jam', icon: Radio, indianOnly: true },
   { id: 'ear', label: 'Ear Trainer', icon: Target },
 ];
 
@@ -23,7 +23,7 @@ interface LabsHubProps {
 export const LabsHub: React.FC<LabsHubProps> = ({ lab, onLabChange, notation }) => (
   <div className="space-y-4">
     <div className="flex gap-1 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-ink-900 border border-ink-800" role="tablist">
-      {LAB_TABS.map(({ id, label, icon: Icon }) => (
+      {LAB_TABS.filter(t => notation === 'indian' || !t.indianOnly).map(({ id, label, icon: Icon }) => (
         <button
           key={id}
           role="tab"
@@ -40,7 +40,7 @@ export const LabsHub: React.FC<LabsHubProps> = ({ lab, onLabChange, notation }) 
     </div>
     {lab === 'transposer' && <TransposerLab />}
     {lab === 'caged' && <CagedLab />}
-    {lab === 'drone' && <DroneLab notation={notation} />}
-    {lab === 'ear' && <EarTrainerLab />}
+    {lab === 'drone' && notation === 'indian' && <DroneLab notation={notation} />}
+    {lab === 'ear' && <EarTrainerLab notation={notation} />}
   </div>
 );

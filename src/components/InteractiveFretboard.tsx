@@ -39,9 +39,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
 
   // Sync when notation changes from parent
   React.useEffect(() => {
-    if (notesNotation === 'indian') {
-      setDisplayMode('sargam');
-    }
+    setDisplayMode(mode => (notesNotation === 'indian' ? 'sargam' : mode === 'sargam' ? 'notes' : mode));
   }, [notesNotation]);
 
   // Sync when customFrets is updated by parent
@@ -260,6 +258,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             >
               Triad Roles
             </button>
+            {notesNotation === 'indian' && (
             <button
               onClick={() => setDisplayMode('sargam')}
               className={`px-2 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
@@ -269,6 +268,7 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
             >
               <span>Sargam</span>
             </button>
+            )}
           </div>
         </div>
       </div>
@@ -443,15 +443,15 @@ export const InteractiveFretboard: React.FC<InteractiveFretboardProps> = ({
               <span className="text-ink-400">• Triad Notes:</span>
               <div className="flex items-center gap-1 font-mono font-bold">
                 <span className="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                  {activeChord.triadNotes[0]} ({getSwaraForNote(activeChord.triadNotes[0], activeChord.root).shortName} - Root)
+                  {activeChord.triadNotes[0]} ({notesNotation === 'indian' ? `${getSwaraForNote(activeChord.triadNotes[0], activeChord.root).shortName} - ` : ''}Root)
                 </span>
                 <span>+</span>
                 <span className="px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-300 border border-gold-500/30">
-                  {activeChord.triadNotes[1]} ({getSwaraForNote(activeChord.triadNotes[1], activeChord.root).shortName} - 3rd)
+                  {activeChord.triadNotes[1]} ({notesNotation === 'indian' ? `${getSwaraForNote(activeChord.triadNotes[1], activeChord.root).shortName} - ` : ''}3rd)
                 </span>
                 <span>+</span>
                 <span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                  {activeChord.triadNotes[2]} ({getSwaraForNote(activeChord.triadNotes[2], activeChord.root).shortName} - 5th)
+                  {activeChord.triadNotes[2]} ({notesNotation === 'indian' ? `${getSwaraForNote(activeChord.triadNotes[2], activeChord.root).shortName} - ` : ''}5th)
                 </span>
               </div>
             </div>

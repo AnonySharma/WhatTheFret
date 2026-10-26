@@ -31,15 +31,11 @@ import { guitarAudio } from '../utils/audioSynth';
 interface IndianSwarasExplorerProps {
   rootSa?: NoteName;
   onSetRootSa?: (root: NoteName) => void;
-  notesNotation: 'western' | 'indian';
-  onToggleNotation: (mode: 'western' | 'indian') => void;
 }
 
 export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
   rootSa = 'C',
   onSetRootSa,
-  notesNotation,
-  onToggleNotation,
 }) => {
   const [activeTab, setActiveTab] = useState<'raagas' | 'swaras' | 'thaats'>('raagas');
   const [selectedRaagaId, setSelectedRaagaId] = useState<string>('raag-yaman');
@@ -148,17 +144,6 @@ export const IndianSwarasExplorer: React.FC<IndianSwarasExplorerProps> = ({
             >
               <Headphones className="w-3.5 h-3.5 text-brand-300" />
               <span>{isDronePlaying ? 'Tanpura Drone Active' : 'Start Sa-Pa Drone'}</span>
-            </button>
-
-            {/* Notation Toggle */}
-            <button
-              onClick={() => onToggleNotation(notesNotation === 'western' ? 'indian' : 'western')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink-950 border border-ink-800 text-xs font-bold text-ink-200 hover:border-ink-700"
-            >
-              <span className="text-[10px] text-brand-400 font-bold uppercase">Notation:</span>
-              <span className="font-extrabold text-brand-300">
-                {notesNotation === 'western' ? 'Western (C D E)' : 'Sargam (Sa Re Ga)'}
-              </span>
             </button>
           </div>
         </div>
