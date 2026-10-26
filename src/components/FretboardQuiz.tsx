@@ -11,7 +11,7 @@ import {
   Flame,
   Settings,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { celebrate } from '../utils/celebrate';
 import {
   GUITAR_STRINGS,
   getFretNote,
@@ -177,7 +177,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
     setLastFeedback(null);
     setGameState('ended');
 
-    confetti({
+    celebrate({
       particleCount: 70,
       spread: 80,
       origin: { y: 0.6 },
@@ -227,7 +227,7 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
 
       // Quick mini confetti on streak milestones
       if (nextStreak === 5 || nextStreak === 10 || nextStreak === 15) {
-        confetti({
+        celebrate({
           particleCount: 25,
           spread: 45,
           origin: { y: 0.7 },
@@ -584,7 +584,6 @@ export const FretboardQuiz: React.FC<FretboardQuizProps> = ({
 
                       {/* Fret Slots */}
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(fret => {
-                        const noteData = getFretNote(str.stringNumber, fret);
                         const isHitFeedback =
                           lastFeedback &&
                           lastFeedback.stringNumber === str.stringNumber &&

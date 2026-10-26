@@ -385,14 +385,6 @@ export function getSwaraForNote(note: string, rootSa: string = 'C'): IndianSwara
   return INDIAN_SWARAS[distance];
 }
 
-export function formatNoteDisplay(note: string, rootSa: string = 'C', notationMode: 'western' | 'indian'): string {
-  if (notationMode === 'indian') {
-    const swara = getSwaraForNote(note, rootSa);
-    return `${swara.shortName} (${note})`;
-  }
-  return note;
-}
-
 // ==========================================
 // 7. Interactive Fretboard Quiz Engine
 // ==========================================

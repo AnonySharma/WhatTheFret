@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, RotateCcw, Trophy, Check } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { celebrate } from '../utils/celebrate';
 import { loadUserProgress, toggleLessonCompletion, resetLessonProgress, calculateProgressStats } from '../utils/progressStore';
 
 interface GuidedJourneyProps {
@@ -85,7 +85,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
     setCompletedStages(updated.completedLessons);
 
     if (updated.completedLessons.includes(idx)) {
-      confetti({
+      celebrate({
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
@@ -127,7 +127,7 @@ export const GuidedJourney: React.FC<GuidedJourneyProps> = ({ onSelectLesson }) 
             </h2>
 
             <p className="text-xs sm:text-sm text-ink-300 max-w-xl leading-relaxed">
-              Every lesson you complete is automatically recorded in your browser’s localStorage. Follow the 7 theoretical milestones to unlock your Certified Maestro status!
+              Every lesson you complete is automatically recorded in your browser’s localStorage. Follow the {stages.length} theoretical milestones to unlock your Certified Maestro status!
             </p>
 
             <div className="pt-1 flex items-center gap-2 text-xs">

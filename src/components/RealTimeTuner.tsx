@@ -4,7 +4,7 @@ import { pitchDetector, PitchDetectionResult, noteFrequency, micErrorMessage } f
 import { GUITAR_STRINGS, NoteName } from '../utils/guitarTheory';
 import { guitarAudio } from '../utils/audioSynth';
 import { MetronomeOverlay } from './MetronomeOverlay';
-import confetti from 'canvas-confetti';
+import { celebrate } from '../utils/celebrate';
 
 interface RealTimeTunerProps {
   isMicActive: boolean;
@@ -57,7 +57,7 @@ export const RealTimeTuner: React.FC<RealTimeTunerProps> = ({ isMicActive, onTog
     if (pitchData && pitchData.note === challengeTargetNote && pitchData.inTune && !challengeSuccess) {
       setChallengeSuccess(true);
       setChallengeStreak(prev => prev + 1);
-      confetti({
+      celebrate({
         particleCount: 40,
         spread: 60,
         origin: { y: 0.7 },

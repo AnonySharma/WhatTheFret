@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Play, Square, Waves } from 'lucide-react';
 import { guitarAudio } from '../../utils/audioSynth';
-import { beatEnvelope, beatFrequency, centsBetween, describeBeat, detunedFrequency } from '../../utils/beats';
+import { beatEnvelope, centsBetween, describeBeat, detunedFrequency } from '../../utils/beats';
 
 interface BeatNoteDemoProps {
   /** Pitch of the open string you are tuning towards (Hz). */

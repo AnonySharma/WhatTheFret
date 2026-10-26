@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, ExternalLink, ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
+import { FileText, ExternalLink, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface PDFCompanionViewProps {
   onSelectModule: (moduleIndex: number) => void;
@@ -79,7 +79,7 @@ export const PDFCompanionView: React.FC<PDFCompanionViewProps> = ({ onSelectModu
         </div>
 
         <a
-          href={`assets/docs/Intuitive_Guitar_Theory.pdf`}
+          href={`${import.meta.env.BASE_URL}assets/docs/Intuitive_Guitar_Theory.pdf`}
           target="_blank"
           rel="noopener noreferrer"
           className="px-4 py-2 rounded-xl bg-ink-800 hover:bg-ink-700 text-ink-200 border border-ink-700 font-semibold text-xs flex items-center gap-2 shadow-sm transition-colors"

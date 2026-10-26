@@ -3,25 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { Navbar, isActiveTab, type ActiveTab } from './components/Navbar';
-import { ChordLibrary } from './components/ChordLibrary';
-import { InteractiveFretboard } from './components/InteractiveFretboard';
-import { RealTimeTuner } from './components/RealTimeTuner';
-import { GuidedJourney } from './components/GuidedJourney';
-import { PDFCompanionView } from './components/PDFCompanionView';
-import { IndianSwarasExplorer } from './components/IndianSwarasExplorer';
-import { CircleOfFifths } from './components/CircleOfFifths';
-import { LabsHub, DEFAULT_LAB, isLabId, visibleLabs, type LabId } from './components/labs/LabsHub';
-
-// 7 Interactive Modules from PDF
-import { ModuleEarTuning } from './components/modules/ModuleEarTuning';
-import { ModuleMajorScale } from './components/modules/ModuleMajorScale';
-import { ModuleTriadCode } from './components/modules/ModuleTriadCode';
-import { ModuleDiatonicHarmony } from './components/modules/ModuleDiatonicHarmony';
-import { ModuleFretboardMapping } from './components/modules/ModuleFretboardMapping';
-import { ModuleBarreChords } from './components/modules/ModuleBarreChords';
-import { ModuleChordDerivation } from './components/modules/ModuleChordDerivation';
+import { PanelFallback } from './components/PanelFallback';
+import { DEFAULT_LAB, isLabId, visibleLabs } from './components/labs/labRoutes';
+import type { LabId } from './constants';
 
 import { guitarAudio } from './utils/audioSynth';
 import { pitchDetector, type PitchListener } from './utils/pitchDetector';
@@ -32,9 +18,47 @@ import {
   calculateProgressStats,
   UserProgressState,
 } from './utils/progressStore';
-import { SUGGESTED_THEORY_LABS, type TheoryLabInfo } from './constants';
+import { type TheoryLabInfo } from './constants';
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Lightbulb, X } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { celebrate } from './utils/celebrate';
+import { ModuleEarTuning } from './components/modules/ModuleEarTuning';
+
+// The first lesson is the default screen, so it ships in the main bundle; everything else loads on demand.
+
+const ChordLibrary = lazy(() => import('./components/ChordLibrary').then(m => ({ default: m.ChordLibrary })));
+const InteractiveFretboard = lazy(() =>
+  import('./components/InteractiveFretboard').then(m => ({ default: m.InteractiveFretboard })),
+);
+const RealTimeTuner = lazy(() => import('./components/RealTimeTuner').then(m => ({ default: m.RealTimeTuner })));
+const GuidedJourney = lazy(() => import('./components/GuidedJourney').then(m => ({ default: m.GuidedJourney })));
+const PDFCompanionView = lazy(() =>
+  import('./components/PDFCompanionView').then(m => ({ default: m.PDFCompanionView })),
+);
+const IndianSwarasExplorer = lazy(() =>
+  import('./components/IndianSwarasExplorer').then(m => ({ default: m.IndianSwarasExplorer })),
+);
+const CircleOfFifths = lazy(() => import('./components/CircleOfFifths').then(m => ({ default: m.CircleOfFifths })));
+const LabsHub = lazy(() => import('./components/labs/LabsHub').then(m => ({ default: m.LabsHub })));
+
+// 7 Interactive Modules from PDF
+const ModuleMajorScale = lazy(() =>
+  import('./components/modules/ModuleMajorScale').then(m => ({ default: m.ModuleMajorScale })),
+);
+const ModuleTriadCode = lazy(() =>
+  import('./components/modules/ModuleTriadCode').then(m => ({ default: m.ModuleTriadCode })),
+);
+const ModuleDiatonicHarmony = lazy(() =>
+  import('./components/modules/ModuleDiatonicHarmony').then(m => ({ default: m.ModuleDiatonicHarmony })),
+);
+const ModuleFretboardMapping = lazy(() =>
+  import('./components/modules/ModuleFretboardMapping').then(m => ({ default: m.ModuleFretboardMapping })),
+);
+const ModuleBarreChords = lazy(() =>
+  import('./components/modules/ModuleBarreChords').then(m => ({ default: m.ModuleBarreChords })),
+);
+const ModuleChordDerivation = lazy(() =>
+  import('./components/modules/ModuleChordDerivation').then(m => ({ default: m.ModuleChordDerivation })),
+);
 
 /** The lessons, in order. The count, stepper, titles and progress totals all derive from this one list. */
 const LESSONS: { title: string; render: (indian: boolean) => ReactNode }[] = [
@@ -294,7 +318,7 @@ export default function App() {
     setProgress(updated);
 
     if (updated.completedLessons.includes(activeModuleIndex)) {
-      confetti({
+      celebrate({
         particleCount: 50,
         spread: 70,
         origin: { y: 0.65 },
@@ -335,6 +359,7 @@ export default function App() {
 
       {/* Main Workspace Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative z-10">
+        <Suspense fallback={<PanelFallback />}>
         {/* TAB 1: 7 THEORY LESSONS FROM PDF */}
         {activeTab === 'modules' && (
           <div className="space-y-6">
@@ -445,7 +470,7 @@ export default function App() {
             </div>
 
             {/* Active Lesson View */}
-            {LESSONS[activeModuleIndex].render(indian)}
+            <Suspense fallback={<PanelFallback />}>{LESSONS[activeModuleIndex].render(indian)}</Suspense>
 
             {/* Lesson Navigation Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-ink-800/80">
@@ -546,6 +571,7 @@ export default function App() {
             />
           </div>
         )}
+        </Suspense>
       </main>
 
       {/* Suggested Theory Labs Bar */}

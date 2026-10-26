@@ -15,8 +15,6 @@ import { generateMovableChords } from './utils/chordShapes';
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 export type NoteName = typeof NOTE_NAMES[number];
 
-export const POPULAR_ROOTS: NoteName[] = ['C', 'G', 'D', 'A', 'E', 'F', 'B'];
-
 export const ENHARMONIC_MAP: Record<string, NoteName> = {
   'Db': 'C#',
   'Eb': 'D#',
@@ -34,14 +32,6 @@ export const ENHARMONIC_MAP: Record<string, NoteName> = {
 // ============================================================================
 
 export const MAJOR_SCALE_STEPS = [2, 2, 1, 2, 2, 2, 1] as const;
-
-export const NATURAL_MINOR_STEPS = [2, 1, 2, 2, 1, 2, 2] as const;
-
-export const PENTATONIC_MAJOR_STEPS = [2, 2, 3, 2, 3] as const;
-
-export const PENTATONIC_MINOR_STEPS = [3, 2, 2, 3, 2] as const;
-
-export const BLUES_SCALE_STEPS = [3, 2, 1, 1, 3, 2] as const;
 
 // ============================================================================
 // SECTION 3: GUITAR ANATOMY & STANDARD TUNING
@@ -120,17 +110,6 @@ export const GUITAR_STRINGS: GuitarStringDef[] = [
     ruleExplanation: 'Highest open string, standard E4.',
   },
 ];
-
-export const STRING_GAUGES: Record<number, number> = {
-  6: 3.5, // Low E (thick wound bronze)
-  5: 2.8, // A
-  4: 2.2, // D
-  3: 1.8, // G
-  2: 1.4, // B
-  1: 1.1, // High E (thin steel)
-};
-
-export const FRET_MARKER_DOTS = [3, 5, 7, 9, 12, 15, 17, 19, 21];
 
 // ============================================================================
 // SECTION 4: COMPREHENSIVE CHORD DATABASE (FOR CHORD LIBRARY & VISUALIZER)
@@ -1236,181 +1215,6 @@ export const INDIAN_RAAGAS: IndianRaaga[] = [
     avarohana: ["Sa'", 'Dha', 'Pa', 'ga', 'Re', 'Sa'],
     description: 'Pentatonic scale with Komal ga. One of the most famous haunting raagas for acoustic guitar melodies.',
     guitarFretsC: [0, 2, 3, 7, 9, 12],
-  },
-];
-
-// ============================================================================
-// SECTION 8: DIATONIC HARMONY & POPULAR PROGRESSIONS
-// ============================================================================
-
-export const DIATONIC_NUMERALS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'] as const;
-
-export const DIATONIC_FUNCTIONS = [
-  'Tonic (Home / Root foundation)',
-  'Supertonic (Predominant tension)',
-  'Mediant (Warm transition)',
-  'Subdominant (Lifting departure)',
-  'Dominant (Powerful resolution pull)',
-  'Submediant (Relative Minor center)',
-  'Leading Tone (Unstable tension yearning to resolve up)',
-];
-
-export interface ChordProgressionDef {
-  name: string;
-  indices: number[]; // 0-based diatonic index
-  description: string;
-}
-
-export const POPULAR_PROGRESSIONS: ChordProgressionDef[] = [
-  {
-    name: 'Pop Anthem (I - V - vi - IV)',
-    indices: [0, 4, 5, 3],
-    description: 'The most popular 4-chord progression in modern music history.',
-  },
-  {
-    name: 'Classic Rock / Folk (I - IV - V - I)',
-    indices: [0, 3, 4, 0],
-    description: 'The foundation of blues, rock, and acoustic songwriting.',
-  },
-  {
-    name: 'Jazz Turnaround (ii - V - I)',
-    indices: [1, 4, 0],
-    description: 'The definitive jazz cadence bringing tension back to home tonic.',
-  },
-  {
-    name: '50s Ballad / Doo-Wop (I - vi - IV - V)',
-    indices: [0, 5, 1, 4],
-    description: 'Nostalgic, romantic vintage progression.',
-  },
-];
-
-// ============================================================================
-// SECTION 9: GUIDED JOURNEY STAGES
-// ============================================================================
-
-export interface JourneyStageDef {
-  title: string;
-  subtitle: string;
-  lessonIndex: number;
-  badge: string;
-  badgeIcon: string;
-  challengeText: string;
-}
-
-export const JOURNEY_STAGES: JourneyStageDef[] = [
-  {
-    title: "Stage 1: The 12 Tones & Tuning by Ear",
-    subtitle: "Understand semitones, Perfect 4ths, and the 4th-fret G exception.",
-    lessonIndex: 0,
-    badge: "Tuning Master",
-    badgeIcon: "🎧",
-    challengeText: "Tune Low E to Open A using the 5th fret unison rule.",
-  },
-  {
-    title: "Stage 2: Deriving the Major Scale DNA",
-    subtitle: "Whole and Half step jumps (+2, +2, +1, +2, +2, +2, +1) and Relative Minor (Root - 3 Frets).",
-    lessonIndex: 1,
-    badge: "Scale Architect",
-    badgeIcon: "🧬",
-    challengeText: "Derive C Major with zero sharps, then locate its twin A Minor.",
-  },
-  {
-    title: "Stage 3: The +4 / +3 Triad Code",
-    subtitle: "Stacking Thirds: Major (+4, +3) vs Minor (+3, +4).",
-    lessonIndex: 2,
-    badge: "Triad Decoder",
-    badgeIcon: "💎",
-    challengeText: "Construct both Major and Minor triads on root note C.",
-  },
-  {
-    title: "Stage 4: Diatonic Harmony Machine",
-    subtitle: "The 'Skip one, take one' method. Why ii is naturally minor.",
-    lessonIndex: 3,
-    badge: "Harmony Explorer",
-    badgeIcon: "🎼",
-    challengeText: "Play a classic I - IV - V - I chord progression.",
-  },
-  {
-    title: "Stage 5: Fretboard Mapping & Bass Gravity",
-    subtitle: "Mapping triad notes to 6 strings and why we mute the thickest string.",
-    lessonIndex: 4,
-    badge: "Fretboard Cartographer",
-    badgeIcon: "🗺️",
-    challengeText: "Test the Bass Gravity rule by comparing Muted Low E vs Open E.",
-  },
-  {
-    title: "Stage 6: Barre Chords & Shifting the Nut",
-    subtitle: "Sliding open E and A shapes; your index finger as the human nut.",
-    lessonIndex: 5,
-    badge: "Barre Champion",
-    badgeIcon: "⚡",
-    challengeText: "Slide the E-Major shape up 1 fret to play an F Major barre chord.",
-  },
-  {
-    title: "Stage 7: Step-by-Step Chord Derivation",
-    subtitle: "The 5-step intuitive thought process to rebuild any chord from scratch.",
-    lessonIndex: 6,
-    badge: "Guitar Maestro",
-    badgeIcon: "👑",
-    challengeText: "Derive G Minor step-by-step: Math ➔ Notes ➔ Anchor ➔ Shape.",
-  },
-];
-
-// ============================================================================
-// SECTION 10: THEORY MASTERY QUIZ QUESTIONS
-// ============================================================================
-
-export interface QuizQuestionDef {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-export const QUIZ_QUESTIONS: QuizQuestionDef[] = [
-  {
-    question: "What is the internal triad math formula for a Minor chord?",
-    options: [
-      "Root, +4 frets, +3 frets",
-      "Root, +3 frets, +4 frets",
-      "Root, +2 frets, +2 frets",
-      "Root, +5 frets, +5 frets",
-    ],
-    correctIndex: 1,
-    explanation: "A minor triad starts with a sad Minor 3rd (+3 semitones), followed by a Major 3rd (+4 semitones). Outer bounds = Perfect 5th (+7).",
-  },
-  {
-    question: "To play a G Minor barre chord using the E-shape, where is your Root anchor on the Low E string?",
-    options: [
-      "1st fret",
-      "3rd fret",
-      "5th fret",
-      "7th fret",
-    ],
-    correctIndex: 1,
-    explanation: "Open Low E ➔ 1st fret F ➔ 2nd fret F# ➔ 3rd fret G! The anchor sits on the 3rd fret.",
-  },
-  {
-    question: "What are the exact triad notes of C Major?",
-    options: [
-      "C, D, G",
-      "C, E, G",
-      "C, Eb, G",
-      "C, F, A",
-    ],
-    correctIndex: 1,
-    explanation: "C (+4 frets) ➔ E (+3 frets) ➔ G.",
-  },
-  {
-    question: "Why do we lay our index finger flat across all strings when sliding an open shape up the neck?",
-    options: [
-      "To mute all strings completely",
-      "To act as a movable, human 'nut' replacing the guitar headstock nut",
-      "To make the guitar sound like a bass",
-      "To avoid playing barre chords",
-    ],
-    correctIndex: 1,
-    explanation: "The guitar nut holds the 0th fret. When sliding up, the index finger becomes the human nut so internal intervals shift together.",
   },
 ];
 

@@ -148,8 +148,6 @@ export class TanpuraEngine {
   }
 }
 
-export type TablaBol = 'dha' | 'dhin' | 'na' | 'tin' | 'ge' | 'ta';
-
 /** Simple per-beat accents: sam (loudest) / vibhag start / normal / khali (soft, airy). */
 export type BeatAccent = 'sam' | 'tali' | 'normal' | 'khali';
 

@@ -7,7 +7,6 @@ import {
   GUITAR_STRINGS,
   getFretNote,
   calculateBarreChord,
-  shiftSemitones,
   normalizeNote,
   tryNormalizeNote,
   noteToFreq,
@@ -132,7 +131,7 @@ test('6. Pitch detection frequencyToNote maps guitar standard strings accurately
 });
 
 test('7. Indian Swaras (Sargam): Achala, Komal (Less) and Teevra (Extra)', async () => {
-  const { getSwaraForNote, INDIAN_SWARAS } = await import('../src/utils/guitarTheory');
+  const { getSwaraForNote } = await import('../src/utils/guitarTheory');
 
   // Key of C (Sa = C)
   const sa = getSwaraForNote('C', 'C');

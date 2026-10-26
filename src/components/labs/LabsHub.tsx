@@ -1,11 +1,14 @@
 import React, { useRef } from 'react';
 import { Compass, Paperclip, Puzzle, Radio, Target } from 'lucide-react';
-import { SUGGESTED_THEORY_LABS, type LabId, type TheoryLabInfo } from '../../constants';
-import { TransposerLab } from './TransposerLab';
-import { CagedLab } from './CagedLab';
-import { CapoLab } from './CapoLab';
-import { DroneLab } from './DroneLab';
-import { EarTrainerLab } from './EarTrainerLab';
+import type { LabId } from '../../constants';
+import { visibleLabs } from './labRoutes';
+import { PanelFallback } from '../PanelFallback';
+
+const TransposerLab = React.lazy(() => import('./TransposerLab').then(m => ({ default: m.TransposerLab })));
+const CagedLab = React.lazy(() => import('./CagedLab').then(m => ({ default: m.CagedLab })));
+const CapoLab = React.lazy(() => import('./CapoLab').then(m => ({ default: m.CapoLab })));
+const DroneLab = React.lazy(() => import('./DroneLab').then(m => ({ default: m.DroneLab })));
+const EarTrainerLab = React.lazy(() => import('./EarTrainerLab').then(m => ({ default: m.EarTrainerLab })));
 
 export type { LabId };
 
@@ -17,17 +20,6 @@ const LAB_ICONS: Record<LabId, React.ElementType> = {
   drone: Radio,
   ear: Target,
 };
-
-/** Labs visible in the current mode, in display order. Indian-only labs drop out unless `indian`. */
-export function visibleLabs(indian: boolean): TheoryLabInfo[] {
-  return SUGGESTED_THEORY_LABS.filter(l => indian || !l.indianOnly);
-}
-
-export const DEFAULT_LAB: LabId = SUGGESTED_THEORY_LABS[0].id;
-
-export function isLabId(value: string | undefined): value is LabId {
-  return SUGGESTED_THEORY_LABS.some(l => l.id === value);
-}
 
 interface LabsHubProps {
   lab: LabId;
@@ -92,11 +84,13 @@ export const LabsHub: React.FC<LabsHubProps> = ({ lab, onLabChange, notation }) 
         })}
       </div>
       <div role="tabpanel" id={panelId(lab)} aria-labelledby={tabId(lab)} tabIndex={-1} className="outline-none">
-        {lab === 'transposer' && <TransposerLab />}
-        {lab === 'caged' && <CagedLab />}
-        {lab === 'capo' && <CapoLab />}
-        {lab === 'drone' && indian && <DroneLab notation={notation} />}
-        {lab === 'ear' && <EarTrainerLab notation={notation} />}
+        <React.Suspense fallback={<PanelFallback />}>
+          {lab === 'transposer' && <TransposerLab />}
+          {lab === 'caged' && <CagedLab />}
+          {lab === 'capo' && <CapoLab />}
+          {lab === 'drone' && indian && <DroneLab notation={notation} />}
+          {lab === 'ear' && <EarTrainerLab notation={notation} />}
+        </React.Suspense>
       </div>
     </div>
   );

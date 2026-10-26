@@ -160,11 +160,6 @@ export function resetLessonProgress(): UserProgressState {
   });
 }
 
-export function isLessonCompleted(lessonIndex: number): boolean {
-  const current = loadUserProgress();
-  return current.completedLessons.includes(lessonIndex);
-}
-
 export function calculateProgressStats(completedLessons: number[], totalLessons: number = LESSON_COUNT) {
   const count = completedLessons.length;
   const percentage =

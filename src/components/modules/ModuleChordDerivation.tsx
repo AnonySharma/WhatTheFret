@@ -12,7 +12,7 @@ import {
 import { spellNote, triadUsesFlats } from '../../utils/labs';
 import { guitarAudio } from '../../utils/audioSynth';
 import { useTimeouts } from '../labs/useTimeouts';
-import confetti from 'canvas-confetti';
+import { celebrate } from '../../utils/celebrate';
 
 export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian = false }) => {
   const [activeTab, setActiveTab] = useState<'wizard' | 'quiz'>('wizard');
@@ -125,7 +125,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
 
     if (optionIdx === quizQuestions[quizQuestionIndex].correctIndex) {
       setQuizScore(prev => prev + 1);
-      confetti({ particleCount: 35, spread: 60 });
+      celebrate({ particleCount: 35, spread: 60 });
     }
   };
 
@@ -703,7 +703,7 @@ export const ModuleChordDerivation: React.FC<{ indian?: boolean }> = ({ indian =
 
             <button
               onClick={() => {
-                confetti({ particleCount: 50, spread: 70 });
+                celebrate({ particleCount: 50, spread: 70 });
                 playDerivedChord();
               }}
               className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md active:scale-95 transition-all shrink-0"
